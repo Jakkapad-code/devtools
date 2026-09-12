@@ -1,0 +1,87 @@
+"use client";
+import { sx, Hoverable } from "../ui";
+import { usePetory } from "../context";
+import { visiblePosts, mapPost } from "../helpers";
+import { CATEGORY_LABELS, BLOG_TITLES } from "../constants";
+import Dropdown from "../components/Dropdown";
+import ExplorePostCard from "../components/ExplorePostCard";
+
+const CATEGORY_ICONS = { all: "🐾", recipe: "🍲", place: "📍", clinic: "🏥", tips: "💡" };
+const SPECIES_LABELS = { all: "ประเภทสัตว์", Dog: "หมา", Cat: "แมว", other: "อื่นๆ" };
+
+export default function ExplorePage() {
+  const { state: s, ...a } = usePetory();
+  const ff = s.feedFilter;
+
+  const generalCats = ["tips", "event", "question"];
+  let feedPosts = visiblePosts(s).filter((p) => {
+    if (p.category === "story") return false;
+    if (ff.category === "tips") return generalCats.includes(p.category);
+    if (ff.category !== "all" && p.category !== ff.category) return false;
+    if (ff.search && ff.search.trim()) {
+      const q = ff.search.trim().toLowerCase();
+      const hay = ((p.caption || "") + " " + (BLOG_TITLES[p.id] || "")).toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+  feedPosts = feedPosts.slice().sort((x, y) => (ff.sort === "popular" ? y.likes - x.likes : 0)).map((p) => mapPost(s, a, p)).map((p) => ({
+    ...p,
+    title: p.title || BLOG_TITLES[p.id] || p.caption, excerpt: p.caption,
+    authorInitial: p.authorName.charAt(0), likeFill: p.liked ? "#E3402B" : "none",
+  }));
+  const feedEmpty = feedPosts.length === 0;
+
+  const categoryFilters = ["all", "recipe", "place", "clinic", "tips"].map((cat) => ({
+    icon: CATEGORY_ICONS[cat], key: cat, label: cat === "all" ? "ทั้งหมด" : CATEGORY_LABELS[cat],
+    fg: ff.category === cat ? "#E3402B" : "#201C16", underline: ff.category === cat ? "#E3402B" : "transparent",
+    fs: ff.category === cat ? "16px" : "14px",
+    pawStyle: ff.category === cat ? "display:inline-block;margin-right:5px;animation:pawPulse 1s ease-in-out infinite" : "display:none",
+  }));
+
+  const feedSpeciesLabel = SPECIES_LABELS[ff.species] || "ประเภทสัตว์";
+  const feedSpeciesOptions = ["all", "Dog", "Cat", "other"].map((val) => ({
+    label: SPECIES_LABELS[val], onSelect: () => a.selectFeedSpecies(val),
+    optionStyle: "padding:9px 14px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;" + (val === ff.species ? "background:#FDEDEA;color:#E4412C" : "color:#201C16"),
+  }));
+  const searchIconStyle = "cursor:pointer;font-size:16px;padding:8px;border-radius:100px;background:transparent;border:none;" + (s.searchOpen ? "display:none" : "");
+
+  return (
+    <div style={sx("background-color: #FFD98413; min-height: calc(100vh - 68px)")}>
+      <div style={sx("max-width: 100%; margin: 0 auto; padding: clamp(20px,4vw,48px) clamp(20px,4vw,48px) 120px; padding-left: 80px; padding-right: 80px")}>
+        <div style={sx("display:flex;align-items:center;gap:24px;flex-wrap:wrap;margin-bottom:28px;padding-bottom:2px")}>
+          {categoryFilters.map((c) => (
+            <Hoverable key={c.key} as="span" onClick={() => a.setFeedCategory(c.key)} style={`padding-bottom: 12px; font-weight: 800; font-size: ${c.fs}; cursor: pointer; color: ${c.fg}; border-bottom: 3px solid ${c.underline}; margin-bottom: -2px; transition: color 0.15s ease,transform 0.12s ease; font-family: Arial`} hoverStyle="color:#E3402B" activeStyle="transform:scale(0.92)">
+              <span style={sx(c.pawStyle)}>{c.icon}</span>{c.label}
+            </Hoverable>
+          ))}
+          <div style={{ flex: 1 }} />
+          <Dropdown
+            label={feedSpeciesLabel}
+            open={s.speciesDropdownOpen}
+            onToggle={a.toggleSpeciesDropdown}
+            options={feedSpeciesOptions}
+            buttonStyle="padding:9px 16px;border-radius:100px;border:none;font-weight:800;font-size:13px;color:#201C16;cursor:pointer;background:#fff;box-shadow:0 2px 6px rgba(32,28,22,0.1);display:flex;align-items:center;gap:8px"
+            panelStyle="position:absolute;top:calc(100% + 6px);left:0;min-width:140px;background:#fff;border-radius:14px;box-shadow:rgba(0,0,0,0.19) 0px 10px 20px, rgba(0,0,0,0.23) 0px 6px 6px;padding:6px;z-index:10;display:flex;flex-direction:column;gap:2px"
+          />
+          {s.searchOpen && (
+            <input placeholder="ค้นหาโพสต์..." value={ff.search} onChange={a.onFeedSearch} onBlur={a.onSearchBlur} autoFocus style={sx("flex: 1; min-width: 140px; max-width: 260px; padding: 9px 16px; border-radius: 100px; border: none; font-size: 13px; background: #FFFCF6; border-style: solid; border-width: 2px; border-color: #E4412C")} />
+          )}
+          <span onClick={a.toggleSearchOpen} style={sx(searchIconStyle)}>
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="#201C16" strokeWidth="2" /><path d="M21 21l-4.35-4.35" stroke="#201C16" strokeWidth="2" strokeLinecap="round" /></svg>
+          </span>
+          <button onClick={a.openCreatePostBlog} style={sx("background:#E3402B;color:#fff;border:none;border-radius:100px;padding:10px 20px;font-weight:800;font-size:13px;text-transform:uppercase;cursor:pointer")}>+ สร้างโพสต์</button>
+        </div>
+        {feedEmpty && (
+          <div style={sx("text-align:center;padding:80px 20px")}>
+            <div style={sx("font-family:'Anton',sans-serif;font-size:clamp(1.8rem,5vw,3rem);text-transform:uppercase;margin:0 0 12px")}>Nothing Here Yet.</div>
+            <p style={sx("color:#4a453c;font-size:15px")}>เริ่มแบ่งปันเรื่องราวของสัตว์เลี้ยงของคุณ</p>
+          </div>
+        )}
+        <div style={sx("display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:22px")}>
+          {feedPosts.map((post) => <ExplorePostCard key={post.id} post={post} />)}
+        </div>
+      </div>
+    </div>
+  );
+}
