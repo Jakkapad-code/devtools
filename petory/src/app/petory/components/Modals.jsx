@@ -46,7 +46,7 @@ export default function Modals() {
             </div>
             <div>
               <div style={sx("font-size:12px;font-weight:700;color:#8a8378;margin-bottom:6px")}>อีเมล</div>
-              <input placeholder="อีเมล" value={s.profileForm.email} onChange={a.onProfileEmail} style={sx("width:100%;box-sizing:border-box;padding:13px 16px;border-radius:12px;border:1px solid #d9d3c6;font-size:15px")} />
+              <input placeholder="อีเมล" value={s.profileForm.email} readOnly aria-readonly="true" style={sx("width:100%;box-sizing:border-box;padding:13px 16px;border-radius:12px;border:1px solid #d9d3c6;font-size:15px;background:#f4f0e7;color:#70695e")} />
             </div>
             <div>
               <div style={sx("font-size:12px;font-weight:700;color:#8a8378;margin-bottom:6px")}>จังหวัด</div>
@@ -57,7 +57,7 @@ export default function Modals() {
           <div style={sx("display:flex;flex-direction:column;gap:14px")}>
             <textarea placeholder="เกี่ยวกับฉัน" value={s.profileForm.bio} onChange={a.onProfileBio} style={sx("padding:14px 16px;border-radius:12px;border:1px solid #d9d3c6;font-size:15px;min-height:100px;resize:vertical")} />
             <div style={sx("display:flex;gap:12px;margin-top:6px")}>
-              <button onClick={a.saveProfile} style={sx("flex:1;background:#E3402B;color:#fff;font-weight:800;font-size:14px;text-transform:uppercase;padding:15px;border-radius:100px;border:none;cursor:pointer")}>Save</button>
+              <button disabled={s.profilePending} onClick={a.saveProfile} style={sx(`flex:1;background:#E3402B;color:#fff;font-weight:800;font-size:14px;text-transform:uppercase;padding:15px;border-radius:100px;border:none;cursor:${s.profilePending ? "wait" : "pointer"};opacity:${s.profilePending ? "0.7" : "1"}`)}>{s.profilePending ? "Saving..." : "Save"}</button>
               <button onClick={a.closeEditProfile} style={sx("border:2px solid #201C16;background:#fff;font-weight:700;font-size:14px;text-transform:uppercase;padding:15px 24px;border-radius:100px;cursor:pointer")}>Cancel</button>
             </div>
           </div>

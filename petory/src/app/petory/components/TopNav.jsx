@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { sx } from "../ui";
 import { LOGO } from "../ui";
@@ -35,7 +36,7 @@ export default function TopNav() {
   return (
     <nav style={sx("display:flex;align-items:center;gap:12px;padding:16px clamp(16px,2.5vw,32px);background:#F5F1E8;position:sticky;top:0;z-index:40;flex-wrap:nowrap;box-shadow:rgba(0,0,0,0.16) 0px 3px 6px, rgba(0,0,0,0.23) 0px 3px 6px")}>
       <Link href="/petory/home" style={sx("display:flex;align-items:center;gap:8px;cursor:pointer;flex:none")}>
-        <img src={LOGO} alt="Petory" style={{ height: 46, width: "auto" }} />
+        <Image src={LOGO} alt="Petory" width={55} height={46} style={{ height: 46, width: "auto" }} priority />
       </Link>
       <div style={sx("display:flex;align-items:center;gap:10px;flex:none;margin-left:16px")}>
         {item("home", "Home", "/petory/home")}

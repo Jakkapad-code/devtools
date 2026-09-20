@@ -1,0 +1,939 @@
+{
+  "version": 1,
+  "createdAt": "2026-09-20T11:04:02.822Z",
+  "updatedAt": "2026-09-20T11:04:02.822Z",
+  "briefPath": ".omx/ultragoal/brief.md",
+  "goalsPath": ".omx/ultragoal/goals.json",
+  "ledgerPath": ".omx/ultragoal/ledger.jsonl",
+  "codexGoalMode": "aggregate",
+  "goals": [
+    {
+      "id": "G001-next-js-16-react-19-javascript-jsx-u",
+      "title": "คง Next.js 16, React 19, JavaScript/JSX และ UI/route เดิมไว้",
+      "objective": "คง Next.js 16, React 19, JavaScript/JSX และ UI/route เดิมไว้",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G002",
+      "title": "ทำทุกหน้าที่มีอยู่ให้บันทึกข้อมูลจริง ปลอดภัย และกลับมาใช้งานต่อได้หล...",
+      "objective": "ทำทุกหน้าที่มีอยู่ให้บันทึกข้อมูลจริง ปลอดภัย และกลับมาใช้งานต่อได้หลังรีสตาร์ต",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G003-postgresql-postgis-backend-api",
+      "title": "ใช้ PostgreSQL + PostGIS เป็นฐานข้อมูล และให้ backend API เป็นเจ้าของ...",
+      "objective": "ใช้ PostgreSQL + PostGIS เป็นฐานข้อมูล และให้ backend API เป็นเจ้าของข้อมูล/กฎธุรกิจ",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G004-next-js-web-application-bff-backend",
+      "title": "ให้ Next.js ทำหน้าที่ web application และ BFF (Backend for Frontend):...",
+      "objective": "ให้ Next.js ทำหน้าที่ web application และ BFF (Backend for Frontend): browser ไม่เรียกฐานข้อมูลหรือถือ backend token เอง",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G005-route-redirect-petory-login-devtools",
+      "title": "Route เริ่มต้น redirect ไป `/petory/login` (`devtools/petory/src/app/...",
+      "objective": "Route เริ่มต้น redirect ไป `/petory/login` (`devtools/petory/src/app/page.jsx:1-5`).",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G006-state-petoryprovider-devtools-petory",
+      "title": "ทุกหน้าหลักอ่าน/แก้ state ร่วมจาก `PetoryProvider` (`devtools/petory/...",
+      "objective": "ทุกหน้าหลักอ่าน/แก้ state ร่วมจาก `PetoryProvider` (`devtools/petory/src/app/petory/layout.jsx:1-36`, `context.jsx:14-329`).",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G007-match-notification",
+      "title": "ข้อมูลผู้ใช้ สัตว์เลี้ยง โพสต์ match และ notification เป็นข้อมูลเริ่ม...",
+      "objective": "ข้อมูลผู้ใช้ สัตว์เลี้ยง โพสต์ match และ notification เป็นข้อมูลเริ่มต้นใน browser (`constants.jsx:17-121`); จึงหายเมื่อ refresh และยังไม่มี API call.",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G008-schema-postgresql-postgis-public-dat",
+      "title": "Schema มี PostgreSQL/PostGIS แล้ว (`public/Database/ERD_V1_4_3.sql:1-...",
+      "objective": "Schema มี PostgreSQL/PostGIS แล้ว (`public/Database/ERD_V1_4_3.sql:1-305`) แต่ยังไม่ถูกเรียกจาก Next.js.",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G009-package-dev-build-start-lint-tes",
+      "title": "Package ปัจจุบันมีเพียง `dev`, `build`, `start`, `lint`; ยังไม่มี tes...",
+      "objective": "Package ปัจจุบันมีเพียง `dev`, `build`, `start`, `lint`; ยังไม่มี test/typecheck/production deployment script (`package.json:5-22`).",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G010-push-notification-email-marketing-vi",
+      "title": "Push notification, email marketing, video call และระบบชำระเงิน",
+      "objective": "Push notification, email marketing, video call และระบบชำระเงิน",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G011-websocket-chat-persistent-message-po",
+      "title": "WebSocket; chat ใช้ persistent message + polling/revalidation ก่อน แล...",
+      "objective": "WebSocket; chat ใช้ persistent message + polling/revalidation ก่อน แล้วเพิ่ม realtime ภายหลังได้",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G012-ui",
+      "title": "การเปลี่ยนดีไซน์ครั้งใหญ่; งานนี้รักษา UI ปัจจุบันเป็นหลัก",
+      "objective": "การเปลี่ยนดีไซน์ครั้งใหญ่; งานนี้รักษา UI ปัจจุบันเป็นหลัก\n-> Next.js pages/components (JavaScript)\n-> Next.js server actions / route handlers\n-> server-only API client\n-> Backend API (authorization + business rules)\n-> PostgreSQL + PostGIS / object storage\napp/                         # routes และ layout; รับผิดชอบ render/navigation เท่านั้น\nfeatures/\nauth/ profiles/ pets/ posts/ matching/ messages/ notifications/\n# UI เฉพาะโดเมน, form schema, actions, service adapters\nserver/\napi/                        # backend client ที่ import ได้เฉพาะ server\nauth/                       # session, guard, refresh\nsecurity/                   # CSRF/origin checks, authorization helpers\nlogging/                    # structured request/error logging\nshared/\nconfig/                     # env validation\ncomponents/ lib/ types/     # UI และ utility ที่ใช้ร่วมกัน",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G013-page-jsx-component-secret-backend-to",
+      "title": "`page.jsx` และ component ห้ามเข้าฐานข้อมูลหรือใส่ secret/backend token.",
+      "objective": "`page.jsx` และ component ห้ามเข้าฐานข้อมูลหรือใส่ secret/backend token.",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G014-mutation-validate-frontend-ux-valida",
+      "title": "ทุก mutation ต้อง validate ที่ frontend เพื่อ UX และ validate ซ้ำที่...",
+      "objective": "ทุก mutation ต้อง validate ที่ frontend เพื่อ UX และ validate ซ้ำที่ server/backend เพื่อความปลอดภัย.",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G015-backend-ownership-client",
+      "title": "Backend ตรวจสิทธิ์และ ownership ทุกครั้ง; client ไม่ใช่แหล่งตัดสินสิท...",
+      "objective": "Backend ตรวจสิทธิ์และ ownership ทุกครั้ง; client ไม่ใช่แหล่งตัดสินสิทธิ์.",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G016-access-refresh-token-httponly-cookie",
+      "title": "Access/refresh token เก็บเฉพาะ HttpOnly cookie, `Secure` ใน productio...",
+      "objective": "Access/refresh token เก็บเฉพาะ HttpOnly cookie, `Secure` ใน production, `SameSite=Lax` เป็นขั้นต่ำ.",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G017-request-csrf-same-origin-validation",
+      "title": "ทุก request เขียนข้อมูลมี CSRF/same-origin validation, request ID และ...",
+      "objective": "ทุก request เขียนข้อมูลมี CSRF/same-origin validation, request ID และ structured logs ที่ไม่บันทึกรหัสผ่าน/token.",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G018-env-commit-env-example-secret-inject",
+      "title": "`.env*` ไม่ commit; ใช้ `.env.example` ที่ไม่มี secret และ inject sec...",
+      "objective": "`.env*` ไม่ commit; ใช้ `.env.example` ที่ไม่มี secret และ inject secret ผ่าน CI/deployment platform.",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G019-api-contract-request-response-error",
+      "title": "สร้างเอกสาร API contract: request/response/error/status code และ owne...",
+      "objective": "สร้างเอกสาร API contract: request/response/error/status code และ ownership ของทุก resource ในตารางฟีเจอร์ด้านบน.",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G020-backend-repository-service-run-migra",
+      "title": "ยืนยันว่า backend อยู่ใน repository/service แยก และเป็นผู้ run migrat...",
+      "objective": "ยืนยันว่า backend อยู่ใน repository/service แยก และเป็นผู้ run migration; Next.js ไม่ต่อ PostgreSQL ตรง.",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G021-env-example-backend-url-next-public",
+      "title": "เพิ่ม `.env.example` สำหรับ `BACKEND_URL`, `NEXT_PUBLIC_APP_URL`, `NE...",
+      "objective": "เพิ่ม `.env.example` สำหรับ `BACKEND_URL`, `NEXT_PUBLIC_APP_URL`, `NEXT_PUBLIC_STATIC_URL`, `SESSION_SECRET`, `ALLOWED_ORIGINS`; ตั้ง `.env*` ใน `.gitignore` ต่อจากกติกาที่มีอยู่ (`.gitignore:33-34`).",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G022-script-lint-test-test-unit-test-inte",
+      "title": "ตั้ง script ขั้นต่ำ: `lint`, `test`, `test:unit`, `test:integration`,...",
+      "objective": "ตั้ง script ขั้นต่ำ: `lint`, `test`, `test:unit`, `test:integration`, `test:e2e`, `build`, `start:prod`. Production build ต้อง fail เมื่อ lint/test/build fail.",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G023-ci-pipeline-npm-ci-lint-tests-build",
+      "title": "เพิ่ม CI pipeline ที่รัน `npm ci`, lint, tests และ build ทุก pull req...",
+      "objective": "เพิ่ม CI pipeline ที่รัน `npm ci`, lint, tests และ build ทุก pull request.",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G024-api-ui-endpoint",
+      "title": "ทีมสามารถเปิดเอกสาร API แล้วระบุได้ว่าแต่ละปุ่มบน UI เรียก endpoint ใด.",
+      "objective": "ทีมสามารถเปิดเอกสาร API แล้วระบุได้ว่าแต่ละปุ่มบน UI เรียก endpoint ใด.",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G025-secret-git-console-log-error-respons",
+      "title": "ไม่มี secret อยู่ใน Git, console log, error response หรือ browser bun...",
+      "objective": "ไม่มี secret อยู่ใน Git, console log, error response หรือ browser bundle.",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G026-pull-request-lint-test-build-merge",
+      "title": "Pull request ที่ lint/test/build ไม่ผ่าน merge ไม่ได้.",
+      "objective": "Pull request ที่ lint/test/build ไม่ผ่าน merge ไม่ได้.",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G027-schema-public-database-migration-bac",
+      "title": "ย้าย schema จาก `public/Database/` ไปเป็น migration ของ backend; ห้าม...",
+      "objective": "ย้าย schema จาก `public/Database/` ไปเป็น migration ของ backend; ห้ามให้ SQL schema/seed ที่มีข้อมูลทดสอบเป็น public static asset.",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G028-migration-schema-seed-local-dev-seed",
+      "title": "แยก migration schema และ seed local/dev; seed ต้อง hash password และห...",
+      "objective": "แยก migration schema และ seed local/dev; seed ต้อง hash password และห้าม deploy พร้อม production.",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G029-constraints-indexes-acc-email-unique",
+      "title": "เติม constraints/indexes ที่จำเป็น: `acc.email` unique, unique follow...",
+      "objective": "เติม constraints/indexes ที่จำเป็น: `acc.email` unique, unique follow/block ต่อคู่บัญชี, unique like/save ต่อผู้ใช้+โพสต์, unique pet relationship ต่อคู่สัตว์, foreign keys, timestamps, soft-delete policy และ indexes สำหรับ feed/search/match/message.",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G030-model-schema-h-post-x-post-erd-v1",
+      "title": "ปรับ model เนื้อหา: schema ปัจจุบันแยก `h_post` กับ `x_post` (`ERD_V1...",
+      "objective": "ปรับ model เนื้อหา: schema ปัจจุบันแยก `h_post` กับ `x_post` (`ERD_V1_4_3.sql:111-182`) แต่ UI ใช้ post เดียวที่มี category (`constants.jsx:48-66`). เลือก model เดียว `posts` + `post_type/category` เพื่อให้ create/edit/like/comment/report ทำงานเสมอกัน.",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G031-model-schema-conversations-conversat",
+      "title": "เพิ่ม model ที่ยังไม่มีใน schema: `conversations`/`conversation_membe...",
+      "objective": "เพิ่ม model ที่ยังไม่มีใน schema: `conversations`/`conversation_members` (messages ปัจจุบันไม่มี room/match reference), `notifications`, `media_uploads`, และ report event ที่เก็บผู้รายงาน/เป้าหมาย/สถานะ.",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G032-matching-state-passed-interested-mat",
+      "title": "นิยาม matching state (`passed`, `interested`, `matched`, `unmatched`)...",
+      "objective": "นิยาม matching state (`passed`, `interested`, `matched`, `unmatched`) พร้อม `initiator_pet_id`, `recipient_pet_id`, timestamp และข้อจำกัดไม่ให้สร้างคู่ซ้ำ.",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G033-postgis-location-province-distance-f",
+      "title": "ใช้ PostGIS กับ location/province สำหรับ distance filter เท่านั้น พร้...",
+      "objective": "ใช้ PostGIS กับ location/province สำหรับ distance filter เท่านั้น พร้อม index แบบ geography; ห้าม expose พิกัดละเอียดของผู้ใช้บน feed.",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G034-run-migrations-run",
+      "title": "สร้างฐานข้อมูลว่างแล้ว run migrations ได้สำเร็จหนึ่งครั้ง และ run ซ้ำ...",
+      "objective": "สร้างฐานข้อมูลว่างแล้ว run migrations ได้สำเร็จหนึ่งครั้ง และ run ซ้ำไม่ทำให้ schema เพี้ยน.",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G035-seed-local-account-pet-post-match-lo",
+      "title": "seed local สร้าง account/pet/post/match ที่ login และทดสอบได้ โดยไม่ม...",
+      "objective": "seed local สร้าง account/pet/post/match ที่ login และทดสอบได้ โดยไม่มี plaintext password.",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G036-query-feed-message-list-match-filter",
+      "title": "query feed, message list และ match filter มี index และผ่าน explain ba...",
+      "objective": "query feed, message list และ match filter มี index และผ่าน explain baseline ที่ backend ทีมตกลง.",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G037-auth-api-register-login-refresh-logo",
+      "title": "สร้าง auth API: register, login, refresh, logout, forgot password, ve...",
+      "objective": "สร้าง auth API: register, login, refresh, logout, forgot password, verify/reset password; password hash ด้วย Argon2id หรือ bcrypt, rate limit endpoint สำคัญ, token rotation และ revoke on logout/reset.",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G038-resource-api-profile-follow-block-re",
+      "title": "สร้าง resource API ตามลำดับ: profile/follow/block/report → pets/media...",
+      "objective": "สร้าง resource API ตามลำดับ: profile/follow/block/report → pets/media → posts/interactions/comments → matching → conversations/messages → notifications.",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G039-authorization-endpoint-owner-resourc",
+      "title": "บังคับ authorization ทุก endpoint: owner แก้/ลบได้เฉพาะ resource ของต...",
+      "objective": "บังคับ authorization ทุก endpoint: owner แก้/ลบได้เฉพาะ resource ของตน, ผู้ใช้ที่ block กันมองไม่เห็นกัน, report ไม่เปิดให้เจ้าของเป้าหมายเห็นข้อมูลผู้รายงาน.",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G040-object-storage-profile-pet-post-api",
+      "title": "ใช้ object storage สำหรับรูป profile/pet/post; API รับ upload metadat...",
+      "objective": "ใช้ object storage สำหรับรูป profile/pet/post; API รับ upload metadata/URL ที่จำกัด type/size, ไม่เก็บ binary ใน database.",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G041-openapi-document-generate-maintain-j",
+      "title": "เขียน OpenAPI document และ generate/maintain JavaScript API client co...",
+      "objective": "เขียน OpenAPI document และ generate/maintain JavaScript API client contract จาก source เดียว.",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G042-health-readiness-endpoint-migration",
+      "title": "สร้าง health/readiness endpoint และ migration rollout procedure.",
+      "objective": "สร้าง health/readiness endpoint และ migration rollout procedure.",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G043-api-integration-test-endpoint-401",
+      "title": "API integration test ครอบคลุมทุก endpoint ที่เปลี่ยนข้อมูลและกรณี 401...",
+      "objective": "API integration test ครอบคลุมทุก endpoint ที่เปลี่ยนข้อมูลและกรณี 401/403/404/422.",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G044-user-a-post-pet-message-profile-priv",
+      "title": "User A ไม่อ่านหรือแก้ post, pet, message หรือ profile private ของ Use...",
+      "objective": "User A ไม่อ่านหรือแก้ post, pet, message หรือ profile private ของ User B ได้.",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G045-ur",
+      "title": "รูปที่อัปโหลดผิดชนิด/เกินขนาดถูกปฏิเสธ และไฟล์ที่อนุญาตเปิดได้ผ่าน UR...",
+      "objective": "รูปที่อัปโหลดผิดชนิด/เกินขนาดถูกปฏิเสธ และไฟล์ที่อนุญาตเปิดได้ผ่าน URL ที่กำหนด.",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G046-src-server-api-client-js-server-only",
+      "title": "เพิ่ม `src/server/api/client.js` แบบ `server-only`; รวม base URL, req...",
+      "objective": "เพิ่ม `src/server/api/client.js` แบบ `server-only`; รวม base URL, request ID, timeout, JSON error normalization และห้าม export token สู่ component client.",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G047-src-server-auth-read-set-clear-sessi",
+      "title": "เพิ่ม `src/server/auth/` สำหรับ read/set/clear session และ `requireAu...",
+      "objective": "เพิ่ม `src/server/auth/` สำหรับ read/set/clear session และ `requireAuth`; เพิ่ม middleware ป้องกัน route หลัง login.",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G048-src-server-security-csrf-same-origin",
+      "title": "เพิ่ม `src/server/security/` สำหรับ CSRF/same-origin validation ใน ac...",
+      "objective": "เพิ่ม `src/server/security/` สำหรับ CSRF/same-origin validation ใน action/route handler ที่เขียนข้อมูล.",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G049-src-shared-config-env-js-fail-fast",
+      "title": "เพิ่ม `src/shared/config/env.js` ที่ fail fast เมื่อค่าบังคับหาย และไ...",
+      "objective": "เพิ่ม `src/shared/config/env.js` ที่ fail fast เมื่อค่าบังคับหาย และไม่ให้ import environment ลับจาก client code.",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G050-next-config-production-security-head",
+      "title": "ตั้ง Next config สำหรับ production: security headers/CSP ที่จำกัด ori...",
+      "objective": "ตั้ง Next config สำหรับ production: security headers/CSP ที่จำกัด origin จริง, `poweredByHeader: false`, remote image allowlist แบบเจาะจง, `output: \"standalone\"`; ห้ามตั้ง ignore lint/build errors.",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G051-error-loading-not-found-ui-infrastru",
+      "title": "เพิ่ม error/loading/not-found UI ที่ไม่เผยรายละเอียด infrastructure แ...",
+      "objective": "เพิ่ม error/loading/not-found UI ที่ไม่เผยรายละเอียด infrastructure และ logging ที่ redacts password, cookie, Authorization header.",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G052-src-app-layout-jsx-1-36-metadata-lan",
+      "title": "`src/app/layout.jsx:1-36` — metadata/lang/global shell และ global err...",
+      "objective": "`src/app/layout.jsx:1-36` — metadata/lang/global shell และ global error boundary.",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G053-src-app-petory-layout-jsx-1-36-globa",
+      "title": "`src/app/petory/layout.jsx:1-36` — ย้ายจาก global mock provider ไปเป็...",
+      "objective": "`src/app/petory/layout.jsx:1-36` — ย้ายจาก global mock provider ไปเป็น shell/navigation ที่อ่าน session จริง.",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G054-next-config-mjs-1-7-config-deploy-se",
+      "title": "`next.config.mjs:1-7` — ขยายจาก config เริ่มต้นเป็น deploy/security c...",
+      "objective": "`next.config.mjs:1-7` — ขยายจาก config เริ่มต้นเป็น deploy/security config.",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G055-package-json-5-22-quality-deploy-scr",
+      "title": "`package.json:5-22` — เพิ่ม quality/deploy scripts และ dependencies ท...",
+      "objective": "`package.json:5-22` — เพิ่ม quality/deploy scripts และ dependencies ที่อนุมัติ.",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G056-dev-staging-production-environment",
+      "title": "เปิด dev/staging/production ด้วย environment คนละชุดได้ และค่าบังคับห...",
+      "objective": "เปิด dev/staging/production ด้วย environment คนละชุดได้ และค่าบังคับหายจะ fail ก่อนรับ traffic.",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G057-route-session-redirect-login-session",
+      "title": "เปิด route ที่ป้องกันโดยไม่มี session แล้ว redirect ไป login; session...",
+      "objective": "เปิด route ที่ป้องกันโดยไม่มี session แล้ว redirect ไป login; session หมดอายุ refresh ได้หรือ logout อย่างปลอดภัย.",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G058-browser-devtools-backend-token-backe",
+      "title": "browser DevTools ไม่พบ backend token หรือ `BACKEND_URL` ที่เป็น secret.",
+      "objective": "browser DevTools ไม่พบ backend token หรือ `BACKEND_URL` ที่เป็น secret.",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G059-context-jsx-feature-level-hooks-acti",
+      "title": "แยก `context.jsx` ออกเป็น feature-level hooks/actions; เริ่มจาก auth,...",
+      "objective": "แยก `context.jsx` ออกเป็น feature-level hooks/actions; เริ่มจาก auth, current user และ pet data.",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G060-login-users-muftee-desktop-devtool-d",
+      "title": "เปลี่ยน [login](/Users/muftee/Desktop/devtool/devtools/petory/src/app...",
+      "objective": "เปลี่ยน [login](/Users/muftee/Desktop/devtool/devtools/petory/src/app/petory/login/page.jsx:1), register, forgot-password และ onboarding ให้เรียก action จริง พร้อม field validation/loading/error state.",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G061-profile-users-muftee-desktop-devtool",
+      "title": "เปลี่ยน [profile](/Users/muftee/Desktop/devtool/devtools/petory/src/a...",
+      "objective": "เปลี่ยน [profile](/Users/muftee/Desktop/devtool/devtools/petory/src/app/petory/profile/page.jsx:1), [pets list](/Users/muftee/Desktop/devtool/devtools/petory/src/app/petory/pets/page.jsx:1), create/edit/detail ให้โหลดและ mutate ข้อมูลจริง.",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G062-image-upload-profile-pet-placeholder",
+      "title": "ทำ image upload ของ profile และ pet; วาด placeholder เดิมระหว่างรูปยั...",
+      "objective": "ทำ image upload ของ profile และ pet; วาด placeholder เดิมระหว่างรูปยังไม่พร้อม.",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G063-follow-unfollow-block-unblock-report",
+      "title": "ทำ follow/unfollow, block/unblock, report user โดยให้ UI revalidate ห...",
+      "objective": "ทำ follow/unfollow, block/unblock, report user โดยให้ UI revalidate หลัง server สำเร็จเท่านั้น.",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G064-onboarding-logout-login",
+      "title": "สมัคร → onboarding → สร้างสัตว์เลี้ยง → logout/login ใหม่ แล้วยังเห็น...",
+      "objective": "สมัคร → onboarding → สร้างสัตว์เลี้ยง → logout/login ใหม่ แล้วยังเห็นข้อมูลเดิม.",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G065-ui-api",
+      "title": "ผู้ใช้ไม่สามารถแก้ไข/ลบสัตว์ของคนอื่นผ่าน UI หรือเรียก API ตรง.",
+      "objective": "ผู้ใช้ไม่สามารถแก้ไข/ลบสัตว์ของคนอื่นผ่าน UI หรือเรียก API ตรง.",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G066-block-target-feed-matching-profile-p",
+      "title": "Block แล้ว target ไม่ปรากฏใน feed/matching/profile ตาม policy.",
+      "objective": "Block แล้ว target ไม่ปรากฏใน feed/matching/profile ตาม policy.",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G067-initialstate-posts-paginated-server",
+      "title": "แทน `initialState().posts` ด้วย paginated server data; คง UX ของ Home...",
+      "objective": "แทน `initialState().posts` ด้วย paginated server data; คง UX ของ Home/Explore เดิม (`home/page.jsx:7-94`, `explore/page.jsx:12-87`).",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G068-category-species-search-sort-cursor",
+      "title": "ทำ category, species, search, sort และ cursor pagination ผ่าน query p...",
+      "objective": "ทำ category, species, search, sort และ cursor pagination ผ่าน query parameters ที่ validate แล้ว.",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G069-create-edit-delete-post-ownership-me",
+      "title": "ทำ create/edit/delete post พร้อม ownership, media attachment และ opti...",
+      "objective": "ทำ create/edit/delete post พร้อม ownership, media attachment และ optimistic UI ที่ rollback เมื่อ server fail.",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G070-like-save-comment-report-post-idempo",
+      "title": "ทำ like, save, comment, report post ด้วย idempotent API และ count ที่...",
+      "objective": "ทำ like, save, comment, report post ด้วย idempotent API และ count ที่ได้จาก server.",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G071-helper-view-model-helpers-jsx-17-46",
+      "title": "แก้ helper/view model (`helpers.jsx:17-46`) ให้ map API DTO เป็น disp...",
+      "objective": "แก้ helper/view model (`helpers.jsx:17-46`) ให้ map API DTO เป็น display model แทน mock data โดยไม่ผูก component กับ API response ตรง.",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G072-like-save-comment-refresh",
+      "title": "โพสต์/แก้ไข/ลบ/like/save/comment คงอยู่หลัง refresh และแสดงเฉพาะคนที่...",
+      "objective": "โพสต์/แก้ไข/ลบ/like/save/comment คงอยู่หลัง refresh และแสดงเฉพาะคนที่ได้รับสิทธิ์.",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G073-search-filter-sort-query-browser",
+      "title": "Search/filter/sort ให้ผลตาม query และไม่โหลดข้อมูลทั้งระบบใน browser.",
+      "objective": "Search/filter/sort ให้ผลตาม query และไม่โหลดข้อมูลทั้งระบบใน browser.",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G074-like-save-retry-count-relation",
+      "title": "เรียก like หรือ save ซ้ำจาก retry ไม่ทำให้ count หรือ relation ซ้ำ.",
+      "objective": "เรียก like หรือ save ซ้ำจาก retry ไม่ทำให้ count หรือ relation ซ้ำ.",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G075-queue-mock-data-matching-page-jsx-us",
+      "title": "แทน queue ที่คำนวณจาก mock data ใน [matching/page.jsx](/Users/muftee/...",
+      "objective": "แทน queue ที่คำนวณจาก mock data ใน [matching/page.jsx](/Users/muftee/Desktop/devtool/devtools/petory/src/app/petory/matching/page.jsx:8) ด้วย endpoint candidate ที่ filter ที่ server (species, distance, gender, size, personality, block/pass state).",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G076-pass-interest-state-transition-idemp",
+      "title": "ทำ pass/interest เป็น state transition ที่ idempotent; เมื่อทั้งคู่สน...",
+      "objective": "ทำ pass/interest เป็น state transition ที่ idempotent; เมื่อทั้งคู่สนใจ ให้ backend สร้าง match+conversation atomically.",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G077-conversation-list-chat-room-users-mu",
+      "title": "ย้าย conversation list และ [chat room](/Users/muftee/Desktop/devtool/...",
+      "objective": "ย้าย conversation list และ [chat room](/Users/muftee/Desktop/devtool/devtools/petory/src/app/petory/messages/[matchId]/page.jsx:8) ไปใช้ messages จริง; เริ่ม revalidate/polling แบบจำกัด แล้วออกแบบ event interface สำหรับ WebSocket ในอนาคต.",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G078-unmatch-conversation-policy-audit-tr",
+      "title": "ทำ unmatch ที่ปิด conversation ตาม policy โดยไม่ลบ audit trail; block...",
+      "objective": "ทำ unmatch ที่ปิด conversation ตาม policy โดยไม่ลบ audit trail; block/report จาก chat มีผลกับ feed/matching/conversation visibility.",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G079-notification-event-like-comment-foll",
+      "title": "สร้าง notification event ทุก like/comment/follow/match/message, pagin...",
+      "objective": "สร้าง notification event ทุก like/comment/follow/match/message, paginated list และ mark-read/mark-all-read.",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G080-mutual-interest-match",
+      "title": "Mutual interest สร้าง match และสนทนาได้เพียงหนึ่งชุดต่อคู่สัตว์.",
+      "objective": "Mutual interest สร้าง match และสนทนาได้เพียงหนึ่งชุดต่อคู่สัตว์.",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G081-refresh-conversation",
+      "title": "ข้อความที่ส่งคงอยู่หลัง refresh และผู้ที่ไม่ใช่สมาชิก conversation เป...",
+      "objective": "ข้อความที่ส่งคงอยู่หลัง refresh และผู้ที่ไม่ใช่สมาชิก conversation เปิดไม่ได้.",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G082-notification-event-unread-count-mark",
+      "title": "Notification เกิดหนึ่งครั้งต่อ event ที่กำหนด, unread count/mark-read...",
+      "objective": "Notification เกิดหนึ่งครั้งต่อ event ที่กำหนด, unread count/mark-read ถูกต้อง และไม่แสดง event จากคนที่ block.",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G083-unit-tests-validation-permission-pol",
+      "title": "เพิ่ม unit tests: validation, permission policy, API DTO mapper, matc...",
+      "objective": "เพิ่ม unit tests: validation, permission policy, API DTO mapper, matching state machine, pagination cursor และ env config.",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G084-api-integration-tests-postgresql-tes",
+      "title": "เพิ่ม API/integration tests ต่อ PostgreSQL test database: migration,...",
+      "objective": "เพิ่ม API/integration tests ต่อ PostgreSQL test database: migration, auth, ownership, block/report, post interaction, mutual match, messages และ notification.",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G085-browser-e2e-register-login-onboardin",
+      "title": "เพิ่ม browser E2E: register/login, onboarding+pet, post flow, follow/...",
+      "objective": "เพิ่ม browser E2E: register/login, onboarding+pet, post flow, follow/block, match-to-chat, notification read state และ unauthorized route.",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G086-security-review-csp-cors-origin-list",
+      "title": "ทำ security review: CSP, CORS/origin list, CSRF, cookie flags, upload...",
+      "objective": "ทำ security review: CSP, CORS/origin list, CSRF, cookie flags, upload validation, rate limit, secrets scan, dependency audit.",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G087-build-standalone-image-deployment-ar",
+      "title": "Build standalone image/deployment artifact, run migrations as deploy...",
+      "objective": "Build standalone image/deployment artifact, run migrations as deploy step ที่ควบคุมได้, health check, rollback และ backup/restore drill.",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G088-observability-structured-logs-error",
+      "title": "ติดตั้ง observability: structured logs, error tracking, health check,...",
+      "objective": "ติดตั้ง observability: structured logs, error tracking, health check, request ID, dashboard สำหรับ API errors/latency/background-job failures.",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G089-staging-smoke-test-release-checklist",
+      "title": "เปิด staging ก่อน แล้วทำ smoke test จาก release checklist ก่อน promot...",
+      "objective": "เปิด staging ก่อน แล้วทำ smoke test จาก release checklist ก่อน promote production.",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G090-ci-npm-ci-lint-unit-integration-e2e",
+      "title": "CI ผ่าน `npm ci`, lint, unit, integration, E2E และ production build.",
+      "objective": "CI ผ่าน `npm ci`, lint, unit, integration, E2E และ production build.",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G091-staging-user-journey-mock-state-rest",
+      "title": "Staging ทำ user journey ครบโดยไม่มี mock state; restart service หรือ...",
+      "objective": "Staging ทำ user journey ครบโดยไม่มี mock state; restart service หรือ refresh browser แล้วข้อมูลไม่สูญหาย.",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G092-production-https-secret-injection-he",
+      "title": "Production มี HTTPS, secret injection, health check, database backup...",
+      "objective": "Production มี HTTPS, secret injection, health check, database backup และ rollback procedure ที่ทดสอบแล้ว.",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G093-route-petory-initialstate",
+      "title": "ทุก route ปัจจุบันภายใต้ `/petory` ใช้ข้อมูลจริง ไม่มี `initialState`...",
+      "objective": "ทุก route ปัจจุบันภายใต้ `/petory` ใช้ข้อมูลจริง ไม่มี `initialState` เป็น source of truth.",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G094-refresh-logout-login-server-restart",
+      "title": "ข้อมูลสำคัญคงอยู่หลัง refresh, logout/login และ server restart.",
+      "objective": "ข้อมูลสำคัญคงอยู่หลัง refresh, logout/login และ server restart.",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G095-authentication-ownership-block-repor",
+      "title": "Authentication, ownership, block, report และ admin/moderation policy...",
+      "objective": "Authentication, ownership, block, report และ admin/moderation policy ผ่าน integration/E2E tests.",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G096-lint-tests-production-build-security",
+      "title": "`lint`, tests, production build และ security checks ผ่านใน CI โดยไม่ม...",
+      "objective": "`lint`, tests, production build และ security checks ผ่านใน CI โดยไม่มี ignored errors.",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G097-production-mock-seed-plaintext-passw",
+      "title": "Production ไม่มี mock seed, plaintext password, hard-coded secret หรื...",
+      "objective": "Production ไม่มี mock seed, plaintext password, hard-coded secret หรือ token ใน client.",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G098-staging-https-environment-separation",
+      "title": "มี staging, HTTPS, environment separation, log/error tracking, health...",
+      "objective": "มี staging, HTTPS, environment separation, log/error tracking, health check, database backup และ rollback ที่ทดสอบแล้ว.",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G099-runbook-deploy-rollback-restore-back",
+      "title": "ทีม runbook สามารถ deploy, rollback, restore backup และรับมือ backend...",
+      "objective": "ทีม runbook สามารถ deploy, rollback, restore backup และรับมือ backend unavailable ได้.",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G100-repository-backend-postgresql-post",
+      "title": "เลือก/ยืนยัน repository และเทคโนโลยี backend ที่จะรับ PostgreSQL/Post...",
+      "objective": "เลือก/ยืนยัน repository และเทคโนโลยี backend ที่จะรับ PostgreSQL/PostGIS และ API contract.",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G101-policy-matching",
+      "title": "กำหนด policy ที่เป็นธุรกิจ: matching เพื่อเพื่อนเล่น/คู่รัก, อายุขั้น...",
+      "objective": "กำหนด policy ที่เป็นธุรกิจ: matching เพื่อเพื่อนเล่น/คู่รัก, อายุขั้นต่ำ, ระยะห่างที่เปิดเผย, การลบ account/data retention และ moderator workflow.",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G102-object-storage-production-staging",
+      "title": "เลือก object storage และโดเมน production/staging.",
+      "objective": "เลือก object storage และโดเมน production/staging.",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    },
+    {
+      "id": "G103-owner-database-migration-backend-api",
+      "title": "กำหนด owner สำหรับ database migration, backend API, frontend integrat...",
+      "objective": "กำหนด owner สำหรับ database migration, backend API, frontend integration และ deployment.",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-09-20T11:04:02.822Z",
+      "updatedAt": "2026-09-20T11:04:02.822Z"
+    }
+  ],
+  "codexObjective": "Complete the durable ultragoal plan in .omx/ultragoal/goals.json, including later accepted/appended stories, under the original brief constraints; use .omx/ultragoal/ledger.jsonl as the audit trail."
+}

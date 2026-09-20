@@ -46,7 +46,7 @@ export default function PetForm({ title, submitLabel, photoPlaceholder }) {
         <textarea placeholder="Bio" value={f.bio} onChange={a.onPetBio} style={sx("padding:14px 16px;border-radius:12px;border:2px solid #201C16;font-size:15px;min-height:90px;resize:vertical")} />
         <input placeholder="Interests (คั่นด้วยลูกจุลภาค เช่น Walks, Park, Fetch)" value={f.interestsRaw} onChange={a.onPetInterests} style={sx("padding:14px 16px;border-radius:12px;border:2px solid #201C16;font-size:15px")} />
         <div style={sx("display:flex;gap:12px;margin-top:8px")}>
-          <button onClick={a.savePet} style={sx("flex:1;background:#E3402B;color:#fff;font-weight:800;font-size:14px;letter-spacing:0.03em;text-transform:uppercase;padding:15px;border-radius:100px;border:none;cursor:pointer")}>{submitLabel}</button>
+          <button disabled={s.petPending} onClick={a.savePet} style={sx(`flex:1;background:#E3402B;color:#fff;font-weight:800;font-size:14px;letter-spacing:0.03em;text-transform:uppercase;padding:15px;border-radius:100px;border:none;cursor:${s.petPending ? "wait" : "pointer"};opacity:${s.petPending ? "0.7" : "1"}`)}>{s.petPending ? "Saving..." : submitLabel}</button>
           <button onClick={a.cancelPetForm} style={sx("border:2px solid #201C16;background:#fff;font-weight:700;font-size:14px;text-transform:uppercase;padding:15px 24px;border-radius:100px;cursor:pointer")}>Cancel</button>
         </div>
       </div>

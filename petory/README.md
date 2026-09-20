@@ -1,24 +1,42 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Petory
 
-## Getting Started
+Petory is a Next.js application for a pet-owner community. The existing UI is
+being migrated from in-memory demo data to a production backend.
 
-First, run the development server:
+## Run locally
+
+Requirements: Node.js 20.9 or newer and npm.
 
 ```bash
+cp .env.example .env.local
+npm ci
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000). The application begins at
+`/petory/login`.
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+`DATABASE_URL` and `SESSION_SECRET` are server-only values. Never commit
+`.env.local` or a real secret.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+To start the local PostgreSQL/PostGIS service, run `docker compose up -d` and
+then `npm run db:migrate`. The compose file exposes PostgreSQL on port `5433`
+to avoid conflicting with another local database.
+
+## Quality checks
+
+Run these before creating a pull request or deploying:
+
+```bash
+npm run lint
+npm run test
+npm run build
+```
+
+`npm run build` runs lint and tests first, then produces a standalone Next.js
+artifact in `.next/standalone`. It intentionally uses the stable webpack build
+path. A self-hosted deployment must copy `public` and `.next/static` into that
+artifact, or serve those assets through a CDN.
 
 ## Learn More
 

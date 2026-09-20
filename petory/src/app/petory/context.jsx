@@ -2,8 +2,15 @@
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { initialState, MUTUAL_CANDIDATES } from "./constants";
+import { authClient, petClient } from "@/features/auth/client";
 
 const PetoryContext = createContext(null);
+
+const PET_COLORS = ["#E9C79A", "#D9A15B", "#B0B0AE", "#EDE0C8", "#C7A374"];
+
+function toPetView(pet, index = 0) {
+  return { ...pet, ownerId: "me", photo: PET_COLORS[index % PET_COLORS.length], distance: 0 };
+}
 
 export function usePetory() {
   const ctx = useContext(PetoryContext);
@@ -20,16 +27,60 @@ export function PetoryProvider({ children }) {
   const update = (patch) => setState((prev) => ({ ...prev, ...(typeof patch === "function" ? patch(prev) : patch) }));
 
   useEffect(() => {
-    update({ isMobile: window.innerWidth < 860 });
+    const syncViewport = () => {
+      update((s2) => {
+        const isMobile = window.innerWidth < 860;
+        return s2.isMobile === isMobile ? {} : { isMobile };
+      });
+    };
+    const animationFrame = window.requestAnimationFrame(syncViewport);
     const onResize = () => update({ isMobile: window.innerWidth < 860 });
     window.addEventListener("resize", onResize);
     const onDocClick = () => update((s2) => (s2.postMenuOpenId ? { postMenuOpenId: null } : {}));
     document.addEventListener("click", onDocClick);
     return () => {
+      window.cancelAnimationFrame(animationFrame);
       window.removeEventListener("resize", onResize);
       document.removeEventListener("click", onDocClick);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+
+    void authClient.me()
+      .then(async (payload) => {
+        if (!active || !payload) return;
+        setState((previous) => ({
+          ...previous,
+          user: payload.account,
+          users: previous.users.map((user) => user.id === "me" ? {
+            ...user,
+            name: payload.account.display_name,
+            email: payload.account.email,
+            bio: payload.account.bio || "",
+            phone: payload.account.phone || "",
+            location: payload.account.location_label || "",
+          } : user),
+        }));
+
+        const { pets } = await petClient.list();
+        if (!active) return;
+        setState((previous) => ({
+          ...previous,
+          pets: previous.pets.filter((pet) => pet.ownerId !== "me").concat(pets.map(toPetView)),
+        }));
+      })
+      .catch(() => {
+        // A failed hydration must not prevent a visitor from using public pages.
+      })
+      .finally(() => {
+        if (active) setState((previous) => ({ ...previous, sessionReady: true }));
+      });
+
+    return () => {
+      active = false;
+    };
   }, []);
 
   const showToast = (msg) => {
@@ -60,14 +111,59 @@ export function PetoryProvider({ children }) {
   const onRegPassword = (e) => update((s2) => ({ registerForm: { ...s2.registerForm, password: e.target.value } }));
   const onRegConfirm = (e) => update((s2) => ({ registerForm: { ...s2.registerForm, confirm: e.target.value } }));
 
-  const login = () => { update({ user: true }); showToast("เข้าสู่ระบบสำเร็จ ยินดีต้อนรับกลับ"); router.push("/petory/home"); };
-  const loginBtnClick = () => { update({ loginBtnPop: true }); setTimeout(() => { update({ loginBtnPop: false }); login(); }, 280); };
-  const register = () => { update({ user: true }); router.push("/petory/onboarding"); };
+  const goForgot = () => router.push("/petory/forgot");
+  const login = async () => {
+    update({ authPending: true, authError: null });
+    try {
+      const { account } = await authClient.login(s.loginForm.email, s.loginForm.password);
+      update({ user: account });
+      showToast("เข้าสู่ระบบสำเร็จ ยินดีต้อนรับกลับ");
+      router.push("/petory/home");
+    } catch (error) {
+      update({ authError: error.message });
+    } finally {
+      update({ authPending: false });
+    }
+  };
+  const loginBtnClick = () => {
+    if (s.authPending) return;
+    update({ loginBtnPop: true });
+    setTimeout(() => {
+      update({ loginBtnPop: false });
+      void login();
+    }, 280);
+  };
+  const register = async () => {
+    if (s.authPending) return;
+    if (s.registerForm.password !== s.registerForm.confirm) {
+      update({ authError: "รหัสผ่านและการยืนยันรหัสผ่านไม่ตรงกัน" });
+      return;
+    }
+
+    update({ authPending: true, authError: null });
+    try {
+      const { account } = await authClient.register(s.registerForm.name, s.registerForm.email, s.registerForm.password);
+      update({ user: account });
+      router.push("/petory/onboarding");
+    } catch (error) {
+      update({ authError: error.message });
+    } finally {
+      update({ authPending: false });
+    }
+  };
   const sendResetLink = () => { showToast("ส่งลิงก์รีเซ็ตรหัสผ่านไปที่อีเมลแล้ว"); router.push("/petory/login"); };
 
   const openLogoutConfirm = () => update((s2) => ({ modals: { ...s2.modals, logoutConfirm: true } }));
   const closeLogoutConfirm = () => update((s2) => ({ modals: { ...s2.modals, logoutConfirm: false } }));
-  const confirmLogout = () => { update((s2) => ({ user: null, modals: { ...s2.modals, logoutConfirm: false } })); router.push("/petory/login"); };
+  const confirmLogout = async () => {
+    try {
+      await authClient.logout();
+      update((s2) => ({ user: null, modals: { ...s2.modals, logoutConfirm: false } }));
+      router.push("/petory/login");
+    } catch (error) {
+      showToast(error.message);
+    }
+  };
 
   // ---- explore / feed filters ----
   const toggleSpeciesDropdown = () => update((s2) => ({ speciesDropdownOpen: !s2.speciesDropdownOpen }));
@@ -177,34 +273,47 @@ export function PetoryProvider({ children }) {
   };
   const editPet = (id) => {
     const pet = s.pets.find((p) => p.id === id);
+    if (!pet) return;
     update({ petForm: { id: pet.id, name: pet.name, species: pet.species, breed: pet.breed, age: String(pet.age), gender: pet.gender, size: pet.size, personality: pet.personality.slice(), bio: pet.bio, interestsRaw: pet.interests.join(", ") } });
     router.push(`/petory/pets/${id}/edit`);
   };
   const cancelPetForm = () => router.push(s.petForm.id ? `/petory/pets/${s.petForm.id}` : "/petory/pets");
-  const savePet = () => {
+  const savePet = async () => {
     const f = s.petForm;
     if (!f.name.trim()) { showToast("กรุณากรอกชื่อสัตว์เลี้ยง"); return; }
+    const age = Number(f.age);
+    if (!Number.isInteger(age) || age < 0 || age > 40) { showToast("กรุณากรอกอายุระหว่าง 0 ถึง 40 ปี"); return; }
     const interests = f.interestsRaw.split(",").map((x) => x.trim()).filter(Boolean);
-    if (f.id) {
-      update((s2) => ({ pets: s2.pets.map((p) => (p.id === f.id ? { ...p, name: f.name.toUpperCase(), species: f.species, breed: f.breed, age: Number(f.age) || p.age, gender: f.gender, size: f.size, personality: f.personality, bio: f.bio, interests } : p)) }));
-      showToast("บันทึกการแก้ไขแล้ว");
-      router.push(`/petory/pets/${f.id}`);
-    } else {
-      const id = "pet" + Date.now();
-      const photos = ["#E9C79A", "#D9A15B", "#B0B0AE", "#EDE0C8", "#C7A374"];
-      const newPet = { id, ownerId: "me", name: f.name.toUpperCase(), species: f.species, breed: f.breed, age: Number(f.age) || 1, gender: f.gender, size: f.size, personality: f.personality, bio: f.bio, interests, distance: 0, photo: photos[Math.floor(Math.random() * photos.length)] };
-      update((s2) => ({ pets: s2.pets.concat([newPet]) }));
-      showToast("เพิ่มสัตว์เลี้ยงเรียบร้อยแล้ว!");
-      router.push("/petory/pets");
+    const input = { name: f.name.trim(), species: f.species, breed: f.breed.trim(), age, gender: f.gender, size: f.size, personality: f.personality, bio: f.bio.trim(), interests };
+    update({ petPending: true });
+    try {
+      const response = f.id ? await petClient.update(f.id, input) : await petClient.create(input);
+      const pet = toPetView(response.pet, s.pets.filter((item) => item.ownerId === "me").length);
+      update((s2) => ({ pets: f.id ? s2.pets.map((item) => item.id === f.id ? pet : item) : s2.pets.concat([pet]) }));
+      showToast(f.id ? "บันทึกการแก้ไขแล้ว" : "เพิ่มสัตว์เลี้ยงเรียบร้อยแล้ว!");
+      router.push(f.id ? `/petory/pets/${f.id}` : "/petory/pets");
+    } catch (error) {
+      showToast(error.message);
+    } finally {
+      update({ petPending: false });
     }
   };
   const openDeletePet = (id) => update((s2) => ({ modals: { ...s2.modals, deletePet: true }, deletePetId: id || s2.petForm.id }));
   const closeDeletePet = () => update((s2) => ({ modals: { ...s2.modals, deletePet: false } }));
-  const confirmDeletePet = () => {
+  const confirmDeletePet = async () => {
     const id = s.deletePetId;
-    update((s2) => ({ pets: s2.pets.filter((p) => p.id !== id), modals: { ...s2.modals, deletePet: false } }));
-    showToast("ลบสัตว์เลี้ยงแล้ว");
-    router.push("/petory/pets");
+    if (!id) return;
+    update({ petPending: true });
+    try {
+      await petClient.remove(id);
+      update((s2) => ({ pets: s2.pets.filter((p) => p.id !== id), modals: { ...s2.modals, deletePet: false } }));
+      showToast("ลบสัตว์เลี้ยงแล้ว");
+      router.push("/petory/pets");
+    } catch (error) {
+      showToast(error.message);
+    } finally {
+      update({ petPending: false });
+    }
   };
 
   // ---- matching ----
@@ -290,6 +399,7 @@ export function PetoryProvider({ children }) {
   // ---- my profile ----
   const goEditProfile = () => {
     const me = s.users.find((u) => u.id === "me");
+    if (!me) return;
     update((s2) => ({ profileForm: { name: me.name, location: me.location, bio: me.bio, phone: me.phone, email: me.email }, modals: { ...s2.modals, editProfile: true } }));
   };
   const closeEditProfile = () => update((s2) => ({ modals: { ...s2.modals, editProfile: false } }));
@@ -298,17 +408,36 @@ export function PetoryProvider({ children }) {
   const onProfilePhone = (e) => update((s2) => ({ profileForm: { ...s2.profileForm, phone: e.target.value } }));
   const onProfileEmail = (e) => update((s2) => ({ profileForm: { ...s2.profileForm, email: e.target.value } }));
   const onProfileBio = (e) => update((s2) => ({ profileForm: { ...s2.profileForm, bio: e.target.value } }));
-  const saveProfile = () => {
+  const saveProfile = async () => {
     const f = s.profileForm;
-    update((s2) => ({ users: s2.users.map((u) => (u.id === "me" ? { ...u, name: f.name, location: f.location, bio: f.bio, phone: f.phone, email: f.email } : u)), modals: { ...s2.modals, editProfile: false } }));
-    showToast("บันทึกโปรไฟล์แล้ว");
+    update({ profilePending: true });
+    try {
+      const { account } = await authClient.updateProfile({
+        displayName: f.name,
+        locationLabel: f.location,
+        bio: f.bio,
+        phone: f.phone,
+      });
+      update((s2) => ({
+        user: account,
+        users: s2.users.map((u) => u.id === "me" ? {
+          ...u, name: account.display_name, location: account.location_label || "", bio: account.bio || "", phone: account.phone || "", email: account.email,
+        } : u),
+        modals: { ...s2.modals, editProfile: false },
+      }));
+      showToast("บันทึกโปรไฟล์แล้ว");
+    } catch (error) {
+      showToast(error.message);
+    } finally {
+      update({ profilePending: false });
+    }
   };
 
   const value = {
     state, update, showToast,
     goHome, goExplore, goMatching, goMessages, goMyPets, goProfile, goFollowing, goSettings, goNotifications,
     onLoginEmail, onLoginPassword, onRegName, onRegEmail, onRegPassword, onRegConfirm,
-    login, loginBtnClick, register, sendResetLink,
+    goForgot, login, loginBtnClick, register, sendResetLink,
     openLogoutConfirm, closeLogoutConfirm, confirmLogout,
     toggleSpeciesDropdown, selectFeedSpecies, onFeedSearch, toggleSearchOpen, onSearchBlur, setFeedCategory,
     toggleLike, toggleComments, onCommentDraft, submitComment, toggleSave, openPostDetail,

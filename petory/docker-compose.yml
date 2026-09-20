@@ -1,0 +1,22 @@
+services:
+  database:
+    image: postgis/postgis:17-3.5
+    # The upstream image currently publishes amd64 only for this tag. Docker
+    # Desktop emulates it on Apple Silicon during local development.
+    platform: linux/amd64
+    environment:
+      POSTGRES_DB: petory
+      POSTGRES_USER: petory
+      POSTGRES_PASSWORD: petory_dev_password
+    ports:
+      - "5433:5432"
+    volumes:
+      - petory-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U petory -d petory"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+volumes:
+  petory-postgres-data:

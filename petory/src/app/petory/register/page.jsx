@@ -15,7 +15,8 @@ export default function RegisterPage() {
           <input placeholder="Email" value={state.registerForm.email} onChange={onRegEmail} style={sx("padding:16px;border-radius:14px;border:2px solid #201C16;font-size:15px;background:#fff")} />
           <input placeholder="Password" type="password" value={state.registerForm.password} onChange={onRegPassword} style={sx("padding:16px;border-radius:14px;border:2px solid #201C16;font-size:15px;background:#fff")} />
           <input placeholder="Confirm Password" type="password" value={state.registerForm.confirm} onChange={onRegConfirm} style={sx("padding:16px;border-radius:14px;border:2px solid #201C16;font-size:15px;background:#fff")} />
-          <button onClick={register} style={sx("margin-top:8px;background:#201C16;color:#F5F1E8;font-weight:800;font-size:15px;letter-spacing:0.04em;text-transform:uppercase;padding:16px;border-radius:100px;border:none;cursor:pointer")}>Create Account</button>
+          {state.authError && <p role="alert" style={sx("margin:0;color:#B42318;font-weight:700;font-size:13px")}>{state.authError}</p>}
+          <button onClick={register} disabled={state.authPending} style={sx("margin-top:8px;background:#201C16;color:#F5F1E8;font-weight:800;font-size:15px;letter-spacing:0.04em;text-transform:uppercase;padding:16px;border-radius:100px;border:none;cursor:pointer")}>{state.authPending ? "Creating account..." : "Create Account"}</button>
           <div style={sx("text-align:center;font-size:14px;margin-top:6px")}>มีบัญชีอยู่แล้ว? <Link href="/petory/login" style={sx("text-decoration:underline;font-weight:700;cursor:pointer")}>Log In</Link></div>
         </div>
       </div>
