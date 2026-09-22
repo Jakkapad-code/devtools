@@ -26,7 +26,7 @@ export function initialState() {
       { id: "mike", name: "Mike Torres", color: "#7C9473", bio: "พาหมาไปทุกที่ที่ไปได้", location: "Bangkok" },
       { id: "kevin", name: "Kevin Park", color: "#B5566D", bio: "บ้านมีแมว 2 ตัว", location: "Bangkok" },
       { id: "aom", name: "Aom Supaporn", color: "#8B5FBF", bio: "ชอบทำขนมให้หมากิน", location: "Nonthaburi" },
-      { id: "me", name: "Jane Rivera", color: "#E3402B", bio: "New to Petory. Looking for playdates for my two.", location: "Bangkok", email: "jane@petory.co", phone: "081-234-5678", memberSince: "2024" },
+      { id: "me", name: "", color: "#E3402B", bio: "", location: "", email: "", phone: "", memberSince: "" },
     ],
     pets: [
       { id: "luna", ownerId: "sarah", name: "LUNA", species: "Dog", breed: "Golden Retriever", age: 2, gender: "Female", size: "Large", personality: ["Friendly", "Playful", "Energetic"], bio: "ชอบวิ่งเล่นในสวนตอนเช้าและงีบตอนบ่าย", interests: ["Walks", "Park", "Fetch"], distance: 3, photo: "#E9C79A" },
@@ -89,6 +89,7 @@ export function initialState() {
     commentDrafts: {},
     blockedUserIds: [],
     followingIds: ["sarah", "james"],
+    suggestedUsers: [],
     passedPetIds: [],
     lastPassedId: null,
     interestedPetIds: [],

@@ -59,6 +59,19 @@ export async function getCurrentAccount() {
   return result.rows[0] ?? null;
 }
 
+export async function getAccountById(accountId) {
+  const result = await query(
+    `SELECT a.id, a.email, a.display_name, a.bio, a.phone, a.location_label, a.avatar_url,
+            a.avatar_media_id AS "avatarMediaId", a.created_at,
+            (SELECT COUNT(*)::integer FROM follows f WHERE f.followed_id = a.id) AS "followerCount",
+            (SELECT COUNT(*)::integer FROM follows f WHERE f.follower_id = a.id) AS "followingCount"
+     FROM accounts a
+     WHERE a.id = $1 AND a.deleted_at IS NULL`,
+    [accountId]
+  );
+  return result.rows[0] ?? null;
+}
+
 export async function requireCurrentAccount() {
   const account = await getCurrentAccount();
   if (!account) throw new Error("Unauthorized");

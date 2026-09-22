@@ -75,10 +75,13 @@ export function PetoryProvider({ children }) {
             bio: payload.account.bio || "",
             phone: payload.account.phone || "",
             location: payload.account.location_label || "",
+            memberSince: new Date(payload.account.created_at).getFullYear().toString(),
           } : user),
         }));
 
-        const [{ pets }, { posts }] = await Promise.all([petClient.list(), postClient.list()]);
+        const [{ pets }, { posts }, { users: following }, { users: suggested }] = await Promise.all([
+          petClient.list(), postClient.list(), socialClient.following(), socialClient.suggested(),
+        ]);
         if (!active) return;
         setState((previous) => ({
           ...previous,
@@ -87,6 +90,8 @@ export function PetoryProvider({ children }) {
           users: previous.users.concat(posts
             .filter((post) => post.authorId !== payload.account.id && !previous.users.some((user) => user.id === post.authorId))
             .map((post) => ({ id: post.authorId, name: post.authorName, color: post.authorColor || "#2B5468", bio: "", location: "" }))),
+          followingIds: following.map((user) => user.id),
+          suggestedUsers: suggested,
         }));
       })
       .catch(() => {
@@ -191,6 +196,21 @@ export function PetoryProvider({ children }) {
   const onSearchBlur = () => { if (!s.feedFilter.search) update({ searchOpen: false }); };
   const setFeedCategory = (cat) => update((s2) => ({ feedFilter: { ...s2.feedFilter, category: cat } }));
 
+  const loadHomeFeed = async (category) => {
+    if (!s.user?.id) return;
+    try {
+      const { posts } = await postClient.list({ scope: "home", category, sort: "latest", limit: "20" });
+      update((s2) => ({
+        posts: posts.map((post) => toPostView(post, s.user.id)),
+        users: s2.users.concat(posts
+          .filter((post) => post.authorId !== s.user.id && !s2.users.some((user) => user.id === post.authorId))
+          .map((post) => ({ id: post.authorId, name: post.authorName, color: post.authorColor || "#2B5468", bio: "", location: "" }))),
+      }));
+    } catch (error) {
+      showToast(error.message);
+    }
+  };
+
   // ---- posts ----
   const toggleLike = async (id) => {
     const post = s.posts.find((item) => item.id === id);
@@ -235,7 +255,15 @@ export function PetoryProvider({ children }) {
   const toggleFollow = async (userId) => {
     if (!/^[0-9a-f-]{36}$/i.test(userId)) { showToast("ผู้ใช้นี้ยังเป็นข้อมูลตัวอย่าง"); return; }
     const willFollow = !s.followingIds.includes(userId);
-    try { await socialClient.setFollow(userId, willFollow); update((s2) => ({ followingIds: willFollow ? s2.followingIds.concat([userId]) : s2.followingIds.filter((id) => id !== userId) })); showToast(willFollow ? "ติดตามแล้ว" : "เลิกติดตามแล้ว"); } catch (error) { showToast(error.message); }
+    try {
+      await socialClient.setFollow(userId, willFollow);
+      update((s2) => ({
+        followingIds: willFollow ? s2.followingIds.concat([userId]) : s2.followingIds.filter((id) => id !== userId),
+        suggestedUsers: willFollow ? s2.suggestedUsers.filter((u) => u.id !== userId) : s2.suggestedUsers,
+        user: s2.user ? { ...s2.user, followingCount: (s2.user.followingCount || 0) + (willFollow ? 1 : -1) } : s2.user,
+      }));
+      showToast(willFollow ? "ติดตามแล้ว" : "เลิกติดตามแล้ว");
+    } catch (error) { showToast(error.message); }
   };
   const unfollowUser = (userId) => toggleFollow(userId);
 
@@ -501,7 +529,7 @@ export function PetoryProvider({ children }) {
     onLoginEmail, onLoginPassword, onRegName, onRegEmail, onRegPassword, onRegConfirm,
     goForgot, login, loginBtnClick, register, sendResetLink,
     openLogoutConfirm, closeLogoutConfirm, confirmLogout,
-    toggleSpeciesDropdown, selectFeedSpecies, onFeedSearch, toggleSearchOpen, onSearchBlur, setFeedCategory,
+    toggleSpeciesDropdown, selectFeedSpecies, onFeedSearch, toggleSearchOpen, onSearchBlur, setFeedCategory, loadHomeFeed,
     toggleLike, toggleComments, onCommentDraft, submitComment, toggleSave, openPostDetail,
     openUserProfile, toggleFollow, unfollowUser,
     openCreatePost, openCreatePostBlog, openEditPost, togglePostMenu, openDeletePost, closeDeletePost, confirmDeletePost,

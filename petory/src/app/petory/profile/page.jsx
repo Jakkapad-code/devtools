@@ -8,12 +8,28 @@ import { mediaClient } from "@/features/auth/client";
 export default function ProfilePage() {
   const { state: s, ...a } = usePetory();
   const [avatarPending, setAvatarPending] = useState(false);
+
+  if (!s.sessionReady) {
+    return (
+      <div style={sx("max-width:1100px;margin:0 auto;padding:clamp(20px,4vw,48px) clamp(20px,4vw,48px) 120px")}>
+        <div style={sx("display:grid;grid-template-columns:320px minmax(0,1fr);gap:24px;align-items:start")}>
+          <div style={sx("height:360px;border-radius:24px;background:#FFFFFFA0")} />
+          <div style={sx("display:flex;flex-direction:column;gap:24px")}>
+            <div style={sx("height:220px;border-radius:24px;background:#FFFFFFA0")} />
+            <div style={sx("height:160px;border-radius:24px;background:#FFFFFFA0")} />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const me = s.users.find((u) => u.id === "me");
   const myPets = s.pets.filter((p) => p.ownerId === "me");
   const myPosts = visiblePosts(s).filter((p) => p.authorId === "me");
   const savedPosts = visiblePosts(s).filter((p) => p.saved);
   const blockedUsers = s.blockedUserIds.map((id) => s.users.find((u) => u.id === id));
-  const handle = "@" + me.name.toLowerCase().replace(/[^a-z]/g, "");
+  const displayName = s.user?.display_name || "";
+  const handle = displayName ? "@" + displayName.toLowerCase().replace(/[^a-z]/g, "") : "";
   const avatarSrc = s.user?.avatarMediaId ? `/api/media/${s.user.avatarMediaId}` : AVATAR;
   const uploadAvatar = async (event) => {
     const file = event.target.files?.[0];
@@ -45,7 +61,9 @@ export default function ProfilePage() {
               <input type="file" accept="image/jpeg,image/png,image/webp" onChange={uploadAvatar} disabled={avatarPending} style={{ display: "none" }} />
               <span style={sx("position:absolute;bottom:-5px;right:-5px;background:#E3402B;color:#fff;border-radius:100px;padding:4px 7px;font-size:10px;font-weight:800")}>{avatarPending ? "..." : "แก้ไข"}</span>
             </label>
-            <h1 style={sx("font-family: 'Anton',sans-serif; font-size: 24px; text-transform: uppercase; margin: 14px 0 0; color: #452A1E")}>{me.name}</h1>
+            {displayName
+              ? <h1 style={sx("font-family: 'Anton',sans-serif; font-size: 24px; text-transform: uppercase; margin: 14px 0 0; color: #452A1E")}>{displayName}</h1>
+              : <div style={sx("width:140px;height:24px;border-radius:8px;background:#F1EDE4;margin-top:14px")} />}
             <div style={sx("font-size:13px;color:#8a8378;margin-top:4px")}>{handle} · {me.location}</div>
             <div style={sx("display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:14px")}>
               <span style={sx("background:#F4C9D6;color:#201C16;font-weight:700;font-size:12px;padding:6px 14px;border-radius:100px")}>เลี้ยงสัตว์ {myPets.length} ตัว</span>
@@ -57,11 +75,11 @@ export default function ProfilePage() {
                 <div style={sx("font-size:12px;font-weight:700")}>โพสต์</div>
               </div>
               <div style={sx("border-radius:14px;padding:10px 4px;text-align:center;box-shadow:0 2px 8px rgba(32,28,22,0.08);background-color:#FFFCF6")}>
-                <div style={sx("font-weight:800;font-size:17px;color:#E3402B")}>1.2K</div>
+                <div style={sx("font-weight:800;font-size:17px;color:#E3402B")}>{s.user?.followerCount ?? 0}</div>
                 <div style={sx("font-size:12px;font-weight:700")}>ผู้ติดตาม</div>
               </div>
               <div onClick={a.goFollowing} style={sx("border-radius:14px;padding:10px 4px;text-align:center;box-shadow:0 2px 8px rgba(32,28,22,0.08);background-color:#FFFCF6;cursor:pointer")}>
-                <div style={sx("font-weight:800;font-size:17px;color:#E3402B")}>{s.followingIds.length}</div>
+                <div style={sx("font-weight:800;font-size:17px;color:#E3402B")}>{s.user?.followingCount ?? 0}</div>
                 <div style={sx("font-size:12px;font-weight:700")}>กำลังติดตาม</div>
               </div>
             </div>

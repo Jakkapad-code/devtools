@@ -1,11 +1,24 @@
 "use client";
 import { sx, Hoverable } from "../ui";
 import { usePetory } from "../context";
-import { visiblePosts, mapPost } from "../helpers";
+import { visiblePosts, mapPost, hashColor } from "../helpers";
 import HomePostCard from "../components/HomePostCard";
 
 export default function HomePage() {
   const { state: s, ...a } = usePetory();
+
+  if (!s.sessionReady) {
+    return (
+      <div style={sx("max-width: 100%; margin: 0 auto; padding: clamp(20px,4vw,40px) clamp(20px,4vw,32px) 140px; display: flex; flex-wrap: wrap; justify-content: center; gap: 28px; align-items: flex-start; background-color: #FDE6B135")}>
+        <div style={sx("flex: 1 1 440px; max-width: 620px; min-width: 0; display: flex; flex-direction: column; gap: 22px")}>
+          {[0, 1, 2].map((i) => <div key={i} style={sx("height:260px;border-radius:22px;background:#FFFFFFA0")} />)}
+        </div>
+        <aside style={sx("flex: 0 1 360px; min-width: 300px; max-width: 380px; display: flex; flex-direction: column; gap: 20px; align-self: flex-start; position: sticky; top: 88px")}>
+          <div style={sx("height:150px;border-radius:22px;background:#FFFFFFA0")} />
+        </aside>
+      </div>
+    );
+  }
 
   const homePosts = visiblePosts(s).filter((p) => p.category === "story").map((p) => mapPost(s, a, p)).map((p) => ({
     ...p,
@@ -21,10 +34,11 @@ export default function HomePage() {
   }));
 
   const myPostsCount = visiblePosts(s).filter((p) => p.authorId === "me").length;
-  const me = s.users.find((u) => u.id === "me");
-  const homeProfile = { name: me.name, handle: "@" + me.name.toLowerCase().replace(/[^a-z]/g, ""), color: me.color, posts: myPostsCount, followers: "1.2K", following: s.followingIds.length };
+  const displayName = s.user?.display_name || "";
+  const avatarColor = s.user?.id ? hashColor(s.user.id) : "#E3402B";
+  const homeProfile = { name: displayName, handle: displayName ? "@" + displayName.toLowerCase().replace(/[^a-z]/g, "") : "", color: avatarColor, posts: myPostsCount, followers: s.user?.followerCount ?? 0, following: s.user?.followingCount ?? 0 };
   const trendingTags = ["อาหาร", "Pet Friendly", "การฝึก", "สุขภาพ", "มือใหม่"];
-  const suggestedOwners = s.users.filter((u) => u.id !== "me" && !s.followingIds.includes(u.id)).slice(0, 3).map((u) => ({ id: u.id, name: u.name, initial: u.name.charAt(0), color: u.color }));
+  const suggestedOwners = s.suggestedUsers.slice(0, 3).map((u) => ({ id: u.id, name: u.displayName, initial: u.displayName.charAt(0), color: hashColor(u.id) }));
   const createPostBtnAnim = s.createPostBtnPop ? "animation:createPostPop 0.28s ease" : "";
 
   return (
@@ -39,7 +53,9 @@ export default function HomePage() {
           <div onClick={a.goProfile} style={sx("display:flex;align-items:center;gap:12px;margin-bottom:16px;cursor:pointer")}>
             <div style={sx(`width:48px;height:48px;border-radius:50%;background:${homeProfile.color};flex:none;box-shadow:0 2px 8px rgba(32,28,22,0.08)`)} />
             <div style={sx("min-width:0")}>
-              <div style={sx("font-weight:800;font-size:15px")}>{homeProfile.name}</div>
+              {homeProfile.name
+                ? <div style={sx("font-weight:800;font-size:15px")}>{homeProfile.name}</div>
+                : <div style={sx("width:96px;height:15px;border-radius:6px;background:#EFEAE2")} />}
               <div style={sx("font-size:13px;color:#8a8378")}>{homeProfile.handle}</div>
             </div>
           </div>

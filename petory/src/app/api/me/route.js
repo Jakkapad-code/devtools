@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getCurrentAccount } from "@/server/auth/session";
+import { getAccountById, getCurrentAccount } from "@/server/auth/session";
 import { profileInputSchema } from "@/features/profile/schema";
 import { query } from "@/server/db/pool";
 import { jsonError } from "@/server/http/response";
@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 export async function GET() {
   const account = await getCurrentAccount();
   if (!account) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  return NextResponse.json({ account });
+  return NextResponse.json({ account: await getAccountById(account.id) });
 }
 
 export async function PATCH(request) {
