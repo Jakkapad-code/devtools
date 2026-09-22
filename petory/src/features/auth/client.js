@@ -38,6 +38,14 @@ export const authClient = {
   }),
 };
 
+export const mediaClient = {
+  uploadAvatar: (file) => {
+    const body = new FormData();
+    body.set("file", file);
+    return requestJson("/api/media/avatar", { method: "POST", body });
+  },
+};
+
 export const petClient = {
   list: () => requestJson("/api/pets"),
   create: (pet) => postJson("/api/pets", pet),
@@ -47,4 +55,50 @@ export const petClient = {
     body: JSON.stringify(pet),
   }),
   remove: (id) => requestJson(`/api/pets/${id}`, { method: "DELETE" }),
+};
+
+export const postClient = {
+  list: (filters = {}) => {
+    const params = new URLSearchParams();
+    Object.entries(filters).forEach(([key, value]) => { if (value) params.set(key, value); });
+    return requestJson(`/api/posts${params.size ? `?${params}` : ""}`);
+  },
+  create: (post) => postJson("/api/posts", post),
+  update: (id, post) => requestJson(`/api/posts/${id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(post) }),
+  remove: (id) => requestJson(`/api/posts/${id}`, { method: "DELETE" }),
+  setLike: (id, active) => requestJson(`/api/posts/${id}/like`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ active }) }),
+  setSave: (id, active) => requestJson(`/api/posts/${id}/save`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ active }) }),
+  addComment: (id, body) => postJson(`/api/posts/${id}/comments`, { body }),
+  report: (id, reason) => postJson(`/api/posts/${id}/report`, { reason }),
+};
+
+export const matchingClient = {
+  candidates: (filters) => {
+    const params = new URLSearchParams();
+    Object.entries(filters).forEach(([key, value]) => {
+      if (Array.isArray(value)) value.forEach((entry) => params.append(key, entry));
+      else if (value) params.set(key, value);
+    });
+    return requestJson(`/api/matching/candidates?${params}`);
+  },
+  interact: (actorPetId, targetPetId, action) => postJson("/api/matching/interactions", { actorPetId, targetPetId, action }),
+};
+
+export const conversationClient = {
+  list: () => requestJson("/api/conversations"),
+  messages: (id) => requestJson(`/api/conversations/${id}/messages`),
+  send: (id, body) => postJson(`/api/conversations/${id}/messages`, { body }),
+};
+
+export const notificationClient = {
+  list: () => requestJson("/api/notifications"),
+  markAllRead: () => postJson("/api/notifications/read", {}),
+};
+
+export const socialClient = {
+  following: () => requestJson("/api/following"),
+  setFollow: (id, active) => requestJson(`/api/users/${id}/follow`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ active }) }),
+  setBlock: (id, active) => requestJson(`/api/users/${id}/block`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ active }) }),
+  user: (id) => requestJson(`/api/users/${id}`),
+  report: (id, reason) => postJson(`/api/users/${id}/report`, { reason }),
 };

@@ -1,23 +1,23 @@
 "use client";
+import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { sx } from "../ui";
 import { usePetory } from "../context";
-import { userById, petById } from "../helpers";
+import { conversationClient } from "@/features/auth/client";
 
 export default function MessagesLayout({ children }) {
   const pathname = usePathname();
   const { state: s, openChat } = usePetory();
   const activeMatchId = pathname.startsWith("/petory/messages/") ? pathname.split("/petory/messages/")[1] : null;
+  const [conversations, setConversations] = useState([]);
 
-  const matchList = s.matches
-    .filter((m) => { const pet = petById(s, m.petId); return pet && s.blockedUserIds.indexOf(pet.ownerId) === -1; })
-    .slice().sort((a2, b2) => (b2.updatedAt || 0) - (a2.updatedAt || 0))
-    .map((m) => {
-      const pet = petById(s, m.petId);
-      const owner = userById(s, pet.ownerId);
-      const last = m.messages.length ? m.messages[m.messages.length - 1].text : "เริ่มการสนทนาได้เลย!";
-      return { ...m, petName: pet.name, ownerName: owner.name, photoBg: pet.photo, lastMessage: last, rowBorder: m.id === activeMatchId ? "#E3402B" : "transparent" };
-    });
+  useEffect(() => {
+    let active = true;
+    void conversationClient.list().then(({ conversations: rows }) => { if (active) setConversations(rows); }).catch(() => { if (active) setConversations([]); });
+    return () => { active = false; };
+  }, [pathname]);
+
+  const matchList = conversations.map((conversation, index) => ({ ...conversation, photoBg: ["#E9C79A", "#D9A15B", "#B0B0AE"][index % 3], lastMessage: conversation.lastMessage || "เริ่มการสนทนาได้เลย!", rowBorder: conversation.id === activeMatchId ? "#E3402B" : "transparent" }));
   const matchesEmpty = matchList.length === 0;
   const showList = !s.isMobile || !activeMatchId;
   const showChat = !s.isMobile || !!activeMatchId;
@@ -42,7 +42,7 @@ export default function MessagesLayout({ children }) {
                   <div style={sx("font-weight:800;font-size:14px")}>{row.petName} <span style={sx("font-weight:500;color:#8a8378;font-size:12px")}>· {row.ownerName}</span></div>
                   <div style={sx("font-size:12px;color:#4a453c;overflow:hidden;text-overflow:ellipsis;white-space:nowrap")}>{row.lastMessage}</div>
                 </div>
-                <div style={sx("font-size:11px;color:#8a8378;flex:none")}>{row.matchedAt}</div>
+                <div style={sx("font-size:11px;color:#8a8378;flex:none")}>Match</div>
               </div>
             ))}
           </div>

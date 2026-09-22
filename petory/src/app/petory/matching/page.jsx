@@ -1,31 +1,31 @@
 "use client";
-import { sx, Hoverable } from "../ui";
+import { useEffect, useState } from "react";
+import { sx, Hoverable, ImageSlot } from "../ui";
 import { usePetory } from "../context";
-import { userById } from "../helpers";
-import { PERSONALITY_OPTIONS } from "../constants";
+import { demoPetImage } from "../helpers";
 import Dropdown from "../components/Dropdown";
+import { matchingClient } from "@/features/auth/client";
 
 export default function MatchingPage() {
   const { state: s, ...a } = usePetory();
   const mf = s.matchFilters;
-
-  const resolvedIds = s.passedPetIds.concat(s.interestedPetIds).concat(s.matches.map((m) => m.petId));
-  let queue = s.pets.filter((p) => p.ownerId !== "me" && s.blockedUserIds.indexOf(p.ownerId) === -1 && resolvedIds.indexOf(p.id) === -1);
-  queue = queue.filter((p) => {
-    if (mf.species !== "all" && p.species !== mf.species) return false;
-    if (mf.gender !== "any" && p.gender !== mf.gender) return false;
-    if (mf.size !== "all" && p.size !== mf.size) return false;
-    if (mf.personality.length && !mf.personality.some((x) => p.personality.indexOf(x) !== -1)) return false;
-    if (mf.distance !== "anywhere" && p.distance > Number(mf.distance)) return false;
-    return true;
-  });
-  const cp = queue[0];
-  const stackRotations = [{ rotate: "rotate(-7deg) translateX(-14px)", z: 2 }, { rotate: "rotate(7deg) translateX(14px)", z: 1 }];
-  const matchStackPets = queue.slice(1, 3).map((p, i) => ({ ...p, ...stackRotations[i] }));
-
   const myPetsForMatching = s.pets.filter((p) => p.ownerId === "me");
   const matchingPetId = s.matchingPetId || (myPetsForMatching[0] && myPetsForMatching[0].id) || "";
   const matchingPetName = (myPetsForMatching.find((p) => p.id === matchingPetId) || {}).name || "";
+  const [candidates, setCandidates] = useState([]);
+
+  useEffect(() => {
+    if (!matchingPetId) return;
+    let active = true;
+    void matchingClient.candidates({ actorPetId: matchingPetId, species: mf.species, gender: mf.gender, size: mf.size, personality: mf.personality })
+      .then(({ candidates: rows }) => { if (active) setCandidates(rows.map((pet, index) => ({ ...pet, photo: ["#E9C79A", "#D9A15B", "#B0B0AE"][index % 3], photoSrc: demoPetImage(pet.name, index), distance: "—" }))); })
+      .catch(() => { if (active) setCandidates([]); });
+    return () => { active = false; };
+  }, [matchingPetId, mf.species, mf.gender, mf.size, mf.personality]);
+
+  const cp = candidates[0];
+  const stackRotations = [{ rotate: "rotate(-7deg) translateX(-14px)", z: 2 }, { rotate: "rotate(7deg) translateX(14px)", z: 1 }];
+  const matchStackPets = candidates.slice(1, 3).map((p, i) => ({ ...p, ...stackRotations[i] }));
   const petDropdownOptions = myPetsForMatching.map((p) => ({
     label: p.name.charAt(0) + p.name.slice(1).toLowerCase(), onSelect: () => a.selectMatchingPet(p.id),
     optionStyle: "padding:9px 14px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;" + (p.id === matchingPetId ? "background:#FDEDEA;color:#E4412C" : "color:#201C16"),
@@ -62,10 +62,10 @@ export default function MatchingPage() {
         <>
           <div style={sx("position:relative;width:100%;max-width:480px;margin-top:-28px")}>
             {matchStackPets.map((sp, i) => (
-              <div key={i} style={sx(`position:absolute;top:0;left:0;right:0;height:340px;background:${sp.photo};border-radius:24px;box-shadow:rgba(0, 0, 0, 0.19) 0px 10px 20px, rgba(0, 0, 0, 0.23) 0px 6px 6px;transform:${sp.rotate};z-index:${sp.z};display:flex;align-items:center;justify-content:center;font-family:monospace;font-size:12px;text-transform:uppercase;opacity:0.85`)}>{sp.name} PHOTO</div>
+              <div key={i} style={sx(`position:absolute;top:0;left:0;right:0;height:340px;background:${sp.photo};border-radius:24px;box-shadow:rgba(0, 0, 0, 0.19) 0px 10px 20px, rgba(0, 0, 0, 0.23) 0px 6px 6px;transform:${sp.rotate};z-index:${sp.z};display:flex;align-items:center;justify-content:center;font-family:monospace;font-size:12px;text-transform:uppercase;opacity:0.85`)}><ImageSlot shape="rect" placeholder={`${sp.name} PHOTO`} src={sp.photoSrc} style="width:100%;height:100%;border-radius:24px" /></div>
             ))}
             <Hoverable style="position:relative;z-index:5;width:100%;background:#fff;border:none;border-radius:24px;overflow:hidden;box-shadow:rgba(0, 0, 0, 0.19) 0px 10px 20px, rgba(0, 0, 0, 0.23) 0px 6px 6px;transition:transform 0.25s ease,box-shadow 0.25s ease" hoverStyle="transform:translateY(-8px) rotate(-1.2deg);box-shadow:rgba(0, 0, 0, 0.25) 0px 16px 32px, rgba(0, 0, 0, 0.22) 0px 8px 10px">
-              <div style={sx(`height:340px;background:${cp.photo};display:flex;align-items:center;justify-content:center;font-family:monospace;font-size:13px;text-transform:uppercase`)}>{cp.name} PHOTO</div>
+              <div style={sx(`height:340px;background:${cp.photo};display:flex;align-items:center;justify-content:center;font-family:monospace;font-size:13px;text-transform:uppercase`)}><ImageSlot shape="rect" placeholder={`${cp.name} PHOTO`} src={cp.photoSrc} style="width:100%;height:100%" /></div>
               <div style={sx("padding:22px")}>
                 <h2 style={sx("font-family:'Anton',sans-serif;font-size:clamp(2rem,7vw,2.8rem);text-transform:uppercase;margin:0")}>{cp.name}</h2>
                 <div style={sx("font-size:15px;color:#4a453c;margin-bottom:6px")}>{cp.breed}</div>
@@ -76,16 +76,16 @@ export default function MatchingPage() {
                   ))}
                 </div>
                 <div style={sx("font-weight:800;font-size:12px;text-transform:uppercase;color:#8a8378;margin-bottom:6px")}>Interests: {cp.interests.join(", ")}</div>
-                <div style={sx("font-size:13px;color:#8a8378")}>Owner: <span style={sx("font-weight:700;color:#201C16")}>{userById(s, cp.ownerId).name}</span></div>
+                <div style={sx("font-size:13px;color:#8a8378")}>Owner: <span style={sx("font-weight:700;color:#201C16")}>{cp.ownerName}</span></div>
               </div>
             </Hoverable>
           </div>
           <div style={sx("display:flex;gap:20px;margin-top:24px")}>
-            <Hoverable as="button" onClick={() => a.interestPet(cp.id)} style="width:76px;height:76px;border-radius:50%;border:none;background:#E3402B;font-family:'Anton',sans-serif;font-size:11px;cursor:pointer;color:#fff;box-shadow:rgba(0, 0, 0, 0.19) 0px 10px 20px, rgba(0, 0, 0, 0.23) 0px 6px 6px;transition:transform 0.15s ease" hoverStyle="transform:scale(1.08)" activeStyle="transform:scale(0.8) rotate(-6deg)">LIKE</Hoverable>
+            <Hoverable as="button" onClick={async () => { if (await a.interestPet(cp.id)) setCandidates((items) => items.filter((item) => item.id !== cp.id)); }} style="width:76px;height:76px;border-radius:50%;border:none;background:#E3402B;font-family:'Anton',sans-serif;font-size:11px;cursor:pointer;color:#fff;box-shadow:rgba(0, 0, 0, 0.19) 0px 10px 20px, rgba(0, 0, 0, 0.23) 0px 6px 6px;transition:transform 0.15s ease" hoverStyle="transform:scale(1.08)" activeStyle="transform:scale(0.8) rotate(-6deg)">LIKE</Hoverable>
             <Hoverable as="button" onClick={() => a.openReportUser(cp.ownerId)} style="width:56px;height:56px;align-self:center;border-radius:50%;border:none;background:#F0C93B;cursor:pointer;color:#201C16;box-shadow:rgba(0, 0, 0, 0.19) 0px 10px 20px, rgba(0, 0, 0, 0.23) 0px 6px 6px;transition:transform 0.15s ease;display:flex;align-items:center;justify-content:center" hoverStyle="transform:scale(1.08)" activeStyle="transform:scale(0.85)">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
             </Hoverable>
-            <Hoverable as="button" onClick={() => a.passPet(cp.id)} style="width:76px;height:76px;border-radius:50%;border:none;background:#fff;font-family:'Anton',sans-serif;font-size:13px;cursor:pointer;color:#201C16;box-shadow:rgba(0, 0, 0, 0.19) 0px 10px 20px, rgba(0, 0, 0, 0.23) 0px 6px 6px;transition:transform 0.15s ease" hoverStyle="transform:scale(1.08)" activeStyle="transform:scale(0.85)">PASS</Hoverable>
+            <Hoverable as="button" onClick={async () => { if (await a.passPet(cp.id)) setCandidates((items) => items.filter((item) => item.id !== cp.id)); }} style="width:76px;height:76px;border-radius:50%;border:none;background:#fff;font-family:'Anton',sans-serif;font-size:13px;cursor:pointer;color:#201C16;box-shadow:rgba(0, 0, 0, 0.19) 0px 10px 20px, rgba(0, 0, 0, 0.23) 0px 6px 6px;transition:transform 0.15s ease" hoverStyle="transform:scale(1.08)" activeStyle="transform:scale(0.85)">PASS</Hoverable>
           </div>
         </>
       ) : (

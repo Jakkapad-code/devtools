@@ -22,7 +22,7 @@ export default function PetProfilePage({ params }) {
       <BackLink fallbackHref="/petory/pets">← All Pets</BackLink>
       <div style={sx("border-radius:24px;margin-top:20px;background:#fff;box-shadow:rgba(0, 0, 0, 0.15) 0px 15px 25px, rgba(0, 0, 0, 0.05) 0px 5px 10px;overflow:hidden")}>
         <div style={sx(`height:340px;border-radius:24px 24px 0 0;overflow:hidden;background:${p.photo}`)}>
-          {isMine && <ImageSlot shape="rect" placeholder="ลากรูปมาวาง" style="width:100%;height:100%" />}
+          <ImageSlot shape="rect" placeholder={`${p.name} PHOTO`} src={p.photoSrc} style="width:100%;height:100%" />
         </div>
         <div style={sx("padding:24px 28px 28px")}>
           <div style={sx("display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:20px")}>

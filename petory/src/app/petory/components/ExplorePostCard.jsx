@@ -5,7 +5,7 @@ export default function ExplorePostCard({ post }) {
   return (
     <Hoverable style="border:none;border-radius:18px;overflow:hidden;background:#fff;display:flex;flex-direction:column;box-shadow:rgba(0, 0, 0, 0.16) 0px 1px 4px;transition:transform 0.2s ease,box-shadow 0.2s ease" hoverStyle="transform:translateY(-4px);box-shadow:rgba(0, 0, 0, 0.22) 0px 4px 12px">
       <div onClick={post.onOpen} style={sx(`cursor:pointer;height:220px;background:${post.photoBg}`)}>
-        {post.isMine && <ImageSlot shape="rect" placeholder="ลากรูปมาวาง" style="width:100%;height:100%" />}
+        <ImageSlot shape="rect" placeholder="รูปโพสต์" src={post.photoSrc} style="width:100%;height:100%" />
       </div>
       <div style={sx("padding:16px;display:flex;flex-direction:column;gap:10px;flex:1")}>
         <div style={sx("display:flex;gap:8px;flex-wrap:wrap")}>

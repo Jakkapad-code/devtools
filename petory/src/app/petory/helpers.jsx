@@ -1,6 +1,27 @@
 import { CATEGORY_LABELS, BLOG_TITLES } from "./constants";
 
 const PHOTO_PALETTE = ["#E9C79A", "#D9A15B", "#EDE0C8", "#C7A374", "#D8B48A", "#B0B0AE", "#9CA3A8", "#E3C08A"];
+const DEMO_IMAGE_PATHS = [
+  "/uploads/demo/mochi-shiba.jpg",
+  "/uploads/demo/luna-golden.jpg",
+  "/uploads/demo/milo-cat.jpg",
+  "/uploads/demo/bella-corgi.jpg",
+  "/uploads/demo/buddy-dog.jpg",
+];
+
+export function demoPetImage(name, fallbackIndex = 0) {
+  const normalizedName = String(name || "").toLowerCase();
+  if (["mochi"].includes(normalizedName)) return DEMO_IMAGE_PATHS[0];
+  if (["luna"].includes(normalizedName)) return DEMO_IMAGE_PATHS[1];
+  if (["milo", "simba", "whiskers", "tom", "coffee", "leo"].includes(normalizedName)) return DEMO_IMAGE_PATHS[2];
+  if (["bella", "coco", "daisy"].includes(normalizedName)) return DEMO_IMAGE_PATHS[3];
+  return DEMO_IMAGE_PATHS[fallbackIndex % DEMO_IMAGE_PATHS.length];
+}
+
+export function demoPostImage(id) {
+  const hash = String(id).split("").reduce((sum, char) => sum + char.charCodeAt(0), 0);
+  return DEMO_IMAGE_PATHS[hash % DEMO_IMAGE_PATHS.length];
+}
 
 export function hashColor(id) {
   return PHOTO_PALETTE[Math.abs(id.split("").reduce((a, c) => a + c.charCodeAt(0), 0)) % PHOTO_PALETTE.length];
@@ -36,7 +57,7 @@ export function mapPost(state, actions, p) {
     petName: pet ? pet.name : null,
     onAuthorClick: () => actions.openUserProfile(p.authorId),
     categoryLabel: categoryLabel(p),
-    photoBg: hashColor(p.id), imageLabel: pet ? pet.name + " PHOTO" : "POST PHOTO",
+    photoBg: hashColor(p.id), photoSrc: p.photoSrc || pet?.photoSrc || demoPostImage(p.id), imageLabel: pet ? pet.name + " PHOTO" : "POST PHOTO",
     likeColor: p.liked ? "#E3402B" : "#201C16", likeAnim: state.lastLikedId === p.id ? "animation:createPostPop 0.32s ease-out" : "",
     saveColor: p.saved ? "#E3402B" : "#8a8378", saveLabel: p.saved ? "Saved" : "Save",
     commentCount: p.comments.length,

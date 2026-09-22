@@ -48,7 +48,8 @@ export async function getCurrentAccount() {
   if (!token) return null;
 
   const result = await query(
-    `SELECT a.id, a.email, a.display_name, a.bio, a.phone, a.location_label, a.avatar_url, a.created_at
+    `SELECT a.id, a.email, a.display_name, a.bio, a.phone, a.location_label, a.avatar_url,
+            a.avatar_media_id AS "avatarMediaId", a.created_at
      FROM sessions s
      JOIN accounts a ON a.id = s.account_id
      WHERE s.token_hash = $1 AND s.expires_at > NOW() AND a.deleted_at IS NULL`,

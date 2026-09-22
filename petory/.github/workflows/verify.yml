@@ -1,0 +1,36 @@
+name: Verify
+on:
+  pull_request:
+  push:
+    branches: [main]
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgis/postgis:17-3.5
+        env:
+          POSTGRES_DB: petory
+          POSTGRES_USER: petory
+          POSTGRES_PASSWORD: petory
+        ports: ["5433:5432"]
+        options: >-
+          --health-cmd "pg_isready -U petory -d petory"
+          --health-interval 10s --health-timeout 5s --health-retries 5
+    env:
+      DATABASE_URL: postgresql://petory:petory@127.0.0.1:5433/petory
+      DATABASE_SSL: "false"
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+      ALLOWED_ORIGINS: http://localhost:3000
+      SESSION_SECRET: ci-session-secret-that-is-longer-than-32-characters
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run db:migrate
+      - run: npm run lint
+      - run: npm run test
+      - run: npm run build

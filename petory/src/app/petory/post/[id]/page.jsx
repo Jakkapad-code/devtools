@@ -2,7 +2,7 @@
 import { use } from "react";
 import { sx, Hoverable, ImageSlot } from "../../ui";
 import { usePetory } from "../../context";
-import { userById, petById, hashColor, categoryLabel } from "../../helpers";
+import { userById, petById, hashColor, categoryLabel, demoPostImage } from "../../helpers";
 import { BLOG_TITLES } from "../../constants";
 import BackLink from "../../components/BackLink";
 
@@ -21,7 +21,7 @@ export default function PostDetailPage({ params }) {
       <BackLink fallbackHref="/petory/explore" />
       <div style={sx("border-radius:24px;padding:24px;margin-top:20px;background:#fff;box-shadow: rgba(0, 0, 0, 0.15) 0px 15px 25px, rgba(0, 0, 0, 0.05) 0px 5px 10px")}>
         <div style={sx(`height:320px;border-radius:16px;margin-bottom:20px;overflow:hidden;background:${hashColor(p.id)}`)}>
-          {isMine && <ImageSlot shape="rect" placeholder={pet ? pet.name + " PHOTO" : "POST PHOTO"} style="width:100%;height:100%" />}
+          <ImageSlot shape="rect" placeholder={pet ? pet.name + " PHOTO" : "POST PHOTO"} src={p.photoSrc || pet?.photoSrc || demoPostImage(p.id)} style="width:100%;height:100%" />
         </div>
         <div style={sx("display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px")}>
           <span style={sx("background:#F4C9D6;color:#201C16;font-weight:700;font-size:12px;padding:6px 14px;border-radius:100px")}>{categoryLabel(p)}</span>

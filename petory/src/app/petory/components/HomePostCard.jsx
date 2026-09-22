@@ -30,7 +30,7 @@ export default function HomePostCard({ post }) {
         </div>
       </div>
       <div style={sx(`position:relative;height:390px;background:${post.photoBg}`)}>
-        {post.isMine && <ImageSlot shape="rect" placeholder={post.imageLabel} style="width:100%;height:100%" />}
+        <ImageSlot shape="rect" placeholder={post.imageLabel} src={post.photoSrc} style="width:100%;height:100%" />
       </div>
       <div style={sx("padding: 16px; display: flex; flex-direction: column; gap: 14px; background-color: #FFFFFFED")}>
         <div style={sx("display:flex;align-items:center;gap:10px")}>

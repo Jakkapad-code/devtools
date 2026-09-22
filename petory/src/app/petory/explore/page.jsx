@@ -1,36 +1,69 @@
 "use client";
+import { useEffect, useMemo, useState } from "react";
 import { sx, Hoverable } from "../ui";
 import { usePetory } from "../context";
 import { visiblePosts, mapPost } from "../helpers";
 import { CATEGORY_LABELS, BLOG_TITLES } from "../constants";
 import Dropdown from "../components/Dropdown";
 import ExplorePostCard from "../components/ExplorePostCard";
+import { postClient } from "@/features/auth/client";
 
 const CATEGORY_ICONS = { all: "🐾", recipe: "🍲", place: "📍", clinic: "🏥", tips: "💡" };
 const SPECIES_LABELS = { all: "ประเภทสัตว์", Dog: "หมา", Cat: "แมว", other: "อื่นๆ" };
 
+function toViewPost(post, accountId) {
+  return {
+    ...post, authorId: post.authorId === accountId ? "me" : post.authorId, location: post.locationLabel || "", time: "now",
+    likes: post.likes || 0, liked: Boolean(post.liked), saved: Boolean(post.saved), comments: post.comments || [],
+  };
+}
+
 export default function ExplorePage() {
   const { state: s, ...a } = usePetory();
   const ff = s.feedFilter;
+  const [remotePosts, setRemotePosts] = useState([]);
+  const [nextCursor, setNextCursor] = useState(null);
+  const [loadingMore, setLoadingMore] = useState(false);
 
-  const generalCats = ["tips", "event", "question"];
-  let feedPosts = visiblePosts(s).filter((p) => {
-    if (p.category === "story") return false;
-    if (ff.category === "tips") return generalCats.includes(p.category);
-    if (ff.category !== "all" && p.category !== ff.category) return false;
-    if (ff.search && ff.search.trim()) {
-      const q = ff.search.trim().toLowerCase();
-      const hay = ((p.caption || "") + " " + (BLOG_TITLES[p.id] || "")).toLowerCase();
-      if (!hay.includes(q)) return false;
+  useEffect(() => {
+    if (!s.user?.id) return;
+    let active = true;
+    void postClient.list({ scope: "explore", category: ff.category, species: ff.species, sort: ff.sort, search: ff.search, limit: "20" })
+      .then(({ posts, nextCursor: cursor }) => {
+        if (!active) return;
+        setRemotePosts(posts.map((post) => toViewPost(post, s.user.id)));
+        setNextCursor(cursor);
+      })
+      .catch(() => { if (active) setRemotePosts([]); });
+    return () => { active = false; };
+  }, [s.user?.id, ff.category, ff.species, ff.sort, ff.search]);
+
+  const loadMore = async () => {
+    if (!nextCursor || loadingMore) return;
+    setLoadingMore(true);
+    try {
+      const { posts, nextCursor: cursor } = await postClient.list({ scope: "explore", category: ff.category, species: ff.species, sort: ff.sort, search: ff.search, cursor: nextCursor, limit: "20" });
+      setRemotePosts((current) => current.concat(posts.map((post) => toViewPost(post, s.user.id)).filter((post) => !current.some((existing) => existing.id === post.id))));
+      setNextCursor(cursor);
+    } finally {
+      setLoadingMore(false);
     }
-    return true;
-  });
-  feedPosts = feedPosts.slice().sort((x, y) => (ff.sort === "popular" ? y.likes - x.likes : 0)).map((p) => mapPost(s, a, p)).map((p) => ({
+  };
+
+  const feedState = useMemo(() => ({
+    ...s,
+    posts: remotePosts,
+    users: s.users.concat(remotePosts
+      .filter((post) => post.authorId !== "me" && !s.users.some((user) => user.id === post.authorId))
+      .map((post) => ({ id: post.authorId, name: post.authorName, color: post.authorColor || "#2B5468", bio: "", location: "" }))),
+  }), [s, remotePosts]);
+
+  const feedPosts = visiblePosts(feedState).map((p) => mapPost(feedState, a, p)).map((p) => ({
     ...p,
     title: p.title || BLOG_TITLES[p.id] || p.caption, excerpt: p.caption,
     authorInitial: p.authorName.charAt(0), likeFill: p.liked ? "#E3402B" : "none",
   }));
-  const feedEmpty = feedPosts.length === 0;
+  const feedEmpty = s.sessionReady && feedPosts.length === 0;
 
   const categoryFilters = ["all", "recipe", "place", "clinic", "tips"].map((cat) => ({
     icon: CATEGORY_ICONS[cat], key: cat, label: cat === "all" ? "ทั้งหมด" : CATEGORY_LABELS[cat],
@@ -81,6 +114,7 @@ export default function ExplorePage() {
         <div style={sx("display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:22px")}>
           {feedPosts.map((post) => <ExplorePostCard key={post.id} post={post} />)}
         </div>
+        {nextCursor && <div style={sx("display:flex;justify-content:center;padding:32px 0 8px")}><button onClick={loadMore} disabled={loadingMore} style={sx(`border:2px solid #201C16;background:#fff;color:#201C16;border-radius:100px;padding:12px 24px;font-weight:800;font-size:13px;text-transform:uppercase;cursor:${loadingMore ? "wait" : "pointer"};opacity:${loadingMore ? "0.65" : "1"}`)}>{loadingMore ? "Loading..." : "Load More"}</button></div>}
       </div>
     </div>
   );

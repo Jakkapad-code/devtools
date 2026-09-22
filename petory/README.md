@@ -23,6 +23,20 @@ To start the local PostgreSQL/PostGIS service, run `docker compose up -d` and
 then `npm run db:migrate`. The compose file exposes PostgreSQL on port `5433`
 to avoid conflicting with another local database.
 
+## Demo data for local development
+
+After migration, populate the local development database with a connected demo
+community: 8 owners, 8 pets, 32 posts, follows, likes, comments, matches,
+chats, and notifications.
+
+```bash
+npm run db:seed
+```
+
+Log in with `aom@petory.local` (or `niran@petory.local`) and password
+`petory-demo-password-2026`. The script refuses `NODE_ENV=production` and only
+removes earlier `@petory.local` demo accounts before it rebuilds the dataset.
+
 ## Quality checks
 
 Run these before creating a pull request or deploying:

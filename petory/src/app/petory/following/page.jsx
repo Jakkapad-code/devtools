@@ -1,12 +1,14 @@
 "use client";
+import { useEffect, useState } from "react";
 import { sx } from "../ui";
 import { usePetory } from "../context";
-import { userById } from "../helpers";
 import BackLink from "../components/BackLink";
+import { socialClient } from "@/features/auth/client";
 
 export default function FollowingPage() {
   const { state: s, ...a } = usePetory();
-  const followingUsers = s.followingIds.map((id) => userById(s, id));
+  const [followingUsers, setFollowingUsers] = useState([]);
+  useEffect(() => { let active = true; void socialClient.following().then(({ users }) => { if (active) setFollowingUsers(users.map((user) => ({ id: user.id, name: user.displayName, location: user.locationLabel || "", color: "#2B5468" }))); }).catch(() => { if (active) setFollowingUsers([]); }); return () => { active = false; }; }, []);
 
   return (
     <div style={sx("max-width:700px;margin:0 auto;padding:clamp(20px,4vw,48px) clamp(20px,4vw,48px) 120px")}>
@@ -22,7 +24,7 @@ export default function FollowingPage() {
                 <div style={sx("font-weight:800;font-size:14px")}>{fu.name}</div>
                 <div style={sx("font-size:12px;color:#8a8378")}>{fu.location}</div>
               </div>
-              <button onClick={() => a.unfollowUser(fu.id)} style={sx("border:1px solid #201C16;background:#fff;border-radius:100px;padding:8px 16px;font-weight:800;font-size:12px;cursor:pointer")}>เลิกติดตาม</button>
+              <button onClick={async () => { await a.unfollowUser(fu.id); setFollowingUsers((users) => users.filter((user) => user.id !== fu.id)); }} style={sx("border:1px solid #201C16;background:#fff;border-radius:100px;padding:8px 16px;font-weight:800;font-size:12px;cursor:pointer")}>เลิกติดตาม</button>
             </div>
           ))}
         </div>

@@ -114,6 +114,7 @@ export function initialState() {
     authError: null,
     petPending: false,
     profilePending: false,
+    postPending: false,
     postForm: { caption: "", petId: "", category: "story", location: "", title: "" },
     postFormIsBlog: false,
     petForm: { id: null, name: "", species: "Dog", breed: "", age: "", gender: "Male", size: "Medium", personality: [], bio: "", interestsRaw: "" },

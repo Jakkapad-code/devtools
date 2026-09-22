@@ -79,7 +79,7 @@ export default function Modals() {
               buttonStyle="width:100%;box-sizing:border-box;padding:14px 16px;border-radius:12px;border:2px solid #201C16;font-size:14px;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:space-between;text-align:left"
               panelStyle="position:absolute;top:calc(100% + 6px);left:0;right:0;background:#fff;border-radius:12px;border:2px solid #201C16;padding:6px;z-index:10;display:flex;flex-direction:column;gap:2px;max-height:220px;overflow-y:auto" />
             <div style={sx("display:flex;gap:12px;margin-top:6px")}>
-              <Hoverable as="button" onClick={a.submitPost} style="flex:1;background:#E3402B;color:#fff;font-weight:800;font-size:14px;text-transform:uppercase;padding:15px;border-radius:100px;border:none;cursor:pointer;transition:transform 0.15s ease,box-shadow 0.15s ease" hoverStyle="transform:translateY(-2px);box-shadow:0 6px 14px rgba(227,64,43,0.4)" activeStyle="transform:scale(0.95)">Post</Hoverable>
+              <Hoverable as="button" disabled={s.postPending} onClick={a.submitPost} style={`flex:1;background:#E3402B;color:#fff;font-weight:800;font-size:14px;text-transform:uppercase;padding:15px;border-radius:100px;border:none;cursor:${s.postPending ? "wait" : "pointer"};opacity:${s.postPending ? "0.7" : "1"};transition:transform 0.15s ease,box-shadow 0.15s ease`} hoverStyle="transform:translateY(-2px);box-shadow:0 6px 14px rgba(227,64,43,0.4)" activeStyle="transform:scale(0.95)">{s.postPending ? "Posting..." : "Post"}</Hoverable>
               <button onClick={a.closeCreatePost} style={sx("border:none;box-shadow:rgba(0, 0, 0, 0.19) 0px 10px 20px, rgba(0, 0, 0, 0.23) 0px 6px 6px;background:#fff;font-weight:700;font-size:14px;text-transform:uppercase;padding:15px 22px;border-radius:100px;cursor:pointer")}>Cancel</button>
             </div>
           </div>
@@ -179,7 +179,7 @@ export default function Modals() {
             ))}
           </div>
           <div style={sx("display:flex;gap:12px")}>
-            <button onClick={a.submitReport} style={sx("flex:1;background:#E3402B;color:#fff;font-weight:800;font-size:14px;text-transform:uppercase;padding:14px;border-radius:100px;border:none;cursor:pointer")}>Submit</button>
+            <button onClick={a.submitReport} disabled={!s.reportReason} style={sx(`flex:1;background:#E3402B;color:#fff;font-weight:800;font-size:14px;text-transform:uppercase;padding:14px;border-radius:100px;border:none;cursor:${s.reportReason ? "pointer" : "not-allowed"};opacity:${s.reportReason ? 1 : 0.5}`)}>Submit</button>
             <button onClick={a.closeReportPost} style={sx("border:2px solid #201C16;background:#fff;font-weight:700;font-size:14px;text-transform:uppercase;padding:14px 20px;border-radius:100px;cursor:pointer")}>Cancel</button>
           </div>
         </ModalShell>

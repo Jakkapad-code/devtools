@@ -1,15 +1,29 @@
 "use client";
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { initialState, MUTUAL_CANDIDATES } from "./constants";
-import { authClient, petClient } from "@/features/auth/client";
+import { initialState } from "./constants";
+import { demoPetImage } from "./helpers";
+import { authClient, matchingClient, petClient, postClient, socialClient } from "@/features/auth/client";
 
 const PetoryContext = createContext(null);
 
 const PET_COLORS = ["#E9C79A", "#D9A15B", "#B0B0AE", "#EDE0C8", "#C7A374"];
 
 function toPetView(pet, index = 0) {
-  return { ...pet, ownerId: "me", photo: PET_COLORS[index % PET_COLORS.length], distance: 0 };
+  return { ...pet, ownerId: "me", photo: PET_COLORS[index % PET_COLORS.length], photoSrc: demoPetImage(pet.name, index), distance: 0 };
+}
+
+function toPostView(post, currentAccountId) {
+  return {
+    ...post,
+    authorId: post.authorId === currentAccountId ? "me" : post.authorId,
+    location: post.locationLabel || "",
+    likes: post.likes || 0,
+    liked: Boolean(post.liked),
+    saved: Boolean(post.saved),
+    comments: post.comments || [],
+    time: "now",
+  };
 }
 
 export function usePetory() {
@@ -64,11 +78,15 @@ export function PetoryProvider({ children }) {
           } : user),
         }));
 
-        const { pets } = await petClient.list();
+        const [{ pets }, { posts }] = await Promise.all([petClient.list(), postClient.list()]);
         if (!active) return;
         setState((previous) => ({
           ...previous,
           pets: previous.pets.filter((pet) => pet.ownerId !== "me").concat(pets.map(toPetView)),
+          posts: posts.map((post) => toPostView(post, payload.account.id)),
+          users: previous.users.concat(posts
+            .filter((post) => post.authorId !== payload.account.id && !previous.users.some((user) => user.id === post.authorId))
+            .map((post) => ({ id: post.authorId, name: post.authorName, color: post.authorColor || "#2B5468", bio: "", location: "" }))),
         }));
       })
       .catch(() => {
@@ -174,24 +192,39 @@ export function PetoryProvider({ children }) {
   const setFeedCategory = (cat) => update((s2) => ({ feedFilter: { ...s2.feedFilter, category: cat } }));
 
   // ---- posts ----
-  const toggleLike = (id) => {
-    update((s2) => ({ posts: s2.posts.map((p) => (p.id === id ? { ...p, liked: !p.liked, likes: p.likes + (p.liked ? -1 : 1) } : p)), lastLikedId: id }));
-    setTimeout(() => update((s2) => (s2.lastLikedId === id ? { lastLikedId: null } : {})), 350);
+  const toggleLike = async (id) => {
+    const post = s.posts.find((item) => item.id === id);
+    if (!post) return;
+    try {
+      const { post: result } = await postClient.setLike(id, !post.liked);
+      update((s2) => ({ posts: s2.posts.map((item) => item.id === id ? { ...item, liked: result.liked, likes: result.likes } : item), lastLikedId: id }));
+      setTimeout(() => update((s2) => (s2.lastLikedId === id ? { lastLikedId: null } : {})), 350);
+    } catch (error) {
+      showToast(error.message);
+    }
   };
   const toggleComments = (id) => update((s2) => ({ openComments: s2.openComments.includes(id) ? s2.openComments.filter((x) => x !== id) : s2.openComments.concat([id]) }));
   const onCommentDraft = (id, e) => { const val = e.target.value; update((s2) => ({ commentDrafts: { ...s2.commentDrafts, [id]: val } })); };
-  const submitComment = (id) => {
+  const submitComment = async (id) => {
     const text = (s.commentDrafts[id] || "").trim();
     if (!text) return;
-    update((s2) => ({
-      posts: s2.posts.map((p) => (p.id === id ? { ...p, comments: p.comments.concat([{ user: "Jane Rivera", color: "#E3402B", text }]) } : p)),
-      commentDrafts: { ...s2.commentDrafts, [id]: "" },
-    }));
+    try {
+      const { comment } = await postClient.addComment(id, text);
+      update((s2) => ({ posts: s2.posts.map((p) => p.id === id ? { ...p, comments: p.comments.concat([comment]) } : p), commentDrafts: { ...s2.commentDrafts, [id]: "" } }));
+    } catch (error) {
+      showToast(error.message);
+    }
   };
-  const toggleSave = (id) => {
-    let saved;
-    update((s2) => ({ posts: s2.posts.map((p) => { if (p.id === id) { saved = !p.saved; return { ...p, saved }; } return p; }) }));
-    setTimeout(() => showToast(saved ? "บันทึกโพสต์แล้ว" : "เอาออกจากบันทึกแล้ว"), 0);
+  const toggleSave = async (id) => {
+    const post = s.posts.find((item) => item.id === id);
+    if (!post) return;
+    try {
+      const { post: result } = await postClient.setSave(id, !post.saved);
+      update((s2) => ({ posts: s2.posts.map((item) => item.id === id ? { ...item, saved: result.saved } : item) }));
+      showToast(result.saved ? "บันทึกโพสต์แล้ว" : "เอาออกจากบันทึกแล้ว");
+    } catch (error) {
+      showToast(error.message);
+    }
   };
   const openPostDetail = (id) => router.push(`/petory/post/${id}`);
 
@@ -199,13 +232,12 @@ export function PetoryProvider({ children }) {
     if (userId === "me") { goProfile(); return; }
     router.push(`/petory/users/${userId}`);
   };
-  const toggleFollow = (userId) => {
+  const toggleFollow = async (userId) => {
+    if (!/^[0-9a-f-]{36}$/i.test(userId)) { showToast("ผู้ใช้นี้ยังเป็นข้อมูลตัวอย่าง"); return; }
     const willFollow = !s.followingIds.includes(userId);
-    update((s2) => ({ followingIds: s2.followingIds.includes(userId) ? s2.followingIds.filter((id) => id !== userId) : s2.followingIds.concat([userId]) }));
-    const u = s.users.find((x) => x.id === userId);
-    showToast((willFollow ? "ติดตาม " : "เลิกติดตาม ") + (u ? u.name : "") + (willFollow ? " แล้ว" : ""));
+    try { await socialClient.setFollow(userId, willFollow); update((s2) => ({ followingIds: willFollow ? s2.followingIds.concat([userId]) : s2.followingIds.filter((id) => id !== userId) })); showToast(willFollow ? "ติดตามแล้ว" : "เลิกติดตามแล้ว"); } catch (error) { showToast(error.message); }
   };
-  const unfollowUser = (userId) => { update((s2) => ({ followingIds: s2.followingIds.filter((id) => id !== userId) })); showToast("เลิกติดตามแล้ว"); };
+  const unfollowUser = (userId) => toggleFollow(userId);
 
   // ---- create / edit post modal ----
   const openCreatePost = (isBlog) => update((s2) => ({ modals: { ...s2.modals, createPost: true }, postFormIsBlog: !!isBlog, editingPostId: null, postForm: { caption: "", petId: "", category: isBlog ? "tips" : "story", location: "", title: "" } }));
@@ -218,11 +250,20 @@ export function PetoryProvider({ children }) {
   const togglePostMenu = (id, e) => { if (e) e.stopPropagation(); update((s2) => ({ postMenuOpenId: s2.postMenuOpenId === id ? null : id })); };
   const openDeletePost = (id) => update((s2) => ({ modals: { ...s2.modals, deletePost: true }, deletePostId: id, postMenuOpenId: null }));
   const closeDeletePost = () => update((s2) => ({ modals: { ...s2.modals, deletePost: false } }));
-  const confirmDeletePost = () => {
+  const confirmDeletePost = async () => {
     const id = s.deletePostId;
-    update((s2) => ({ posts: s2.posts.filter((p) => p.id !== id), modals: { ...s2.modals, deletePost: false } }));
-    showToast("ลบโพสต์แล้ว");
-    router.push("/petory/explore");
+    if (!id) return;
+    update({ postPending: true });
+    try {
+      await postClient.remove(id);
+      update((s2) => ({ posts: s2.posts.filter((p) => p.id !== id), modals: { ...s2.modals, deletePost: false } }));
+      showToast("ลบโพสต์แล้ว");
+      router.push("/petory/explore");
+    } catch (error) {
+      showToast(error.message);
+    } finally {
+      update({ postPending: false });
+    }
   };
   const onCreatePostBtnClick = () => { update({ createPostBtnPop: true }); setTimeout(() => { update({ createPostBtnPop: false }); openCreatePost(false); }, 280); };
   const closeCreatePost = () => update((s2) => ({ modals: { ...s2.modals, createPost: false } }));
@@ -230,23 +271,27 @@ export function PetoryProvider({ children }) {
   const onPostTitle = (e) => update((s2) => ({ postForm: { ...s2.postForm, title: e.target.value } }));
   const selectPostPet = (id) => update((s2) => ({ postForm: { ...s2.postForm, petId: id }, fieldDropdownOpen: null }));
   const togglePostPetDropdown = () => update((s2) => ({ fieldDropdownOpen: s2.fieldDropdownOpen === "postPet" ? null : "postPet" }));
-  const submitPost = () => {
+  const submitPost = async () => {
     const f = s.postForm;
     if (!f.caption.trim()) { showToast("กรุณาเขียนแคปชั่นก่อนโพสต์"); return; }
     const editId = s.editingPostId;
-    if (editId) {
+    const input = { category: f.category, caption: f.caption.trim(), title: f.title.trim(), locationLabel: f.location.trim(), petId: f.petId || null };
+    const isBlog = s.postFormIsBlog;
+    update({ postPending: true });
+    try {
+      const response = editId ? await postClient.update(editId, input) : await postClient.create(input);
+      const post = toPostView(response.post, s.user?.id);
       update((s2) => ({
-        posts: s2.posts.map((p) => (p.id === editId ? { ...p, caption: f.caption, petId: f.petId || null, category: f.category, location: f.location, title: f.title || null } : p)),
+        posts: editId ? s2.posts.map((item) => item.id === editId ? post : item) : [post].concat(s2.posts),
         modals: { ...s2.modals, createPost: false }, editingPostId: null,
       }));
-      showToast("บันทึกการแก้ไขแล้ว");
-      return;
+      showToast(editId ? "บันทึกการแก้ไขแล้ว" : "โพสต์เรียบร้อยแล้ว!");
+      router.push(isBlog ? "/petory/explore" : "/petory/home");
+    } catch (error) {
+      showToast(error.message);
+    } finally {
+      update({ postPending: false });
     }
-    const newPost = { id: "p" + Date.now(), category: f.category, petId: f.petId || null, authorId: "me", caption: f.caption, title: f.title || null, likes: 0, liked: false, saved: false, comments: [], time: "now" };
-    const isBlog = s.postFormIsBlog;
-    update((s2) => ({ posts: [newPost].concat(s2.posts), modals: { ...s2.modals, createPost: false } }));
-    showToast("โพสต์เรียบร้อยแล้ว!");
-    router.push(isBlog ? "/petory/explore" : "/petory/home");
   };
 
   // ---- pets ----
@@ -329,20 +374,28 @@ export function PetoryProvider({ children }) {
     const personality = has ? s2.matchFilters.personality.filter((p) => p !== label) : s2.matchFilters.personality.concat([label]);
     return { matchFilters: { ...s2.matchFilters, personality } };
   });
-  const passPet = (id) => update((s2) => ({ passedPetIds: s2.passedPetIds.concat([id]), lastPassedId: id }));
-  const interestPet = (id) => {
-    if (MUTUAL_CANDIDATES.indexOf(id) !== -1) {
-      const matchId = "m" + Date.now();
-      update((s2) => ({
-        interestedPetIds: s2.interestedPetIds.concat([id]),
-        matches: s2.matches.concat([{ id: matchId, petId: id, matchedAt: "วันนี้", updatedAt: Date.now(), messages: [] }]),
-        newMatchPetId: id,
-        modals: { ...s2.modals, mutualMatch: true },
-      }));
-    } else {
-      update((s2) => ({ interestedPetIds: s2.interestedPetIds.concat([id]) }));
-      showToast("ส่งความสนใจแล้ว รอการตอบรับ");
-    }
+  const passPet = async (id) => {
+    const actorPetId = s.matchingPetId || s.pets.find((pet) => pet.ownerId === "me")?.id;
+    if (!actorPetId) { showToast("กรุณาเพิ่มสัตว์เลี้ยงก่อนเริ่ม matching"); return false; }
+    try {
+      await matchingClient.interact(actorPetId, id, "pass");
+      update((s2) => ({ passedPetIds: s2.passedPetIds.concat([id]), lastPassedId: id }));
+      return true;
+    } catch (error) { showToast(error.message); return false; }
+  };
+  const interestPet = async (id) => {
+    const actorPetId = s.matchingPetId || s.pets.find((pet) => pet.ownerId === "me")?.id;
+    if (!actorPetId) { showToast("กรุณาเพิ่มสัตว์เลี้ยงก่อนเริ่ม matching"); return false; }
+    try {
+      const { interaction } = await matchingClient.interact(actorPetId, id, "interest");
+      if (interaction.matchId) {
+        update((s2) => ({ interestedPetIds: s2.interestedPetIds.concat([id]), matches: s2.matches.concat([{ id: interaction.matchId, petId: id, matchedAt: "วันนี้", updatedAt: Date.now(), messages: [] }]), newMatchPetId: id, modals: { ...s2.modals, mutualMatch: true } }));
+      } else {
+        update((s2) => ({ interestedPetIds: s2.interestedPetIds.concat([id]) }));
+        showToast("ส่งความสนใจแล้ว รอการตอบรับ");
+      }
+      return true;
+    } catch (error) { showToast(error.message); return false; }
   };
   const closeMutualMatch = () => update((s2) => ({ modals: { ...s2.modals, mutualMatch: false }, newMatchPetId: null }));
   const startChatFromModal = () => {
@@ -382,18 +435,27 @@ export function PetoryProvider({ children }) {
   const openReportPost = (postId) => update((s2) => ({ modals: { ...s2.modals, reportPost: true }, reportTargetType: "post", reportTargetId: postId, reportReason: "", postMenuOpenId: null }));
   const closeReportPost = () => update((s2) => ({ modals: { ...s2.modals, reportPost: false } }));
   const setReportReason = (r) => update({ reportReason: r });
-  const submitReport = () => {
-    if (!s.reportReason) return;
-    update((s2) => ({ modals: { ...s2.modals, reportUser: false, reportPost: false } }));
-    showToast("ขอบคุณสำหรับรายงาน เราจะตรวจสอบโดยเร็ว");
+  const submitReport = async () => {
+    if (!s.reportReason || !s.reportTargetId) {
+      showToast("กรุณาเลือกรายการรายงาน");
+      return;
+    }
+    if (s.reportTargetType === "user") { try { await socialClient.report(s.reportTargetId, s.reportReason); update((s2) => ({ modals: { ...s2.modals, reportUser: false }, reportReason: "" })); showToast("ขอบคุณสำหรับรายงาน เราจะตรวจสอบโดยเร็ว"); } catch (error) { showToast(error.message); } return; }
+    if (s.reportTargetType !== "post") return;
+    try {
+      await postClient.report(s.reportTargetId, s.reportReason);
+      update((s2) => ({ modals: { ...s2.modals, reportPost: false }, reportReason: "" }));
+      showToast("ขอบคุณสำหรับรายงาน เราจะตรวจสอบโดยเร็ว");
+    } catch (error) {
+      showToast(error.message);
+    }
   };
-  const unblockUser = (userId) => { update((s2) => ({ blockedUserIds: s2.blockedUserIds.filter((id) => id !== userId) })); showToast("ปลดบล็อกผู้ใช้แล้ว"); };
+  const unblockUser = async (userId) => { try { await socialClient.setBlock(userId, false); update((s2) => ({ blockedUserIds: s2.blockedUserIds.filter((id) => id !== userId) })); showToast("ปลดบล็อกผู้ใช้แล้ว"); } catch (error) { showToast(error.message); } };
   const openBlock = (userId) => update((s2) => ({ modals: { ...s2.modals, block: true }, blockTargetUserId: userId, postMenuOpenId: null }));
   const closeBlock = () => update((s2) => ({ modals: { ...s2.modals, block: false } }));
-  const confirmBlock = () => {
+  const confirmBlock = async () => {
     const uid = s.blockTargetUserId;
-    update((s2) => ({ blockedUserIds: s2.blockedUserIds.concat([uid]), modals: { ...s2.modals, block: false } }));
-    showToast("บล็อกผู้ใช้แล้ว");
+    try { await socialClient.setBlock(uid, true); update((s2) => ({ blockedUserIds: s2.blockedUserIds.concat([uid]), followingIds: s2.followingIds.filter((id) => id !== uid), modals: { ...s2.modals, block: false } })); showToast("บล็อกผู้ใช้แล้ว"); } catch (error) { showToast(error.message); }
   };
 
   // ---- my profile ----

@@ -1,16 +1,38 @@
 "use client";
+import { useState } from "react";
 import { sx, Hoverable, ImageSlot, AVATAR } from "../ui";
 import { usePetory } from "../context";
 import { visiblePosts, hashColor, categoryLabel, postTitle } from "../helpers";
+import { mediaClient } from "@/features/auth/client";
 
 export default function ProfilePage() {
   const { state: s, ...a } = usePetory();
+  const [avatarPending, setAvatarPending] = useState(false);
   const me = s.users.find((u) => u.id === "me");
   const myPets = s.pets.filter((p) => p.ownerId === "me");
   const myPosts = visiblePosts(s).filter((p) => p.authorId === "me");
   const savedPosts = visiblePosts(s).filter((p) => p.saved);
   const blockedUsers = s.blockedUserIds.map((id) => s.users.find((u) => u.id === id));
   const handle = "@" + me.name.toLowerCase().replace(/[^a-z]/g, "");
+  const avatarSrc = s.user?.avatarMediaId ? `/api/media/${s.user.avatarMediaId}` : AVATAR;
+  const uploadAvatar = async (event) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+    setAvatarPending(true);
+    try {
+      const { mediaId } = await mediaClient.uploadAvatar(file);
+      a.update((current) => ({
+        user: { ...current.user, avatarMediaId: mediaId },
+        users: current.users.map((user) => user.id === "me" ? { ...user, avatarMediaId: mediaId } : user),
+      }));
+      a.showToast("อัปโหลดรูปโปรไฟล์แล้ว");
+    } catch (error) {
+      a.showToast(error.message);
+    } finally {
+      setAvatarPending(false);
+    }
+  };
 
   return (
     <div style={sx("max-width:1100px;margin:0 auto;padding:clamp(20px,4vw,48px) clamp(20px,4vw,48px) 120px")}>
@@ -18,9 +40,11 @@ export default function ProfilePage() {
         <div style={sx("background:#fff;border-radius:24px;overflow:hidden;box-shadow:rgba(0, 0, 0, 0.16) 0px 1px 4px")}>
           <div style={sx("height: 64px; background-color: #452A1E")} />
           <div style={sx("padding:0 28px 28px;display:flex;flex-direction:column;align-items:center;text-align:center;margin-top:-46px")}>
-            <div style={sx("width:96px;height:96px;border-radius:50%;border:4px solid #fff;box-shadow:0 4px 12px rgba(32,28,22,0.18)")}>
-              <ImageSlot shape="circle" placeholder="รูปโปรไฟล์" src={AVATAR} style="width:100%;height:100%" />
-            </div>
+            <label title="อัปโหลดรูปโปรไฟล์" style={sx("width:96px;height:96px;border-radius:50%;border:4px solid #fff;box-shadow:0 4px 12px rgba(32,28,22,0.18);position:relative;cursor:pointer")}>
+              <ImageSlot shape="circle" placeholder="รูปโปรไฟล์" src={avatarSrc} style="width:100%;height:100%" />
+              <input type="file" accept="image/jpeg,image/png,image/webp" onChange={uploadAvatar} disabled={avatarPending} style={{ display: "none" }} />
+              <span style={sx("position:absolute;bottom:-5px;right:-5px;background:#E3402B;color:#fff;border-radius:100px;padding:4px 7px;font-size:10px;font-weight:800")}>{avatarPending ? "..." : "แก้ไข"}</span>
+            </label>
             <h1 style={sx("font-family: 'Anton',sans-serif; font-size: 24px; text-transform: uppercase; margin: 14px 0 0; color: #452A1E")}>{me.name}</h1>
             <div style={sx("font-size:13px;color:#8a8378;margin-top:4px")}>{handle} · {me.location}</div>
             <div style={sx("display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:14px")}>
