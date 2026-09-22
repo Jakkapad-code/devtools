@@ -43,8 +43,8 @@ export default function PostDetailPage({ params }) {
               </>
             ) : (
               <>
-                <Hoverable as="button" onClick={() => a.openReportPost(p.id)} style="border:1px solid #b8b2a6;background:#fff;border-radius:100px;padding:8px 16px;font-weight:800;font-size:12px;cursor:pointer;transition:all 0.2s ease" hoverStyle="background:#201C16;color:#fff;border-color:#201C16;transform:translateY(-2px)">Report post</Hoverable>
-                <Hoverable as="button" onClick={() => a.openBlock(p.authorId)} style="border:1px solid #b8b2a6;background:#fff;border-radius:100px;padding:8px 16px;font-weight:800;font-size:12px;cursor:pointer;transition:all 0.2s ease" hoverStyle="background:#E3402B;color:#fff;border-color:#E3402B;transform:translateY(-2px)">Block user</Hoverable>
+                <Hoverable as="button" onClick={() => a.openReportPost(p.id)} style="border:1px solid #b8b2a6;background:#fff;border-radius:100px;padding:8px 16px;font-weight:800;font-size:12px;cursor:pointer;transition:all 0.2s ease" hoverStyle="background:#201C16;color:#fff;border:1px solid #201C16;transform:translateY(-2px)">Report post</Hoverable>
+                <Hoverable as="button" onClick={() => a.openBlock(p.authorId)} style="border:1px solid #b8b2a6;background:#fff;border-radius:100px;padding:8px 16px;font-weight:800;font-size:12px;cursor:pointer;transition:all 0.2s ease" hoverStyle="background:#E3402B;color:#fff;border:1px solid #E3402B;transform:translateY(-2px)">Block user</Hoverable>
               </>
             )}
           </div>

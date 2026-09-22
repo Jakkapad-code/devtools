@@ -85,7 +85,7 @@ export default function ProfilePage() {
             </div>
           </div>
           <div style={sx("padding:0 28px 28px")}>
-            <Hoverable as="button" onClick={a.goEditProfile} style="margin-top: 18px; width: 100%; border: none; color: #fff; border-radius: 100px; padding: 12px; font-weight: 800; font-size: 13px; cursor: pointer; box-shadow: 0 4px 12px rgba(227,64,43,0.3); background-color: #DD3E2A" hoverStyle="background:#c8351f">แก้ไขข้อมูลคนเลี้ยง</Hoverable>
+            <Hoverable as="button" onClick={a.goEditProfile} style="margin-top: 18px; width: 100%; border: none; color: #fff; border-radius: 100px; padding: 12px; font-weight: 800; font-size: 13px; cursor: pointer; box-shadow: 0 4px 12px rgba(227,64,43,0.3); background-color: #DD3E2A" hoverStyle="background-color:#c8351f">แก้ไขข้อมูลคนเลี้ยง</Hoverable>
           </div>
         </div>
 

@@ -36,8 +36,8 @@ export default function PetProfilePage({ params }) {
                 </>
               ) : (
                 <>
-                  <Hoverable as="button" onClick={() => a.openReportUser(p.ownerId)} style="border:1px solid #b8b2a6;background:#fff;border-radius:100px;padding:10px 18px;font-weight:800;font-size:12px;cursor:pointer;transition:all 0.2s ease" hoverStyle="background:#201C16;color:#fff;border-color:#201C16;transform:translateY(-2px)">Report</Hoverable>
-                  <Hoverable as="button" onClick={() => a.openBlock(p.ownerId)} style="border:1px solid #b8b2a6;background:#fff;border-radius:100px;padding:10px 18px;font-weight:800;font-size:12px;cursor:pointer;transition:all 0.2s ease" hoverStyle="background:#E3402B;color:#fff;border-color:#E3402B;transform:translateY(-2px)">Block</Hoverable>
+                  <Hoverable as="button" onClick={() => a.openReportUser(p.ownerId)} style="border:1px solid #b8b2a6;background:#fff;border-radius:100px;padding:10px 18px;font-weight:800;font-size:12px;cursor:pointer;transition:all 0.2s ease" hoverStyle="background:#201C16;color:#fff;border:1px solid #201C16;transform:translateY(-2px)">Report</Hoverable>
+                  <Hoverable as="button" onClick={() => a.openBlock(p.ownerId)} style="border:1px solid #b8b2a6;background:#fff;border-radius:100px;padding:10px 18px;font-weight:800;font-size:12px;cursor:pointer;transition:all 0.2s ease" hoverStyle="background:#E3402B;color:#fff;border:1px solid #E3402B;transform:translateY(-2px)">Block</Hoverable>
                 </>
               )}
             </div>
