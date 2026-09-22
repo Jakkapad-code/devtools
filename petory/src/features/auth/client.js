@@ -48,6 +48,7 @@ export const mediaClient = {
 
 export const petClient = {
   list: () => requestJson("/api/pets"),
+  get: (id) => requestJson(`/api/pets/${id}`),
   create: (pet) => postJson("/api/pets", pet),
   update: (id, pet) => requestJson(`/api/pets/${id}`, {
     method: "PUT",

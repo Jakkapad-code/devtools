@@ -33,6 +33,19 @@ export async function getOwnedPet(ownerId, petId) {
   return result.rows[0] ?? null;
 }
 
+/** Any pet a viewer is allowed to look at — their own, or another member's when neither has blocked the other. */
+export async function getVisiblePet(viewerId, petId) {
+  const result = await query(
+    `SELECT ${petFields}, a.display_name AS "ownerName"
+     FROM pets p
+     JOIN accounts a ON a.id = p.owner_id
+     WHERE p.id = $1 AND p.deleted_at IS NULL AND a.deleted_at IS NULL
+       AND NOT EXISTS (SELECT 1 FROM blocks b WHERE (b.blocker_id = $2 AND b.blocked_id = p.owner_id) OR (b.blocker_id = p.owner_id AND b.blocked_id = $2))`,
+    [petId, viewerId]
+  );
+  return result.rows[0] ?? null;
+}
+
 export async function createPet(ownerId, input) {
   const result = await query(
     `INSERT INTO pets (owner_id, name, species, breed, gender, size, birth_date, bio, personality, interests)

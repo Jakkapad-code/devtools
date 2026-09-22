@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { petIdSchema, petInputSchema } from "@/features/pets/schema";
 import { getCurrentAccount } from "@/server/auth/session";
-import { deleteOwnedPet, getOwnedPet, updateOwnedPet } from "@/server/pets/repository";
+import { deleteOwnedPet, getVisiblePet, updateOwnedPet } from "@/server/pets/repository";
 import { jsonError } from "@/server/http/response";
 import { requireSameOrigin } from "@/server/security/origin";
 
@@ -21,7 +21,7 @@ export async function GET(_request, context) {
   const resolved = await accountAndPetId(context);
   if (resolved.error) return resolved.error;
 
-  const pet = await getOwnedPet(resolved.account.id, resolved.petId);
+  const pet = await getVisiblePet(resolved.account.id, resolved.petId);
   if (!pet) return jsonError("Pet not found", 404);
   return NextResponse.json({ pet });
 }

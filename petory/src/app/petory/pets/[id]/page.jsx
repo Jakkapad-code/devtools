@@ -1,18 +1,38 @@
 "use client";
-import { use } from "react";
+import { use, useEffect, useState } from "react";
 import { sx, Hoverable, ImageSlot } from "../../ui";
 import { usePetory } from "../../context";
-import { userById } from "../../helpers";
+import { demoPetImage, hashColor } from "../../helpers";
 import BackLink from "../../components/BackLink";
+import { petClient } from "@/features/auth/client";
 
 export default function PetProfilePage({ params }) {
   const { id } = use(params);
   const { state: s, ...a } = usePetory();
-  const p = s.pets.find((pp) => pp.id === id);
+  const localPet = s.pets.find((pp) => pp.id === id);
+  // undefined while loading, null when the pet cannot be viewed.
+  const [remotePet, setRemotePet] = useState(undefined);
+
+  useEffect(() => {
+    if (localPet) return;
+    let active = true;
+    void petClient.get(id)
+      .then(({ pet }) => { if (active) setRemotePet({ ...pet, photo: hashColor(pet.id), photoSrc: demoPetImage(pet.name) }); })
+      .catch(() => { if (active) setRemotePet(null); });
+    return () => { active = false; };
+  }, [id, localPet]);
+
+  const p = localPet || remotePet;
+  if (p === undefined) {
+    return (
+      <div style={sx("max-width:900px;margin:0 auto;padding:clamp(20px,4vw,48px) clamp(20px,4vw,48px) 120px")}>
+        <div style={sx("height:340px;border-radius:24px;background:#FFFFFFA0;margin-top:44px")} />
+      </div>
+    );
+  }
   if (!p) return <div style={sx("max-width:900px;margin:0 auto;padding:48px;text-align:center")}>ไม่พบสัตว์เลี้ยงนี้</div>;
 
-  const owner = userById(s, p.ownerId);
-  const isMine = p.ownerId === "me";
+  const isMine = p.ownerId === "me" || p.ownerId === s.user?.id;
   const speciesLabel = p.species === "Dog" ? "หมา" : p.species === "Cat" ? "แมว" : "อื่นๆ";
   const genderLabel = p.gender === "Male" ? "ผู้" : "เมีย";
   const weightLabel = p.weight ? p.weight + " กก." : "—";

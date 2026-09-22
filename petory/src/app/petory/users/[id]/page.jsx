@@ -11,11 +11,16 @@ export default function UserProfilePage({ params }) {
   const { state: s, ...a } = usePetory();
   // undefined while loading, null when the account does not exist.
   const [account, setAccount] = useState(undefined);
+  const [pets, setPets] = useState([]);
 
   useEffect(() => {
     let active = true;
     void socialClient.user(id)
-      .then(({ user }) => { if (active) setAccount(user); })
+      .then(({ user, pets: ownedPets }) => {
+        if (!active) return;
+        setAccount(user);
+        setPets(ownedPets.map((pet) => ({ ...pet, photo: hashColor(pet.id) })));
+      })
       .catch(() => { if (active) setAccount(null); });
     return () => { active = false; };
   }, [id]);
@@ -31,7 +36,6 @@ export default function UserProfilePage({ params }) {
 
   const u = { id: account.id, name: account.displayName, color: hashColor(account.id), bio: account.bio || "", location: account.locationLabel || "" };
 
-  const pets = s.pets.filter((p) => p.ownerId === u.id);
   const posts = visiblePosts(s).filter((p) => p.authorId === u.id);
   const isFollowing = s.followingIds.includes(u.id);
   const isBlocked = s.blockedUserIds.includes(u.id);
