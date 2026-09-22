@@ -39,8 +39,9 @@ export default function HomePostCard({ post }) {
               <svg width="24" height="24" viewBox="0 0 24 24" fill={post.likeFill} stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round"><path d="M12 20.3 3.5 12C1.6 10 1.8 6.7 4 5c1.9-1.5 4.6-1.2 6.2.6L12 7.5l1.8-1.9c1.6-1.8 4.3-2.1 6.2-.6 2.2 1.7 2.4 5 .5 7L12 20.3z" /></svg>
             </span>
           </button>
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M4 12a8 8 0 1 1 3.2 6.4L4 20l1.3-3.4A7.9 7.9 0 0 1 4 12z" /></svg>
-          <button onClick={post.onToggleComments} style={sx("background:none;border:none;width:44px;height:44px;cursor:pointer;color:#201C16;display:flex;align-items:center;justify-content:center;padding:0;transition:transform 0.15s ease")} />
+          <button onClick={post.onToggleComments} style={sx("background:none;border:none;width:44px;height:44px;cursor:pointer;color:#201C16;display:flex;align-items:center;justify-content:center;padding:0;transition:transform 0.15s ease")}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M4 12a8 8 0 1 1 3.2 6.4L4 20l1.3-3.4A7.9 7.9 0 0 1 4 12z" /></svg>
+          </button>
           <button onClick={post.onSave} style={sx(`margin-left: auto; background: none; border: none; cursor: pointer; color: ${post.saveColor}; display: flex; align-items: center; justify-content: center; padding: 0; width: 44px; height: 44px; transition: transform 0.15s ease; font-size: 14px`)}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill={post.saveFill} stroke="currentColor" strokeWidth="2" style={{ stroke: "#000000" }}><path d="M6 3h12v18l-6-4-6 4V3z" /></svg>
           </button>
