@@ -8,6 +8,7 @@ import { authClient, matchingClient, petClient, postClient, socialClient } from 
 const PetoryContext = createContext(null);
 
 const PET_COLORS = ["#E9C79A", "#D9A15B", "#B0B0AE", "#EDE0C8", "#C7A374"];
+const REMEMBER_EMAIL_KEY = "petory_remember_email";
 
 function toPetView(pet, index = 0) {
   return { ...pet, ownerId: "me", photo: PET_COLORS[index % PET_COLORS.length], photoSrc: demoPetImage(pet.name, index), distance: 0 };
@@ -134,11 +135,32 @@ export function PetoryProvider({ children }) {
   const onRegPassword = (e) => update((s2) => ({ registerForm: { ...s2.registerForm, password: e.target.value } }));
   const onRegConfirm = (e) => update((s2) => ({ registerForm: { ...s2.registerForm, confirm: e.target.value } }));
 
+  const onToggleRemember = (e) => {
+    const rememberMe = e.target.checked;
+    update({ rememberMe });
+  };
+
+  /** Only the email is kept, never the password. */
+  const loadRememberedEmail = () => {
+    try {
+      const saved = window.localStorage.getItem(REMEMBER_EMAIL_KEY);
+      if (saved) update((s2) => ({ loginForm: { ...s2.loginForm, email: saved }, rememberMe: true }));
+    } catch {
+      // Storage can be blocked; the form simply starts empty.
+    }
+  };
+
   const goForgot = () => router.push("/petory/forgot");
   const login = async () => {
     update({ authPending: true, authError: null });
     try {
       const { account } = await authClient.login(s.loginForm.email, s.loginForm.password);
+      try {
+        if (s.rememberMe) window.localStorage.setItem(REMEMBER_EMAIL_KEY, s.loginForm.email);
+        else window.localStorage.removeItem(REMEMBER_EMAIL_KEY);
+      } catch {
+        // Storage can be blocked; sign-in should still succeed.
+      }
       update({ user: account });
       showToast("เข้าสู่ระบบสำเร็จ ยินดีต้อนรับกลับ");
       router.push("/petory/home");
@@ -526,7 +548,7 @@ export function PetoryProvider({ children }) {
   const value = {
     state, update, showToast,
     goHome, goExplore, goMatching, goMessages, goMyPets, goProfile, goFollowing, goSettings, goNotifications,
-    onLoginEmail, onLoginPassword, onRegName, onRegEmail, onRegPassword, onRegConfirm,
+    onLoginEmail, onLoginPassword, onToggleRemember, loadRememberedEmail, onRegName, onRegEmail, onRegPassword, onRegConfirm,
     goForgot, login, loginBtnClick, register, sendResetLink,
     openLogoutConfirm, closeLogoutConfirm, confirmLogout,
     toggleSpeciesDropdown, selectFeedSpecies, onFeedSearch, toggleSearchOpen, onSearchBlur, setFeedCategory, loadHomeFeed,

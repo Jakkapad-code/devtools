@@ -108,6 +108,7 @@ export function initialState() {
     reportReason: "",
     blockTargetUserId: null,
     loginForm: { email: "", password: "" },
+    rememberMe: false,
     registerForm: { name: "", email: "", password: "", confirm: "" },
     user: null,
     sessionReady: false,

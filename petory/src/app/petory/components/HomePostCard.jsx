@@ -9,7 +9,11 @@ export default function HomePostCard({ post }) {
         <div onClick={post.onAuthorClick} style={sx("flex:1;min-width:0;cursor:pointer")}>
           <div style={sx("font-weight:800;font-size:14px")}>{post.authorName}</div>
           {post.petName && <span style={sx("display:inline-block;margin-top:2px;background:#F4C9D6;color:#201C16;font-weight:700;font-size:11px;padding:3px 10px;border-radius:100px")}>🐾 {post.petName}</span>}
+          {post.notMine && !post.isFollowing && <div style={sx("font-size:12px;color:#8a8378;margin-top:2px")}>แนะนำสำหรับคุณ</div>}
         </div>
+        {post.notMine && !post.isFollowing && (
+          <Hoverable as="button" onClick={post.onFollow} style="background:#fff;border:none;border-radius:100px;padding:8px 14px;box-shadow:0 2px 8px rgba(32,28,22,0.08);font-weight:800;font-size:12px;cursor:pointer;flex:none;transition:background 0.15s ease,color 0.15s ease" hoverStyle="background:#E3402B;color:#fff">ติดตาม</Hoverable>
+        )}
         <div style={{ position: "relative" }} onClick={(e) => e.stopPropagation()}>
           <span onClick={post.onMenuToggle} style={sx("background:none;border:none;color:#8a8378;font-weight:800;font-size:16px;padding:6px 10px;border-radius:100px;cursor:pointer;letter-spacing:2px")}>•••</span>
           {post.menuOpen && (

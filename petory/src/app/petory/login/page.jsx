@@ -1,11 +1,17 @@
 "use client";
+import { useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { sx, Hoverable, LOGO, DOG1, DOG2 } from "../ui";
 import { usePetory } from "../context";
 
 export default function LoginPage() {
-  const { state, onLoginEmail, onLoginPassword, goForgot, loginBtnClick } = usePetory();
+  const { state, onLoginEmail, onLoginPassword, onToggleRemember, loadRememberedEmail, goForgot, loginBtnClick } = usePetory();
+
+  useEffect(() => {
+    loadRememberedEmail();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   return (
     <div style={sx("min-height:100vh;display:flex;align-items:center;justify-content:center;padding:32px;position:relative;overflow:hidden")}>
       <Image src={DOG1} alt="" width={591} height={420} aria-hidden="true" style={sx("position: fixed; width: 591px; height: 420px; z-index: 0; pointer-events: none; left: -161px; top: -30px; transform: rotate(120deg) scaleX(-1); transform-origin: 50% 50%")} />
@@ -24,7 +30,7 @@ export default function LoginPage() {
             <input placeholder="Password" type="password" value={state.loginForm.password} onChange={onLoginPassword} style={sx("padding:16px;border-radius:14px;border:2px solid #201C16;font-size:15px;background:#fff")} />
             {state.authError && <p role="alert" style={sx("margin:0;color:#B42318;font-weight:700;font-size:13px")}>{state.authError}</p>}
           <div style={sx("display:flex;justify-content:space-between;align-items:center;font-size:13px")}>
-            <label style={sx("display:flex;align-items:center;gap:6px")}><input type="checkbox" /> Remember Me</label>
+            <label style={sx("display:flex;align-items:center;gap:6px;cursor:pointer")}><input type="checkbox" checked={state.rememberMe} onChange={onToggleRemember} /> Remember Me</label>
             <span onClick={goForgot} style={sx("text-decoration:underline;cursor:pointer;font-weight:600")}>Forgot Password?</span>
           </div>
           <Hoverable
