@@ -51,7 +51,12 @@ export function PetoryProvider({ children }) {
     const animationFrame = window.requestAnimationFrame(syncViewport);
     const onResize = () => update({ isMobile: window.innerWidth < 860 });
     window.addEventListener("resize", onResize);
-    const onDocClick = () => update((s2) => (s2.postMenuOpenId ? { postMenuOpenId: null } : {}));
+    // React delegates clicks on the document too, so stopPropagation in the toggle
+    // cannot block this listener; skip clicks that came from the menu itself.
+    const onDocClick = (event) => {
+      if (event.target.closest?.("[data-post-menu]")) return;
+      update((s2) => (s2.postMenuOpenId ? { postMenuOpenId: null } : {}));
+    };
     document.addEventListener("click", onDocClick);
     return () => {
       window.cancelAnimationFrame(animationFrame);
@@ -60,40 +65,46 @@ export function PetoryProvider({ children }) {
     };
   }, []);
 
+  const applyAccount = (account) => setState((previous) => ({
+    ...previous,
+    user: account,
+    users: previous.users.map((user) => user.id === "me" ? {
+      ...user,
+      name: account.display_name,
+      email: account.email,
+      bio: account.bio || "",
+      phone: account.phone || "",
+      location: account.location_label || "",
+      memberSince: new Date(account.created_at).getFullYear().toString(),
+    } : user),
+  }));
+
+  /** Replaces the placeholder feed with this account's real data. */
+  const loadAccountData = async (account, isActive = () => true) => {
+    const [{ pets }, { posts }, { users: following }, { users: suggested }] = await Promise.all([
+      petClient.list(), postClient.list(), socialClient.following(), socialClient.suggested(),
+    ]);
+    if (!isActive()) return;
+    setState((previous) => ({
+      ...previous,
+      pets: previous.pets.filter((pet) => pet.ownerId !== "me").concat(pets.map(toPetView)),
+      posts: posts.map((post) => toPostView(post, account.id)),
+      users: previous.users.concat(posts
+        .filter((post) => post.authorId !== account.id && !previous.users.some((user) => user.id === post.authorId))
+        .map((post) => ({ id: post.authorId, name: post.authorName, color: post.authorColor || "#2B5468", bio: "", location: "" }))),
+      followingIds: following.map((user) => user.id),
+      suggestedUsers: suggested,
+    }));
+  };
+
   useEffect(() => {
     let active = true;
 
     void authClient.me()
       .then(async (payload) => {
         if (!active || !payload) return;
-        setState((previous) => ({
-          ...previous,
-          user: payload.account,
-          users: previous.users.map((user) => user.id === "me" ? {
-            ...user,
-            name: payload.account.display_name,
-            email: payload.account.email,
-            bio: payload.account.bio || "",
-            phone: payload.account.phone || "",
-            location: payload.account.location_label || "",
-            memberSince: new Date(payload.account.created_at).getFullYear().toString(),
-          } : user),
-        }));
-
-        const [{ pets }, { posts }, { users: following }, { users: suggested }] = await Promise.all([
-          petClient.list(), postClient.list(), socialClient.following(), socialClient.suggested(),
-        ]);
-        if (!active) return;
-        setState((previous) => ({
-          ...previous,
-          pets: previous.pets.filter((pet) => pet.ownerId !== "me").concat(pets.map(toPetView)),
-          posts: posts.map((post) => toPostView(post, payload.account.id)),
-          users: previous.users.concat(posts
-            .filter((post) => post.authorId !== payload.account.id && !previous.users.some((user) => user.id === post.authorId))
-            .map((post) => ({ id: post.authorId, name: post.authorName, color: post.authorColor || "#2B5468", bio: "", location: "" }))),
-          followingIds: following.map((user) => user.id),
-          suggestedUsers: suggested,
-        }));
+        applyAccount(payload.account);
+        await loadAccountData(payload.account, () => active);
       })
       .catch(() => {
         // A failed hydration must not prevent a visitor from using public pages.
@@ -121,6 +132,7 @@ export function PetoryProvider({ children }) {
   const goMyPets = () => router.push("/petory/pets");
   const goProfile = () => router.push("/petory/profile");
   const goFollowing = () => router.push("/petory/following");
+  const goFollowers = () => router.push("/petory/followers");
   const goSettings = () => router.push("/petory/settings");
   const goNotifications = () => {
     update((s2) => ({ notifications: s2.notifications.map((n) => ({ ...n, read: true })) }));
@@ -161,7 +173,8 @@ export function PetoryProvider({ children }) {
       } catch {
         // Storage can be blocked; sign-in should still succeed.
       }
-      update({ user: account });
+      applyAccount(account);
+      await loadAccountData(account).catch(() => {});
       showToast("เข้าสู่ระบบสำเร็จ ยินดีต้อนรับกลับ");
       router.push("/petory/home");
     } catch (error) {
@@ -188,7 +201,8 @@ export function PetoryProvider({ children }) {
     update({ authPending: true, authError: null });
     try {
       const { account } = await authClient.register(s.registerForm.name, s.registerForm.email, s.registerForm.password);
-      update({ user: account });
+      applyAccount(account);
+      await loadAccountData(account).catch(() => {});
       router.push("/petory/onboarding");
     } catch (error) {
       update({ authError: error.message });
@@ -547,7 +561,7 @@ export function PetoryProvider({ children }) {
 
   const value = {
     state, update, showToast,
-    goHome, goExplore, goMatching, goMessages, goMyPets, goProfile, goFollowing, goSettings, goNotifications,
+    goHome, goExplore, goMatching, goMessages, goMyPets, goProfile, goFollowing, goFollowers, goSettings, goNotifications,
     onLoginEmail, onLoginPassword, onToggleRemember, loadRememberedEmail, onRegName, onRegEmail, onRegPassword, onRegConfirm,
     goForgot, login, loginBtnClick, register, sendResetLink,
     openLogoutConfirm, closeLogoutConfirm, confirmLogout,

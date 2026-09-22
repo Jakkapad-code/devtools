@@ -39,6 +39,37 @@ export function visiblePosts(state) {
   return state.posts.filter((p) => state.blockedUserIds.indexOf(p.authorId) === -1);
 }
 
+/**
+ * Feed order: not-yet-followed posts spread in between the ones you follow.
+ * Both streams advance proportionally, so recommendations stay scattered across
+ * the whole feed at any ratio instead of piling up once one stream runs out —
+ * including a brand new account, whose feed is recommendations only.
+ */
+export function withRecommended(state, posts) {
+  const followed = [];
+  const recommended = [];
+  posts.forEach((post) => {
+    if (post.authorId === "me" || state.followingIds.includes(post.authorId)) followed.push(post);
+    else recommended.push(post);
+  });
+
+  const ordered = [];
+  let f = 0;
+  let r = 0;
+  while (f < followed.length || r < recommended.length) {
+    const followedDone = f / (followed.length || 1);
+    const recommendedDone = r / (recommended.length || 1);
+    if (f < followed.length && (followedDone <= recommendedDone || r >= recommended.length)) {
+      ordered.push(followed[f]);
+      f += 1;
+    } else {
+      ordered.push(recommended[r]);
+      r += 1;
+    }
+  }
+  return ordered;
+}
+
 export function categoryLabel(post) {
   return CATEGORY_LABELS[post.category] || post.category;
 }

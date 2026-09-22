@@ -1,7 +1,7 @@
 "use client";
 import { sx, Hoverable } from "../ui";
 import { usePetory } from "../context";
-import { visiblePosts, mapPost, hashColor } from "../helpers";
+import { visiblePosts, mapPost, hashColor, withRecommended } from "../helpers";
 import HomePostCard from "../components/HomePostCard";
 
 export default function HomePage() {
@@ -20,7 +20,8 @@ export default function HomePage() {
     );
   }
 
-  const homePosts = visiblePosts(s).filter((p) => p.category === "story").map((p) => mapPost(s, a, p)).map((p) => ({
+  const storyPosts = visiblePosts(s).filter((p) => p.category === "story");
+  const homePosts = withRecommended(s, storyPosts).map((p) => mapPost(s, a, p)).map((p) => ({
     ...p,
     likeFill: p.liked ? "#E3402B" : "none", saveFill: p.saved ? "#E3402B" : "none",
     commentsOpen: s.openComments.includes(p.id),
@@ -64,7 +65,7 @@ export default function HomePage() {
               <div style={sx("font-weight: 800; font-size: 17px; color: #7C6510")}>{homeProfile.posts}</div>
               <div style={sx("font-size:12px;font-weight:700")}>โพสต์</div>
             </div>
-            <div style={sx("border-radius: 14px; padding: 10px 4px; text-align: center; box-shadow: 0 2px 8px rgba(32,28,22,0.08); background-color: #EFEAE2")}>
+            <div onClick={a.goFollowers} style={sx("border-radius: 14px; padding: 10px 4px; text-align: center; box-shadow: 0 2px 8px rgba(32,28,22,0.08); background-color: #EFEAE2; cursor: pointer")}>
               <div style={sx("font-weight: 800; font-size: 17px; color: #7C6510")}>{homeProfile.followers}</div>
               <div style={sx("font-size:12px;font-weight:700")}>ผู้ติดตาม</div>
             </div>

@@ -1,7 +1,9 @@
 import { z } from "zod";
 
+export const PASSWORD_MIN_LENGTH = 12;
+
 const email = z.string().trim().toLowerCase().pipe(z.email());
-const password = z.string().min(12, "Password must be at least 12 characters.").max(128);
+const password = z.string().min(PASSWORD_MIN_LENGTH, `Password must be at least ${PASSWORD_MIN_LENGTH} characters.`).max(128);
 
 export const registerSchema = z.object({
   displayName: z.string().trim().min(2).max(80),

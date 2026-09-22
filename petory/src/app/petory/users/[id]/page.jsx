@@ -1,15 +1,35 @@
 "use client";
-import { use } from "react";
+import { use, useEffect, useState } from "react";
 import { sx, Hoverable } from "../../ui";
 import { usePetory } from "../../context";
-import { userById, visiblePosts, hashColor, categoryLabel, postTitle } from "../../helpers";
+import { visiblePosts, hashColor, postTitle } from "../../helpers";
 import BackLink from "../../components/BackLink";
+import { socialClient } from "@/features/auth/client";
 
 export default function UserProfilePage({ params }) {
   const { id } = use(params);
   const { state: s, ...a } = usePetory();
-  const u = userById(s, id);
-  if (!u || u.name === "Unknown") return <div style={sx("max-width:900px;margin:0 auto;padding:48px;text-align:center")}>ไม่พบผู้ใช้นี้</div>;
+  // undefined while loading, null when the account does not exist.
+  const [account, setAccount] = useState(undefined);
+
+  useEffect(() => {
+    let active = true;
+    void socialClient.user(id)
+      .then(({ user }) => { if (active) setAccount(user); })
+      .catch(() => { if (active) setAccount(null); });
+    return () => { active = false; };
+  }, [id]);
+
+  if (account === undefined) {
+    return (
+      <div style={sx("max-width:900px;margin:0 auto;padding:clamp(20px,4vw,48px) clamp(20px,4vw,48px) 120px")}>
+        <div style={sx("height:220px;border-radius:24px;background:#FFFFFFA0;margin-top:44px")} />
+      </div>
+    );
+  }
+  if (!account) return <div style={sx("max-width:900px;margin:0 auto;padding:48px;text-align:center")}>ไม่พบผู้ใช้นี้</div>;
+
+  const u = { id: account.id, name: account.displayName, color: hashColor(account.id), bio: account.bio || "", location: account.locationLabel || "" };
 
   const pets = s.pets.filter((p) => p.ownerId === u.id);
   const posts = visiblePosts(s).filter((p) => p.authorId === u.id);

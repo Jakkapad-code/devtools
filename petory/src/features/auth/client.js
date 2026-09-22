@@ -97,6 +97,7 @@ export const notificationClient = {
 
 export const socialClient = {
   following: () => requestJson("/api/following"),
+  followers: () => requestJson("/api/followers"),
   suggested: () => requestJson("/api/users/suggested"),
   setFollow: (id, active) => requestJson(`/api/users/${id}/follow`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ active }) }),
   setBlock: (id, active) => requestJson(`/api/users/${id}/block`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ active }) }),

@@ -74,7 +74,7 @@ export default function ProfilePage() {
                 <div style={sx("font-weight:800;font-size:17px;color:#E3402B")}>{myPosts.length}</div>
                 <div style={sx("font-size:12px;font-weight:700")}>โพสต์</div>
               </div>
-              <div style={sx("border-radius:14px;padding:10px 4px;text-align:center;box-shadow:0 2px 8px rgba(32,28,22,0.08);background-color:#FFFCF6")}>
+              <div onClick={a.goFollowers} style={sx("border-radius:14px;padding:10px 4px;text-align:center;box-shadow:0 2px 8px rgba(32,28,22,0.08);background-color:#FFFCF6;cursor:pointer")}>
                 <div style={sx("font-weight:800;font-size:17px;color:#E3402B")}>{s.user?.followerCount ?? 0}</div>
                 <div style={sx("font-size:12px;font-weight:700")}>ผู้ติดตาม</div>
               </div>

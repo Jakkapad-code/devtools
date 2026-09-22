@@ -14,7 +14,7 @@ export default function HomePostCard({ post }) {
         {post.notMine && !post.isFollowing && (
           <Hoverable as="button" onClick={post.onFollow} style="background:#fff;border:none;border-radius:100px;padding:8px 14px;box-shadow:0 2px 8px rgba(32,28,22,0.08);font-weight:800;font-size:12px;cursor:pointer;flex:none;transition:background 0.15s ease,color 0.15s ease" hoverStyle="background:#E3402B;color:#fff">ติดตาม</Hoverable>
         )}
-        <div style={{ position: "relative" }} onClick={(e) => e.stopPropagation()}>
+        <div data-post-menu style={{ position: "relative" }} onClick={(e) => e.stopPropagation()}>
           <span onClick={post.onMenuToggle} style={sx("background:none;border:none;color:#8a8378;font-weight:800;font-size:16px;padding:6px 10px;border-radius:100px;cursor:pointer;letter-spacing:2px")}>•••</span>
           {post.menuOpen && (
             <div style={sx("position:absolute;right:0;top:calc(100% + 4px);background:#fff;border-radius:14px;box-shadow:rgba(0, 0, 0, 0.2) 0px 8px 20px;padding:6px;min-width:160px;z-index:10;display:flex;flex-direction:column")}>
