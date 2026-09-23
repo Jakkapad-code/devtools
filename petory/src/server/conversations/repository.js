@@ -3,13 +3,20 @@ import { query } from "@/server/db/pool";
 
 export async function listConversations(accountId) {
   const result = await query(
-    `SELECT c.id, c.match_id AS "matchId", c.created_at AS "createdAt", p.id AS "petId", p.name AS "petName", a.display_name AS "ownerName",
-      (SELECT m.body FROM messages m WHERE m.conversation_id = c.id AND m.deleted_at IS NULL ORDER BY m.created_at DESC LIMIT 1) AS "lastMessage"
+    `SELECT c.id, c.match_id AS "matchId", c.created_at AS "createdAt", mt.created_at AS "matchedAt",
+      p.id AS "petId", p.name AS "petName", p.photo_media_id AS "petPhotoMediaId", a.display_name AS "ownerName",
+      last.body AS "lastMessage", last.created_at AS "lastMessageAt"
      FROM conversations c JOIN conversation_members self ON self.conversation_id = c.id AND self.account_id = $1
      JOIN matches mt ON mt.id = c.match_id AND mt.status = 'active'
      JOIN pets p ON p.id = CASE WHEN mt.pet_a_id IN (SELECT id FROM pets WHERE owner_id = $1) THEN mt.pet_b_id ELSE mt.pet_a_id END
      JOIN accounts a ON a.id = p.owner_id
-     WHERE c.closed_at IS NULL ORDER BY c.created_at DESC`, [accountId]
+     LEFT JOIN LATERAL (
+       SELECT m.body, m.created_at FROM messages m
+       WHERE m.conversation_id = c.id AND m.deleted_at IS NULL
+       ORDER BY m.created_at DESC LIMIT 1
+     ) last ON TRUE
+     WHERE c.closed_at IS NULL
+     ORDER BY COALESCE(last.created_at, c.created_at) DESC`, [accountId]
   );
   return result.rows;
 }

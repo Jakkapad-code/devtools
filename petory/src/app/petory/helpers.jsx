@@ -34,9 +34,29 @@ export function petPhotoSrc(pet) {
   return demoPetImage(pet.name, stable);
 }
 
-/** Uploaded avatars are served from media; callers fall back to a coloured initial. */
+export function shortTime(value) {
+  if (!value) return "";
+  return new Date(value).toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" });
+}
+
+export function daysAgoLabel(value) {
+  if (!value) return "";
+  const days = Math.floor((Date.now() - new Date(value).getTime()) / 86_400_000);
+  if (days <= 0) return "วันนี้";
+  if (days === 1) return "เมื่อวาน";
+  return `${days} วันก่อน`;
+}
+
+/** Uploaded avatars are served from media. There is no shared stand-in picture:
+ *  an account without a photo falls back to its own initial, so every circle on
+ *  screen belongs to that one account. */
 export function avatarSrc(mediaId) {
   return mediaId ? `/api/media/${mediaId}` : undefined;
+}
+
+/** The letter shown in place of a missing avatar. */
+export function avatarInitial(name) {
+  return String(name || "?").trim().charAt(0).toUpperCase();
 }
 
 export function hashColor(id) {
@@ -104,7 +124,8 @@ export function mapPost(state, actions, p) {
   const pet = petById(state, p.petId);
   return {
     ...p,
-    authorName: author.name, authorColor: author.color, isMine: p.authorId === "me", notMine: p.authorId !== "me",
+    authorName: author.name, authorColor: hashColor(p.authorId), isMine: p.authorId === "me", notMine: p.authorId !== "me",
+    authorInitial: avatarInitial(author.name),
     authorAvatarSrc: avatarSrc(p.authorAvatarMediaId ?? (p.authorId === "me" ? state.user?.avatarMediaId : author.avatarMediaId)),
     petName: pet ? pet.name : null,
     isFollowing: state.followingIds.includes(p.authorId),

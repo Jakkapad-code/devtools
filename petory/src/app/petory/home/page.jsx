@@ -1,7 +1,7 @@
 "use client";
 import { sx, Hoverable, ImageSlot } from "../ui";
 import { usePetory } from "../context";
-import { visiblePosts, mapPost, hashColor, withRecommended, avatarSrc } from "../helpers";
+import { visiblePosts, mapPost, hashColor, withRecommended, avatarSrc, avatarInitial } from "../helpers";
 import HomePostCard from "../components/HomePostCard";
 
 export default function HomePage() {
@@ -37,9 +37,9 @@ export default function HomePage() {
   const myPostsCount = visiblePosts(s).filter((p) => p.authorId === "me").length;
   const displayName = s.user?.display_name || "";
   const avatarColor = s.user?.id ? hashColor(s.user.id) : "#E3402B";
-  const homeProfile = { name: displayName, handle: displayName ? "@" + displayName.toLowerCase().replace(/[^a-z]/g, "") : "", color: avatarColor, avatarSrc: avatarSrc(s.user?.avatarMediaId), posts: myPostsCount, followers: s.user?.followerCount ?? 0, following: s.user?.followingCount ?? 0 };
+  const homeProfile = { name: displayName, handle: displayName ? "@" + displayName.toLowerCase().replace(/[^a-z]/g, "") : "", color: avatarColor, avatarSrc: avatarSrc(s.user?.avatarMediaId), initial: avatarInitial(displayName), posts: myPostsCount, followers: s.user?.followerCount ?? 0, following: s.user?.followingCount ?? 0 };
   const trendingTags = ["อาหาร", "Pet Friendly", "การฝึก", "สุขภาพ", "มือใหม่"];
-  const suggestedOwners = s.suggestedUsers.slice(0, 3).map((u) => ({ id: u.id, name: u.displayName, initial: u.displayName.charAt(0), color: hashColor(u.id), avatarSrc: avatarSrc(u.avatarMediaId) }));
+  const suggestedOwners = s.suggestedUsers.slice(0, 3).map((u) => ({ id: u.id, name: u.displayName, initial: avatarInitial(u.displayName), color: hashColor(u.id), avatarSrc: avatarSrc(u.avatarMediaId) }));
   const createPostBtnAnim = s.createPostBtnPop ? "animation:createPostPop 0.28s ease" : "";
 
   return (
@@ -54,8 +54,10 @@ export default function HomePage() {
       <aside style={sx(`flex: 0 1 360px; min-width: 0; max-width: 380px; display: flex; flex-direction: column; gap: 20px; align-self: flex-start; position: sticky; top: 88px; padding: 14px; margin-top: -14px; margin-right: -14px; margin-bottom: -14px; margin-left: ${s.isMobile ? "-14px" : "90px"}`)}>
         <div style={sx("border: none; border-radius: 22px; padding: 20px; background-color: #FFFFFFED; box-shadow: rgba(0, 0, 0, 0.25) 0px 0.0625em 0.0625em, rgba(0, 0, 0, 0.25) 0px 0.125em 0.5em, rgba(255, 255, 255, 0.1) 0px 0px 0px 1px inset")}>
           <div onClick={a.goProfile} style={sx("display:flex;align-items:center;gap:12px;margin-bottom:16px;cursor:pointer")}>
-            <div style={sx(`width:48px;height:48px;border-radius:50%;background:${homeProfile.color};flex:none;overflow:hidden;box-shadow:0 2px 8px rgba(32,28,22,0.08)`)}>
-              {homeProfile.avatarSrc && <ImageSlot shape="circle" placeholder="" src={homeProfile.avatarSrc} style="width:100%;height:100%" />}
+            <div style={sx(`width:48px;height:48px;border-radius:50%;background:${homeProfile.color};flex:none;overflow:hidden;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:18px;box-shadow:0 2px 8px rgba(32,28,22,0.08)`)}>
+              {homeProfile.avatarSrc
+                ? <ImageSlot shape="circle" placeholder="" src={homeProfile.avatarSrc} style="width:100%;height:100%" />
+                : homeProfile.initial}
             </div>
             <div style={sx("min-width:0")}>
               {homeProfile.name

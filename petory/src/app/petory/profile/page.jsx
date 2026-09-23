@@ -1,7 +1,7 @@
 "use client";
-import { sx, Hoverable, ImageSlot, AVATAR } from "../ui";
+import { sx, Hoverable, ImageSlot } from "../ui";
 import { usePetory } from "../context";
-import { visiblePosts, hashColor, categoryLabel, postTitle } from "../helpers";
+import { visiblePosts, hashColor, categoryLabel, postTitle, avatarSrc, avatarInitial } from "../helpers";
 
 export default function ProfilePage() {
   const { state: s, ...a } = usePetory();
@@ -27,7 +27,6 @@ export default function ProfilePage() {
   const blockedUsers = s.blockedUserIds.map((id) => s.users.find((u) => u.id === id));
   const displayName = s.user?.display_name || "";
   const handle = displayName ? "@" + displayName.toLowerCase().replace(/[^a-z]/g, "") : "";
-  const avatarSrc = s.user?.avatarMediaId ? `/api/media/${s.user.avatarMediaId}` : AVATAR;
 
   return (
     <div style={sx("max-width:1100px;margin:0 auto;padding:clamp(20px,4vw,48px) clamp(20px,4vw,48px) 120px")}>
@@ -36,7 +35,9 @@ export default function ProfilePage() {
           <div style={sx("height: 64px; background-color: #452A1E")} />
           <div style={sx("padding:0 28px 28px;display:flex;flex-direction:column;align-items:center;text-align:center;margin-top:-46px")}>
             <label title="อัปโหลดรูปโปรไฟล์" style={sx("width:96px;height:96px;border-radius:50%;border:4px solid #fff;box-shadow:0 4px 12px rgba(32,28,22,0.18);position:relative;cursor:pointer")}>
-              <ImageSlot shape="circle" placeholder="รูปโปรไฟล์" src={avatarSrc} style="width:100%;height:100%" />
+              {avatarSrc(s.user?.avatarMediaId)
+                ? <ImageSlot shape="circle" placeholder="" src={avatarSrc(s.user?.avatarMediaId)} style="width:100%;height:100%" />
+                : <div style={sx(`width:100%;height:100%;border-radius:50%;background:${s.user?.id ? hashColor(s.user.id) : "#E3402B"};display:flex;align-items:center;justify-content:center;color:#fff;font-family:'Anton',sans-serif;font-size:38px`)}>{avatarInitial(displayName)}</div>}
               <input type="file" accept="image/jpeg,image/png,image/webp" onChange={a.pickImage("avatar", 1)} disabled={s.avatarPhotoPending} style={{ display: "none" }} />
               <span style={sx("position:absolute;bottom:-5px;right:-5px;background:#E3402B;color:#fff;border-radius:100px;padding:4px 7px;font-size:10px;font-weight:800")}>{s.avatarPhotoPending ? "..." : "แก้ไข"}</span>
             </label>
