@@ -75,6 +75,8 @@ export function PetoryProvider({ children }) {
   const applyAccount = (account) => setState((previous) => ({
     ...previous,
     user: account,
+    // The purpose lives on the account, so a sign-in on another device keeps it.
+    matchingPurpose: account.matchingPurpose ?? previous.matchingPurpose,
     users: previous.users.map((user) => user.id === "me" ? {
       ...user,
       name: account.display_name,
@@ -340,10 +342,10 @@ export function PetoryProvider({ children }) {
   const closeCreatePost = () => update((s2) => ({ modals: { ...s2.modals, createPost: false } }));
   const onPostCaption = (e) => update((s2) => ({ postForm: { ...s2.postForm, caption: e.target.value } }));
   const onPostTitle = (e) => update((s2) => ({ postForm: { ...s2.postForm, title: e.target.value } }));
-  // Only "story" reaches the Home feed, so the choice also decides where a post lands.
+  // Where a post lands is decided by the composer it was opened from, not by the
+  // category: a Home post stays on Home, and the category only labels it.
   const selectPostCategory = (category) => update((s2) => ({
     postForm: { ...s2.postForm, category },
-    postFormIsBlog: category !== "story",
     fieldDropdownOpen: null,
   }));
   const togglePostCategoryDropdown = () => update((s2) => ({ fieldDropdownOpen: s2.fieldDropdownOpen === "postCategory" ? null : "postCategory" }));
@@ -482,7 +484,19 @@ export function PetoryProvider({ children }) {
   const closeMatchFilter = () => update((s2) => ({ modals: { ...s2.modals, matchFilter: false } }));
   const togglePetDropdown = () => update((s2) => ({ petDropdownOpen: !s2.petDropdownOpen }));
   const selectMatchingPet = (id) => update({ matchingPetId: id, petDropdownOpen: false });
-  const setMatchingPurpose = (v2) => update({ matchingPurpose: v2 });
+  /** The choice is stored on the account: candidates only come from accounts
+   *  looking for the same thing, so it has to outlive this page. */
+  const setMatchingPurpose = async (v2) => {
+    const previous = s.matchingPurpose;
+    if (v2 === previous) return;
+    update((s2) => ({ matchingPurpose: v2, user: s2.user ? { ...s2.user, matchingPurpose: v2 } : s2.user }));
+    try {
+      await matchingClient.setPurpose(v2);
+    } catch (error) {
+      update((s2) => ({ matchingPurpose: previous, user: s2.user ? { ...s2.user, matchingPurpose: previous } : s2.user }));
+      showToast(error.message);
+    }
+  };
   const resetMatchFilter = () => update({ matchFilters: { species: "all", distance: "anywhere", gender: "any", size: "all", personality: [] } });
   const setMatchFilter = (key, value) => update((s2) => ({ matchFilters: { ...s2.matchFilters, [key]: value } }));
   const toggleMatchPersonalityFilter = (label) => update((s2) => {

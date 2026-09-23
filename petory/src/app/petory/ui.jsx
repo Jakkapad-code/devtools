@@ -24,12 +24,27 @@ export function sx(css) {
   return style;
 }
 
+/**
+ * React drops a style key it no longer renders by assigning "" to it. For a
+ * longhand that lives inside a shorthand — `backgroundColor` inside an
+ * unchanged `background` — that also wipes the shorthand's colour, so a button
+ * whose hover state uses `background-color` turned white for good once the
+ * pointer left. Restating the base colour under the same longhand key keeps the
+ * key set identical across renders, so only the value flips.
+ */
+function stableBase(style, overlays) {
+  const base = sx(style) ?? {};
+  const needsLonghand = base.background !== undefined && base.backgroundColor === undefined
+    && overlays.some((overlay) => overlay && sx(overlay)?.backgroundColor !== undefined);
+  return needsLonghand ? { ...base, backgroundColor: base.background } : base;
+}
+
 // Generic wrapper implementing the design's style-hover / style-active states.
 export function Hoverable({ as: Tag = "div", style, hoverStyle, activeStyle, children, ...rest }) {
   const [hover, setHover] = useState(false);
   const [active, setActive] = useState(false);
   const merged = {
-    ...sx(style),
+    ...stableBase(style, [hoverStyle, activeStyle]),
     ...(hover && hoverStyle ? sx(hoverStyle) : null),
     ...(active && activeStyle ? sx(activeStyle) : null),
   };

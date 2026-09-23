@@ -124,11 +124,14 @@ export default function ImageAdjuster({ file, aspect = 1, title = "ปรับ�
         aria-label="ย่อ-ขยายรูป"
         style={sx("width:100%;margin:18px 0 6px;accent-color:#E3402B;cursor:pointer")}
       />
-      <div style={sx("display:flex;gap:12px;margin-top:12px")}>
-        <Hoverable as="button" onClick={confirm} disabled={saving || !natural} style={`flex:1;background:#E3402B;color:#fff;border:none;border-radius:100px;padding:14px;font-weight:800;font-size:14px;text-transform:uppercase;cursor:${saving ? "wait" : "pointer"}`} hoverStyle="background-color:#c8351f">
+      {/* Both buttons carry the same 2px border box so the pair lines up: the
+          confirm one keeps a transparent border instead of `border:none`,
+          which would leave it 4px shorter than its neighbour. */}
+      <div style={sx("display:flex;gap:12px;margin-top:12px;align-items:stretch")}>
+        <Hoverable as="button" onClick={confirm} disabled={saving || !natural} style={`flex:1 1 auto;min-width:0;box-sizing:border-box;background-color:#E3402B;color:#fff;border:2px solid transparent;border-radius:100px;padding:14px 20px;font-family:inherit;font-weight:800;font-size:14px;line-height:1.2;white-space:nowrap;cursor:${saving || !natural ? "not-allowed" : "pointer"};opacity:${saving || !natural ? "0.6" : "1"};transition:background-color 0.15s ease`} hoverStyle={saving || !natural ? "" : "background-color:#C8351F"}>
           {saving ? "กำลังบันทึก..." : "ใช้รูปนี้"}
         </Hoverable>
-        <button onClick={onCancel} style={sx("border:2px solid #201C16;background:#fff;border-radius:100px;padding:14px 24px;font-weight:800;font-size:14px;text-transform:uppercase;cursor:pointer")}>ยกเลิก</button>
+        <button onClick={onCancel} style={sx("flex:none;box-sizing:border-box;border:2px solid #201C16;background:#fff;color:#201C16;border-radius:100px;padding:14px 24px;font-family:inherit;font-weight:800;font-size:14px;line-height:1.2;white-space:nowrap;cursor:pointer")}>ยกเลิก</button>
       </div>
     </ModalShell>
   );

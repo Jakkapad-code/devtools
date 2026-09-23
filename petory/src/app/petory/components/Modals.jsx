@@ -28,8 +28,9 @@ export default function Modals() {
   }));
   const postPetLabel = (s.pets.find((p) => p.id === s.postForm.petId) || {}).name || "เลือกสัตว์เลี้ยง (ไม่บังคับ)";
 
-  // The five buckets the feeds actually filter by; tips covers event/question too.
-  const postCategoryOptions = ["story", "recipe", "place", "clinic", "tips"].map((key) => ({
+  // Home posts are always "story"; the picker belongs to the blog composer, whose
+  // categories are exactly the ones Explore filters by.
+  const postCategoryOptions = ["recipe", "place", "clinic", "tips"].map((key) => ({
     label: CATEGORY_LABELS[key], onSelect: () => a.selectPostCategory(key),
     optionStyle: "padding:10px 12px;border-radius:8px;font-size:14px;cursor:pointer;" + (key === s.postForm.category ? "background:#FDEDEA;color:#E4402B;font-weight:700" : ""),
   }));
@@ -77,7 +78,7 @@ export default function Modals() {
 
       {m.createPost && (
         <ModalShell maxWidth={520}>
-          <h2 style={sx("font-family:'Anton',sans-serif;font-size:28px;text-transform:uppercase;margin:0 0 18px")}>CREATE POST</h2>
+          <h2 style={sx("font-family:'Anton',sans-serif;font-size:28px;text-transform:uppercase;margin:0 0 18px")}>{s.postFormIsBlog ? "เขียนบล็อก" : "Create Post"}</h2>
           <div style={sx("display:flex;flex-direction:column;gap:14px")}>
             {s.postFormIsBlog && (
               <input placeholder="หัวข้อเรื่อง" value={s.postForm.title} onChange={a.onPostTitle} style={sx("padding:14px 16px;border-radius:12px;border:2px solid #201C16;font-size:15px;font-weight:800")} />
@@ -89,9 +90,11 @@ export default function Modals() {
                 {s.postPhotoPending ? "กำลังอัปโหลด..." : s.postForm.photoMediaId ? "เปลี่ยนรูป" : "เพิ่มรูป"}
               </span>
             </label>
-            <Dropdown label={postCategoryLabel} open={s.fieldDropdownOpen === "postCategory"} onToggle={a.togglePostCategoryDropdown} options={postCategoryOptions}
-              buttonStyle="width:100%;box-sizing:border-box;padding:14px 16px;border-radius:12px;border:2px solid #201C16;font-size:14px;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:space-between;text-align:left"
-              panelStyle="position:absolute;top:calc(100% + 6px);left:0;right:0;background:#fff;border-radius:12px;border:2px solid #201C16;padding:6px;z-index:10;display:flex;flex-direction:column;gap:2px;max-height:220px;overflow-y:auto" />
+            {s.postFormIsBlog && (
+              <Dropdown label={postCategoryLabel} open={s.fieldDropdownOpen === "postCategory"} onToggle={a.togglePostCategoryDropdown} options={postCategoryOptions}
+                buttonStyle="width:100%;box-sizing:border-box;padding:14px 16px;border-radius:12px;border:2px solid #201C16;font-size:14px;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:space-between;text-align:left"
+                panelStyle="position:absolute;top:calc(100% + 6px);left:0;right:0;background:#fff;border-radius:12px;border:2px solid #201C16;padding:6px;z-index:10;display:flex;flex-direction:column;gap:2px;max-height:220px;overflow-y:auto" />
+            )}
             <textarea placeholder="เขียนแคปชั่น..." value={s.postForm.caption} onChange={a.onPostCaption} style={sx("padding:14px 16px;border-radius:12px;border:2px solid #201C16;font-size:15px;min-height:80px;resize:vertical")} />
             <Dropdown label={postPetLabel} open={s.fieldDropdownOpen === "postPet"} onToggle={a.togglePostPetDropdown} options={postPetOptions}
               buttonStyle="width:100%;box-sizing:border-box;padding:14px 16px;border-radius:12px;border:2px solid #201C16;font-size:14px;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:space-between;text-align:left"

@@ -21,7 +21,8 @@ export default function MatchingPage() {
       .then(({ candidates: rows }) => { if (active) setCandidates(rows.map((pet, index) => ({ ...pet, photo: ["#E9C79A", "#D9A15B", "#B0B0AE"][index % 3], photoSrc: petPhotoSrc(pet), distance: "—" }))); })
       .catch(() => { if (active) setCandidates([]); });
     return () => { active = false; };
-  }, [matchingPetId, mf.species, mf.gender, mf.size, mf.personality]);
+    // The purpose narrows the query server side, so switching it refetches.
+  }, [matchingPetId, s.matchingPurpose, mf.species, mf.gender, mf.size, mf.personality]);
 
   const cp = candidates[0];
   const stackRotations = [{ rotate: "rotate(-7deg) translateX(-14px)", z: 2 }, { rotate: "rotate(7deg) translateX(14px)", z: 1 }];

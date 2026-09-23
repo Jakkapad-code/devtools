@@ -27,7 +27,7 @@ export async function PATCH(request) {
        SET display_name = $2, bio = $3, phone = NULLIF($4, ''), location_label = NULLIF($5, '')
        WHERE id = $1 AND deleted_at IS NULL
        RETURNING id, email, display_name, bio, phone, location_label, avatar_url,
-                 avatar_media_id AS "avatarMediaId", created_at`,
+                 avatar_media_id AS "avatarMediaId", matching_purpose AS "matchingPurpose", created_at`,
       [account.id, input.data.displayName, input.data.bio, input.data.phone, input.data.locationLabel]
     );
     return NextResponse.json({ account: result.rows[0] });

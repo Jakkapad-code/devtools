@@ -1,11 +1,22 @@
 import "server-only";
 import { getPool, query } from "@/server/db/pool";
 
+export async function setMatchingPurpose(accountId, purpose) {
+  const result = await query(
+    `UPDATE accounts SET matching_purpose = $2, updated_at = NOW()
+     WHERE id = $1 AND deleted_at IS NULL RETURNING matching_purpose AS "matchingPurpose"`,
+    [accountId, purpose]
+  );
+  return result.rows[0]?.matchingPurpose ?? null;
+}
+
 export async function listCandidates(accountId, actorPetId, filters = {}) {
   const owned = await query(`SELECT id FROM pets WHERE id = $1 AND owner_id = $2 AND deleted_at IS NULL`, [actorPetId, accountId]);
   if (!owned.rows[0]) return null;
   const values = [actorPetId, accountId];
-  const where = ["p.id <> $1", "p.deleted_at IS NULL", "a.deleted_at IS NULL", "p.owner_id <> $2", "NOT EXISTS (SELECT 1 FROM blocks b WHERE (b.blocker_id = $2 AND b.blocked_id = p.owner_id) OR (b.blocker_id = p.owner_id AND b.blocked_id = $2))", "NOT EXISTS (SELECT 1 FROM match_interactions i WHERE i.actor_pet_id = $1 AND i.target_pet_id = p.id)"];
+  // Both sides must be looking for the same thing, so a playmate search never
+  // shows an account that is looking for a mate.
+  const where = ["a.matching_purpose = (SELECT matching_purpose FROM accounts WHERE id = $2)", "p.id <> $1", "p.deleted_at IS NULL", "a.deleted_at IS NULL", "p.owner_id <> $2", "NOT EXISTS (SELECT 1 FROM blocks b WHERE (b.blocker_id = $2 AND b.blocked_id = p.owner_id) OR (b.blocker_id = p.owner_id AND b.blocked_id = $2))", "NOT EXISTS (SELECT 1 FROM match_interactions i WHERE i.actor_pet_id = $1 AND i.target_pet_id = p.id)"];
   const add = (value) => { values.push(value); return `$${values.length}`; };
   if (filters.species && filters.species !== "all") where.push(`p.species = ${add(filters.species)}`);
   if (filters.gender && filters.gender !== "any") where.push(`p.gender = ${add(filters.gender)}`);

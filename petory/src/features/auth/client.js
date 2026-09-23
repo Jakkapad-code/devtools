@@ -89,6 +89,7 @@ export const matchingClient = {
     return requestJson(`/api/matching/candidates?${params}`);
   },
   interact: (actorPetId, targetPetId, action) => postJson("/api/matching/interactions", { actorPetId, targetPetId, action }),
+  setPurpose: (purpose) => postJson("/api/matching/purpose", { purpose }),
 };
 
 export const conversationClient = {
