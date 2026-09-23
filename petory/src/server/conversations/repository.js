@@ -5,6 +5,7 @@ export async function listConversations(accountId) {
   const result = await query(
     `SELECT c.id, c.match_id AS "matchId", c.created_at AS "createdAt", mt.created_at AS "matchedAt",
       p.id AS "petId", p.name AS "petName", p.photo_media_id AS "petPhotoMediaId", a.display_name AS "ownerName",
+      a.avatar_media_id AS "ownerAvatarMediaId",
       last.body AS "lastMessage", last.created_at AS "lastMessageAt"
      FROM conversations c JOIN conversation_members self ON self.conversation_id = c.id AND self.account_id = $1
      JOIN matches mt ON mt.id = c.match_id AND mt.status = 'active'

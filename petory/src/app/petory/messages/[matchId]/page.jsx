@@ -3,7 +3,7 @@ import { use, useEffect, useState } from "react";
 import Link from "next/link";
 import { sx, ImageSlot } from "../../ui";
 import { usePetory } from "../../context";
-import { petPhotoSrc, shortTime, daysAgoLabel } from "../../helpers";
+import { avatarSrc, avatarInitial, mediaSrc, shortTime, daysAgoLabel, hashColor } from "../../helpers";
 import { conversationClient } from "@/features/auth/client";
 
 export default function ChatPage({ params }) {
@@ -39,15 +39,25 @@ export default function ChatPage({ params }) {
     }
   };
 
-  const partnerPhoto = conversation
-    ? petPhotoSrc({ id: conversation.petId, name: conversation.petName, photoMediaId: conversation.petPhotoMediaId })
-    : undefined;
+  // Same rule as the list: the pet identifies the room, the owner rides along as
+  // a badge, because one owner can hold several rooms.
+  const partnerPhoto = mediaSrc(conversation?.petPhotoMediaId);
+  const partnerInitial = avatarInitial(conversation?.petName);
+  const partnerColor = conversation ? hashColor(conversation.petId) : "#D9A15B";
+  const ownerPhoto = avatarSrc(conversation?.ownerAvatarMediaId);
+  const ownerInitial = avatarInitial(conversation?.ownerName);
+  const ownerColor = conversation ? hashColor(conversation.ownerName || conversation.id) : "#2B5468";
 
   return <>
     <div style={sx("display:flex;align-items:center;gap:12px;padding:16px clamp(16px,3vw,24px);box-shadow:rgba(0,0,0,0.07) 0px 2px 5px;z-index:3;background:#fff")}>
       {state.isMobile && <Link href="/petory/messages" style={sx("cursor:pointer;font-weight:700;font-size:20px")}>←</Link>}
-      <div style={sx("width:38px;height:38px;border-radius:50%;background:#D9A15B;flex:none;overflow:hidden")}>
-        {partnerPhoto && <ImageSlot shape="circle" placeholder="" src={partnerPhoto} style="width:100%;height:100%" />}
+      <div style={sx("position:relative;width:38px;height:38px;flex:none")}>
+        <div style={sx(`width:100%;height:100%;border-radius:50%;background:${partnerColor};overflow:hidden;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:15px`)}>
+          {partnerPhoto ? <ImageSlot shape="circle" placeholder="" src={partnerPhoto} style="width:100%;height:100%" /> : partnerInitial}
+        </div>
+        <div title={conversation?.ownerName} style={sx(`position:absolute;right:-2px;bottom:-2px;width:18px;height:18px;border-radius:50%;background:${ownerColor};border:2px solid #fff;overflow:hidden;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:8px`)}>
+          {ownerPhoto ? <ImageSlot shape="circle" placeholder="" src={ownerPhoto} style="width:100%;height:100%" /> : ownerInitial}
+        </div>
       </div>
       <div>
         <div style={sx("font-weight:800;font-size:15px")}>{conversation?.petName || "Conversation"}</div>
@@ -67,8 +77,8 @@ export default function ChatPage({ params }) {
         return (
           <div key={message.id} style={sx(`display:flex;gap:8px;align-items:flex-end;justify-content:${mine ? "flex-end" : "flex-start"}`)}>
             {!mine && (
-              <div style={sx("width:22px;height:22px;border-radius:50%;background:#D9A15B;flex:none;overflow:hidden;margin-bottom:18px")}>
-                {partnerPhoto && <ImageSlot shape="circle" placeholder="" src={partnerPhoto} style="width:100%;height:100%" />}
+              <div style={sx(`width:22px;height:22px;border-radius:50%;background:${partnerColor};flex:none;overflow:hidden;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:10px;margin-bottom:18px`)}>
+                {partnerPhoto ? <ImageSlot shape="circle" placeholder="" src={partnerPhoto} style="width:100%;height:100%" /> : partnerInitial}
               </div>
             )}
             <div style={sx(`max-width:70%;display:flex;flex-direction:column;align-items:${mine ? "flex-end" : "flex-start"}`)}>

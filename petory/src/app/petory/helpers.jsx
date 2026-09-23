@@ -47,11 +47,16 @@ export function daysAgoLabel(value) {
   return `${days} วันก่อน`;
 }
 
+/** An uploaded file, wherever it is attached, is served from media. */
+export function mediaSrc(mediaId) {
+  return mediaId ? `/api/media/${mediaId}` : undefined;
+}
+
 /** Uploaded avatars are served from media. There is no shared stand-in picture:
  *  an account without a photo falls back to its own initial, so every circle on
  *  screen belongs to that one account. */
 export function avatarSrc(mediaId) {
-  return mediaId ? `/api/media/${mediaId}` : undefined;
+  return mediaSrc(mediaId);
 }
 
 /** The letter shown in place of a missing avatar. */

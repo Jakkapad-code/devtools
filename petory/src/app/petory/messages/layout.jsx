@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { sx, ImageSlot } from "../ui";
 import { usePetory } from "../context";
-import { petPhotoSrc, daysAgoLabel } from "../helpers";
+import { avatarSrc, avatarInitial, mediaSrc, daysAgoLabel, hashColor } from "../helpers";
 import { conversationClient } from "@/features/auth/client";
 
 export default function MessagesLayout({ children }) {
@@ -27,10 +27,17 @@ export default function MessagesLayout({ children }) {
     return () => { active = false; };
   }, [pathname, refreshKey]);
 
-  const matchList = conversations.map((conversation, index) => ({
+  // One owner can match with several of their pets, so each row is keyed by the
+  // pet it belongs to and carries the owner's picture as a small badge: two rows
+  // with the same person still read as two different conversations.
+  const matchList = conversations.map((conversation) => ({
     ...conversation,
-    photoBg: ["#E9C79A", "#D9A15B", "#B0B0AE"][index % 3],
-    photoSrc: petPhotoSrc({ id: conversation.petId, name: conversation.petName, photoMediaId: conversation.petPhotoMediaId }),
+    photoBg: hashColor(conversation.petId),
+    photoSrc: mediaSrc(conversation.petPhotoMediaId),
+    initial: avatarInitial(conversation.petName),
+    ownerPhotoSrc: avatarSrc(conversation.ownerAvatarMediaId),
+    ownerInitial: avatarInitial(conversation.ownerName),
+    ownerBg: hashColor(conversation.ownerName || conversation.id),
     lastMessage: conversation.lastMessage || "เริ่มการสนทนาได้เลย!",
     timeLabel: daysAgoLabel(conversation.lastMessageAt || conversation.matchedAt || conversation.createdAt),
     rowBorder: conversation.id === activeMatchId ? "#E3402B" : "transparent",
@@ -54,8 +61,13 @@ export default function MessagesLayout({ children }) {
           <div style={sx("display:flex;flex-direction:column;gap:10px")}>
             {matchList.map((row) => (
               <div key={row.id} onClick={() => openChat(row.id)} style={sx(`display: flex; align-items: center; gap: 12px; padding: 12px 14px; cursor: pointer; border: 2px solid ${row.rowBorder}; border-radius: 18px; box-shadow: rgba(17, 17, 26, 0.1) 0px 1px 0px, rgba(17, 17, 26, 0.1) 0px 8px 24px, rgba(17, 17, 26, 0.1) 0px 16px 48px; background: #fff`)}>
-                <div style={sx(`width:44px;height:44px;border-radius:50%;background:${row.photoBg};flex:none;overflow:hidden;box-shadow:rgba(0, 0, 0, 0.16) 0px 1px 4px`)}>
-                  <ImageSlot shape="circle" placeholder="" src={row.photoSrc} style="width:100%;height:100%" />
+                <div style={sx("position:relative;width:44px;height:44px;flex:none")}>
+                  <div style={sx(`width:100%;height:100%;border-radius:50%;background:${row.photoBg};overflow:hidden;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:17px;box-shadow:rgba(0, 0, 0, 0.16) 0px 1px 4px`)}>
+                    {row.photoSrc ? <ImageSlot shape="circle" placeholder="" src={row.photoSrc} style="width:100%;height:100%" /> : row.initial}
+                  </div>
+                  <div title={row.ownerName} style={sx(`position:absolute;right:-2px;bottom:-2px;width:20px;height:20px;border-radius:50%;background:${row.ownerBg};border:2px solid #fff;overflow:hidden;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:9px`)}>
+                    {row.ownerPhotoSrc ? <ImageSlot shape="circle" placeholder="" src={row.ownerPhotoSrc} style="width:100%;height:100%" /> : row.ownerInitial}
+                  </div>
                 </div>
                 <div style={sx("flex:1;min-width:0")}>
                   <div style={sx("font-weight:800;font-size:14px")}>{row.petName} <span style={sx("font-weight:500;color:#8a8378;font-size:12px")}>· {row.ownerName}</span></div>
