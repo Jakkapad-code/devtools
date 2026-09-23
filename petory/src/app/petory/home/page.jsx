@@ -38,7 +38,15 @@ export default function HomePage() {
   const displayName = s.user?.display_name || "";
   const avatarColor = s.user?.id ? hashColor(s.user.id) : "#E3402B";
   const homeProfile = { name: displayName, handle: displayName ? "@" + displayName.toLowerCase().replace(/[^a-z]/g, "") : "", color: avatarColor, avatarSrc: avatarSrc(s.user?.avatarMediaId), initial: avatarInitial(displayName), posts: myPostsCount, followers: s.user?.followerCount ?? 0, following: s.user?.followingCount ?? 0 };
-  const trendingTags = ["อาหาร", "Pet Friendly", "การฝึก", "สุขภาพ", "มือใหม่"];
+  // Each tag is a topic in Explore, so tapping one lands on that filter rather
+  // than on the unfiltered feed.
+  const trendingTags = [
+    { label: "อาหาร", category: "recipe" },
+    { label: "Pet Friendly", category: "place" },
+    { label: "คลินิก", category: "clinic" },
+    { label: "การฝึก", category: "tips" },
+    { label: "ทั้งหมด", category: "all" },
+  ];
   const suggestedOwners = s.suggestedUsers.slice(0, 3).map((u) => ({ id: u.id, name: u.displayName, initial: avatarInitial(u.displayName), color: hashColor(u.id), avatarSrc: avatarSrc(u.avatarMediaId) }));
   const createPostBtnAnim = s.createPostBtnPop ? "animation:createPostPop 0.28s ease" : "";
 
@@ -85,9 +93,9 @@ export default function HomePage() {
         <div style={sx("border: none; border-radius: 22px; padding: 20px; background-color: #FFFFFFED; box-shadow: rgba(0, 0, 0, 0.25) 0px 0.0625em 0.0625em, rgba(0, 0, 0, 0.25) 0px 0.125em 0.5em, rgba(255, 255, 255, 0.1) 0px 0px 0px 1px inset")}>
           <div style={sx("font-weight:800;font-size:15px;margin-bottom:14px")}>กำลังเป็นที่นิยม</div>
           <div style={sx("display:flex;flex-wrap:wrap;gap:10px;justify-content:center")}>
-            {trendingTags.map((tag, i) => (
-              <Hoverable key={i} as="span" onClick={a.goExplore} style="background:#FFFFFF;color:#2B2B2B;border:none;border-radius:100px;padding:9px 16px;box-shadow:0 2px 8px rgba(32,28,22,0.08);font-weight:700;font-size:13px;cursor:pointer;transition:background 0.15s ease,color 0.15s ease" hoverStyle="background:#E3402B;color:#fff">
-                {tag}
+            {trendingTags.map((tag) => (
+              <Hoverable key={tag.category} as="span" onClick={() => a.goExploreCategory(tag.category)} style="background:#FFFFFF;color:#2B2B2B;border:none;border-radius:100px;padding:9px 16px;box-shadow:0 2px 8px rgba(32,28,22,0.08);font-weight:700;font-size:13px;cursor:pointer;transition:background 0.15s ease,color 0.15s ease" hoverStyle="background:#E3402B;color:#fff">
+                {tag.label}
               </Hoverable>
             ))}
           </div>

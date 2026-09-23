@@ -94,7 +94,7 @@ export default function ExplorePage() {
   const searchIconStyle = "cursor:pointer;font-size:16px;padding:8px;border-radius:100px;background:transparent;border:none;" + (s.searchOpen ? "display:none" : "");
 
   return (
-    <div style={sx("background-color: #FFD98413; min-height: calc(100vh - 68px)")}>
+    <div style={sx("background-color: #FDFDF4; min-height: calc(100vh - 68px)")}>
       <div style={sx("max-width: 100%; margin: 0 auto; padding: clamp(20px,4vw,48px) clamp(20px,4vw,48px) 120px; padding-left: 80px; padding-right: 80px")}>
         <div style={sx("display:flex;align-items:center;gap:24px;flex-wrap:wrap;margin-bottom:28px;padding-bottom:2px")}>
           {categoryFilters.map((c) => (

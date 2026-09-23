@@ -70,7 +70,11 @@ export default function MessagesLayout({ children }) {
                   </div>
                 </div>
                 <div style={sx("flex:1;min-width:0")}>
-                  <div style={sx("font-weight:800;font-size:14px")}>{row.petName} <span style={sx("font-weight:500;color:#8a8378;font-size:12px")}>· {row.ownerName}</span></div>
+                  {/* The pet matched with leads, our own pet trails it: the pair
+                      is what tells apart several matches with the same owner. */}
+                  <div style={sx("font-weight:800;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap")}>
+                    {row.petName}<span style={sx("font-weight:600;color:#8a8378")}> ↔ {row.myPetName}</span>
+                  </div>
                   <div style={sx("font-size:12px;color:#4a453c;overflow:hidden;text-overflow:ellipsis;white-space:nowrap")}>{row.lastMessage}</div>
                 </div>
                 <div style={sx("font-size:11px;color:#8a8378;flex:none")}>{row.timeLabel}</div>

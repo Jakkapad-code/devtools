@@ -3,7 +3,7 @@ import { use, useEffect, useState } from "react";
 import { sx, Hoverable, ImageSlot } from "../../ui";
 import { usePetory } from "../../context";
 import { petPhotoSrc, hashColor } from "../../helpers";
-import BackLink from "../../components/BackLink";
+import Link from "next/link";
 import { petClient } from "@/features/auth/client";
 
 export default function PetProfilePage({ params }) {
@@ -39,7 +39,9 @@ export default function PetProfilePage({ params }) {
 
   return (
     <div style={sx("max-width:900px;margin:0 auto;padding:clamp(20px,4vw,48px) clamp(20px,4vw,48px) 120px")}>
-      <BackLink fallbackHref="/petory/pets">← All Pets</BackLink>
+      {/* The label names a destination, so it goes there: history back would
+          land on the edit form the viewer just saved. */}
+      <Link href="/petory/pets" style={sx("font-weight:800;font-size:15px;color:#E3402B;cursor:pointer;text-decoration-line:none")}>← All Pets</Link>
       <div style={sx("border-radius:24px;margin-top:20px;background:#fff;box-shadow:rgba(0, 0, 0, 0.15) 0px 15px 25px, rgba(0, 0, 0, 0.05) 0px 5px 10px;overflow:hidden")}>
         <div style={sx(`height:340px;border-radius:24px 24px 0 0;overflow:hidden;background:${p.photo}`)}>
           <ImageSlot shape="rect" placeholder={`${p.name} PHOTO`} src={p.photoSrc} style="width:100%;height:100%" />

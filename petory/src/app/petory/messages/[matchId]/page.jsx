@@ -61,12 +61,19 @@ export default function ChatPage({ params }) {
       </div>
       <div>
         <div style={sx("font-weight:800;font-size:15px")}>{conversation?.petName || "Conversation"}</div>
-        <div style={sx("font-size:12px;color:#8a8378")}>{conversation?.ownerName || "ข้อความจะถูกบันทึกอัตโนมัติ"}</div>
+        <div style={sx("font-size:12px;color:#8a8378")}>
+          {conversation ? `${conversation.ownerName} · จับคู่กับ ${conversation.myPetName}` : "ข้อความจะถูกบันทึกอัตโนมัติ"}
+        </div>
       </div>
     </div>
 
     <div style={sx("flex:1;overflow-y:auto;padding:20px clamp(16px,3vw,24px);display:flex;flex-direction:column;gap:14px;background:#fff")}>
-      {error && <p role="alert" style={sx("color:#B42318")}>{error}</p>}
+      {error && (
+        <div role="alert" style={sx("text-align:center;padding:40px 20px")}>
+          <p style={sx("color:#B42318;margin:0 0 12px")}>{error}</p>
+          <Link href="/petory/messages" style={sx("font-weight:800;font-size:14px;color:#E3402B;text-decoration-line:none")}>← กลับไปที่ข้อความ</Link>
+        </div>
+      )}
       {conversation?.matchedAt && (
         <div style={sx("text-align:center;font-size:12px;font-weight:800;color:#8a8378;letter-spacing:0.04em;margin-bottom:6px")}>
           MATCHED {daysAgoLabel(conversation.matchedAt)}

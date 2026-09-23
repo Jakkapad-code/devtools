@@ -36,6 +36,7 @@ export async function recordInteraction(accountId, input) {
     if (!actor.rows[0] || !target.rows[0] || actor.rows[0].owner_id !== accountId || actor.rows[0].owner_id === target.rows[0].owner_id) { await client.query("ROLLBACK"); return null; }
     await client.query(`INSERT INTO match_interactions (actor_pet_id, target_pet_id, action) VALUES ($1, $2, $3) ON CONFLICT (actor_pet_id, target_pet_id) DO UPDATE SET action = EXCLUDED.action, created_at = NOW()`, [input.actorPetId, input.targetPetId, input.action]);
     let match = null;
+    let conversationId = null;
     if (input.action === "interest") {
       const reverse = await client.query(`SELECT 1 FROM match_interactions WHERE actor_pet_id = $1 AND target_pet_id = $2 AND action = 'interest'`, [input.targetPetId, input.actorPetId]);
       if (reverse.rows[0]) {
@@ -43,10 +44,13 @@ export async function recordInteraction(accountId, input) {
         const created = await client.query(`INSERT INTO matches (pet_a_id, pet_b_id) VALUES ($1, $2) ON CONFLICT (pet_a_id, pet_b_id) DO UPDATE SET status = 'active', unmatched_at = NULL RETURNING id`, [petA, petB]);
         match = created.rows[0];
         const conversation = await client.query(`INSERT INTO conversations (match_id) VALUES ($1) ON CONFLICT (match_id) DO UPDATE SET closed_at = NULL RETURNING id`, [match.id]);
-        await client.query(`INSERT INTO conversation_members (conversation_id, account_id) VALUES ($1, $2), ($1, $3) ON CONFLICT DO NOTHING`, [conversation.rows[0].id, actor.rows[0].owner_id, target.rows[0].owner_id]);
+        conversationId = conversation.rows[0].id;
+        await client.query(`INSERT INTO conversation_members (conversation_id, account_id) VALUES ($1, $2), ($1, $3) ON CONFLICT DO NOTHING`, [conversationId, actor.rows[0].owner_id, target.rows[0].owner_id]);
       }
     }
     await client.query("COMMIT");
-    return { action: input.action, matchId: match?.id ?? null };
+    // The chat route is keyed by conversation, not by match, so the caller needs
+    // the conversation id to open the new room.
+    return { action: input.action, matchId: match?.id ?? null, conversationId };
   } catch (error) { await client.query("ROLLBACK"); throw error; } finally { client.release(); }
 }

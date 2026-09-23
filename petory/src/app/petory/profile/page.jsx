@@ -1,7 +1,7 @@
 "use client";
 import { sx, Hoverable, ImageSlot } from "../ui";
 import { usePetory } from "../context";
-import { visiblePosts, hashColor, categoryLabel, postTitle, avatarSrc, avatarInitial } from "../helpers";
+import { visiblePosts, hashColor, postTitle, avatarSrc, avatarInitial } from "../helpers";
 
 export default function ProfilePage() {
   const { state: s, ...a } = usePetory();
@@ -98,7 +98,9 @@ export default function ProfilePage() {
             <div style={sx("display:flex;flex-direction:column")}>
               {myPosts.map((post) => (
                 <div key={post.id} onClick={() => a.openPostDetail(post.id)} style={sx("display:flex;align-items:center;gap:14px;padding:14px 0;border-top:1px solid #ece7db;cursor:pointer")}>
-                  <div style={sx(`width:44px;height:44px;border-radius:12px;background:${hashColor(post.id)};flex:none`)} />
+                  <div style={sx(`width:44px;height:44px;border-radius:12px;background:${hashColor(post.id)};flex:none;overflow:hidden`)}>
+                    {post.photoSrc && <ImageSlot shape="rect" placeholder="" src={post.photoSrc} style="width:100%;height:100%" />}
+                  </div>
                   <div style={sx("flex:1;min-width:0")}>
                     <div style={sx("font-weight:800;font-size:14px")}>{postTitle(post)}</div>
                   </div>
@@ -113,10 +115,11 @@ export default function ProfilePage() {
             <div style={sx("display:flex;flex-direction:column")}>
               {savedPosts.map((post) => (
                 <div key={post.id} onClick={() => a.openPostDetail(post.id)} style={sx("display:flex;align-items:center;gap:14px;padding:14px 0;border-top:1px solid #ece7db;cursor:pointer")}>
-                  <div style={sx(`width:44px;height:44px;border-radius:12px;background:${hashColor(post.id)};flex:none`)} />
+                  <div style={sx(`width:44px;height:44px;border-radius:12px;background:${hashColor(post.id)};flex:none;overflow:hidden`)}>
+                    {post.photoSrc && <ImageSlot shape="rect" placeholder="" src={post.photoSrc} style="width:100%;height:100%" />}
+                  </div>
                   <div style={sx("flex:1;min-width:0")}>
                     <div style={sx("font-weight:800;font-size:14px")}>{postTitle(post)}</div>
-                    <div style={sx("font-size:12px;color:#8a8378;margin-top:2px")}>{categoryLabel(post)} · {post.time} · ❤ {post.likes}</div>
                   </div>
                   <span style={sx("color:#E3402B;font-weight:800;font-size:13px;cursor:pointer")}>ดู</span>
                 </div>

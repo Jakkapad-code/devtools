@@ -10,9 +10,21 @@ const PetoryContext = createContext(null);
 const PET_COLORS = ["#E9C79A", "#D9A15B", "#B0B0AE", "#EDE0C8", "#C7A374"];
 const REMEMBER_EMAIL_KEY = "petory_remember_email";
 
+/** Optional text from the API arrives as null; forms and trim() need a string. */
+function text(value) {
+  return value == null ? "" : String(value);
+}
+
 function toPetView(pet, index = 0) {
   return {
     ...pet,
+    // An empty breed is stored as NULL, so it comes back as null. The pet form
+    // treats these as text it can trim, which a null would break, so they are
+    // normalised the moment the record enters state.
+    breed: pet.breed ?? "",
+    bio: pet.bio ?? "",
+    personality: pet.personality ?? [],
+    interests: pet.interests ?? [],
     ownerId: "me",
     photo: PET_COLORS[index % PET_COLORS.length],
     photoSrc: petPhotoSrc(pet),
@@ -136,6 +148,11 @@ export function PetoryProvider({ children }) {
   // ---- simple page navigation ----
   const goHome = () => router.push("/petory/home");
   const goExplore = () => router.push("/petory/explore");
+  /** A trending tag is a shortcut into Explore already filtered to its topic. */
+  const goExploreCategory = (category) => {
+    update((s2) => ({ feedFilter: { ...s2.feedFilter, category, search: "" } }));
+    router.push("/petory/explore");
+  };
   const goMatching = () => router.push("/petory/matching");
   const goMessages = () => router.push("/petory/messages");
   const goMyPets = () => router.push("/petory/pets");
@@ -435,26 +452,31 @@ export function PetoryProvider({ children }) {
   const editPet = (id) => {
     const pet = s.pets.find((p) => p.id === id);
     if (!pet) return;
-    update({ petForm: { id: pet.id, name: pet.name, species: pet.species, breed: pet.breed, age: String(pet.age), weight: pet.weightKg == null ? "" : String(pet.weightKg), photoMediaId: pet.photoMediaId ?? null, gender: pet.gender, size: pet.size, personality: pet.personality.slice(), bio: pet.bio, interestsRaw: pet.interests.join(", ") } });
+    update({ petForm: { id: pet.id, name: text(pet.name), species: pet.species, breed: text(pet.breed), age: String(pet.age), weight: pet.weightKg == null ? "" : String(pet.weightKg), photoMediaId: pet.photoMediaId ?? null, gender: pet.gender, size: pet.size, personality: (pet.personality ?? []).slice(), bio: text(pet.bio), interestsRaw: (pet.interests ?? []).join(", ") } });
     router.push(`/petory/pets/${id}/edit`);
   };
   const cancelPetForm = () => router.push(s.petForm.id ? `/petory/pets/${s.petForm.id}` : "/petory/pets");
   const savePet = async () => {
     const f = s.petForm;
-    if (!f.name.trim()) { showToast("กรุณากรอกชื่อสัตว์เลี้ยง"); return; }
+    // A column that stores "" as NULL comes back as null, and an older form in
+    // memory can still hold one, so every text field is read through text().
+    const name = text(f.name).trim();
+    if (!name) { showToast("กรุณากรอกชื่อสัตว์เลี้ยง"); return; }
     const age = Number(f.age);
     if (!Number.isInteger(age) || age < 0 || age > 40) { showToast("กรุณากรอกอายุระหว่าง 0 ถึง 40 ปี"); return; }
-    const weightKg = f.weight.trim() ? Number(f.weight) : null;
+    const weight = text(f.weight).trim();
+    const weightKg = weight ? Number(weight) : null;
     if (weightKg !== null && !(weightKg > 0 && weightKg <= 500)) { showToast("กรุณากรอกน้ำหนักระหว่าง 0 ถึง 500 กก."); return; }
-    const interests = f.interestsRaw.split(",").map((x) => x.trim()).filter(Boolean);
-    const input = { name: f.name.trim(), species: f.species, breed: f.breed.trim(), age, weightKg, photoMediaId: f.photoMediaId, gender: f.gender, size: f.size, personality: f.personality, bio: f.bio.trim(), interests };
+    const interests = text(f.interestsRaw).split(",").map((x) => x.trim()).filter(Boolean);
+    const input = { name, species: f.species, breed: text(f.breed).trim(), age, weightKg, photoMediaId: f.photoMediaId, gender: f.gender, size: f.size, personality: f.personality ?? [], bio: text(f.bio).trim(), interests };
     update({ petPending: true });
     try {
       const response = f.id ? await petClient.update(f.id, input) : await petClient.create(input);
       const pet = toPetView(response.pet, s.pets.filter((item) => item.ownerId === "me").length);
       update((s2) => ({ pets: f.id ? s2.pets.map((item) => item.id === f.id ? pet : item) : s2.pets.concat([pet]) }));
       showToast(f.id ? "บันทึกการแก้ไขแล้ว" : "เพิ่มสัตว์เลี้ยงเรียบร้อยแล้ว!");
-      router.push(f.id ? `/petory/pets/${f.id}` : "/petory/pets");
+      // replace, not push: a saved form should not sit in history waiting for Back.
+      router.replace(f.id ? `/petory/pets/${f.id}` : "/petory/pets");
     } catch (error) {
       showToast(error.message);
     } finally {
@@ -519,7 +541,7 @@ export function PetoryProvider({ children }) {
     try {
       const { interaction } = await matchingClient.interact(actorPetId, id, "interest");
       if (interaction.matchId) {
-        update((s2) => ({ interestedPetIds: s2.interestedPetIds.concat([id]), matches: s2.matches.concat([{ id: interaction.matchId, petId: id, matchedAt: "วันนี้", updatedAt: Date.now(), messages: [] }]), newMatchPetId: id, newMatchPetName: petName ?? null, modals: { ...s2.modals, mutualMatch: true } }));
+        update((s2) => ({ interestedPetIds: s2.interestedPetIds.concat([id]), matches: s2.matches.concat([{ id: interaction.matchId, conversationId: interaction.conversationId, petId: id, matchedAt: "วันนี้", updatedAt: Date.now(), messages: [] }]), newMatchPetId: id, newMatchPetName: petName ?? null, modals: { ...s2.modals, mutualMatch: true } }));
       } else {
         update((s2) => ({ interestedPetIds: s2.interestedPetIds.concat([id]) }));
         showToast("ส่งความสนใจแล้ว รอการตอบรับ");
@@ -532,7 +554,8 @@ export function PetoryProvider({ children }) {
     const petId = s.newMatchPetId;
     const match = s.matches.slice().reverse().find((m) => m.petId === petId);
     update((s2) => ({ modals: { ...s2.modals, mutualMatch: false }, newMatchPetId: null, newMatchPetName: null }));
-    router.push(match ? `/petory/messages/${match.id}` : "/petory/messages");
+    // Messages are addressed by conversation; the match id is a different record.
+    router.push(match?.conversationId ? `/petory/messages/${match.conversationId}` : "/petory/messages");
   };
 
   // ---- messages ----
@@ -627,7 +650,7 @@ export function PetoryProvider({ children }) {
 
   const value = {
     state, update, showToast,
-    goHome, goExplore, goMatching, goMessages, goMyPets, goProfile, goFollowing, goFollowers, goSettings, goNotifications,
+    goHome, goExplore, goExploreCategory, goMatching, goMessages, goMyPets, goProfile, goFollowing, goFollowers, goSettings, goNotifications,
     onLoginEmail, onLoginPassword, onToggleRemember, loadRememberedEmail, onRegName, onRegEmail, onRegPassword, onRegConfirm,
     goForgot, login, loginBtnClick, register, sendResetLink,
     openLogoutConfirm, closeLogoutConfirm, confirmLogout,

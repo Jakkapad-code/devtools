@@ -14,7 +14,7 @@ describe("registerSchema", () => {
     expect(registerSchema.safeParse({
       displayName: "Jane",
       email: "jane@petory.test",
-      password: "too-short",
+      password: "short",
     }).success).toBe(false);
   });
 });

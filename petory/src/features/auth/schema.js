@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const PASSWORD_MIN_LENGTH = 12;
+export const PASSWORD_MIN_LENGTH = 6;
 
 const email = z.string().trim().toLowerCase().pipe(z.email());
 const password = z.string().min(PASSWORD_MIN_LENGTH, `Password must be at least ${PASSWORD_MIN_LENGTH} characters.`).max(128);
