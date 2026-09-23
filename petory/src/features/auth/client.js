@@ -44,6 +44,11 @@ export const mediaClient = {
     body.set("file", file);
     return requestJson("/api/media/avatar", { method: "POST", body });
   },
+  upload: (file) => {
+    const body = new FormData();
+    body.set("file", file);
+    return requestJson("/api/media", { method: "POST", body });
+  },
 };
 
 export const petClient = {
@@ -64,6 +69,7 @@ export const postClient = {
     Object.entries(filters).forEach(([key, value]) => { if (value) params.set(key, value); });
     return requestJson(`/api/posts${params.size ? `?${params}` : ""}`);
   },
+  get: (id) => requestJson(`/api/posts/${id}`),
   create: (post) => postJson("/api/posts", post),
   update: (id, post) => requestJson(`/api/posts/${id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(post) }),
   remove: (id) => requestJson(`/api/posts/${id}`, { method: "DELETE" }),

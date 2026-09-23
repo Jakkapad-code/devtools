@@ -1,11 +1,12 @@
 "use client";
 import { sx, Hoverable, ImageSlot } from "../ui";
 import { usePetory } from "../context";
-import { PERSONALITY_OPTIONS } from "../constants";
+import { PERSONALITY_OPTIONS, CATEGORY_LABELS } from "../constants";
 import { petById } from "../helpers";
 import ModalShell from "./ModalShell";
 import ConfirmModal from "./ConfirmModal";
 import Dropdown from "./Dropdown";
+import ImageAdjuster from "./ImageAdjuster";
 
 const USER_REASONS = ["Harassment", "Spam", "Fake Account", "Unsafe Behavior", "Inappropriate Behavior"];
 const POST_REASONS = ["Spam", "Inappropriate Content", "Animal Abuse", "False Information", "Harassment"];
@@ -27,7 +28,17 @@ export default function Modals() {
   }));
   const postPetLabel = (s.pets.find((p) => p.id === s.postForm.petId) || {}).name || "เลือกสัตว์เลี้ยง (ไม่บังคับ)";
 
-  const newMatchPet = s.newMatchPetId ? petById(s, s.newMatchPetId) : null;
+  // The five buckets the feeds actually filter by; tips covers event/question too.
+  const postCategoryOptions = ["story", "recipe", "place", "clinic", "tips"].map((key) => ({
+    label: CATEGORY_LABELS[key], onSelect: () => a.selectPostCategory(key),
+    optionStyle: "padding:10px 12px;border-radius:8px;font-size:14px;cursor:pointer;" + (key === s.postForm.category ? "background:#FDEDEA;color:#E4402B;font-weight:700" : ""),
+  }));
+  const postCategoryLabel = CATEGORY_LABELS[s.postForm.category] || "เลือกหมวดหมู่";
+
+  // Matching candidates live in that page's own state, so fall back to the name it captured.
+  const newMatchPet = s.newMatchPetId
+    ? petById(s, s.newMatchPetId) || (s.newMatchPetName ? { name: s.newMatchPetName } : null)
+    : null;
   const myFirstPetName = (s.pets.find((p) => p.ownerId === "me") || {}).name || "YOUR PET";
 
   return (
@@ -71,9 +82,16 @@ export default function Modals() {
             {s.postFormIsBlog && (
               <input placeholder="หัวข้อเรื่อง" value={s.postForm.title} onChange={a.onPostTitle} style={sx("padding:14px 16px;border-radius:12px;border:2px solid #201C16;font-size:15px;font-weight:800")} />
             )}
-            <div style={sx("height:140px;border-radius:14px;overflow:hidden")}>
-              <ImageSlot shape="rect" placeholder="drag & drop or click to upload image" style="width:100%;height:100%" />
-            </div>
+            <label title="อัปโหลดรูปประกอบโพสต์" style={sx("height:140px;border-radius:14px;overflow:hidden;position:relative;display:block;cursor:pointer")}>
+              <ImageSlot shape="rect" placeholder={s.postPhotoPending ? "กำลังอัปโหลด..." : "คลิกเพื่อเลือกรูป"} src={s.postForm.photoMediaId ? `/api/media/${s.postForm.photoMediaId}` : undefined} style="width:100%;height:100%" />
+              <input type="file" accept="image/jpeg,image/png,image/webp" onChange={a.uploadPostPhoto} disabled={s.postPhotoPending} style={{ display: "none" }} />
+              <span style={sx("position:absolute;right:10px;bottom:10px;background:#E3402B;color:#fff;border-radius:100px;padding:6px 14px;font-size:12px;font-weight:800")}>
+                {s.postPhotoPending ? "กำลังอัปโหลด..." : s.postForm.photoMediaId ? "เปลี่ยนรูป" : "เพิ่มรูป"}
+              </span>
+            </label>
+            <Dropdown label={postCategoryLabel} open={s.fieldDropdownOpen === "postCategory"} onToggle={a.togglePostCategoryDropdown} options={postCategoryOptions}
+              buttonStyle="width:100%;box-sizing:border-box;padding:14px 16px;border-radius:12px;border:2px solid #201C16;font-size:14px;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:space-between;text-align:left"
+              panelStyle="position:absolute;top:calc(100% + 6px);left:0;right:0;background:#fff;border-radius:12px;border:2px solid #201C16;padding:6px;z-index:10;display:flex;flex-direction:column;gap:2px;max-height:220px;overflow-y:auto" />
             <textarea placeholder="เขียนแคปชั่น..." value={s.postForm.caption} onChange={a.onPostCaption} style={sx("padding:14px 16px;border-radius:12px;border:2px solid #201C16;font-size:15px;min-height:80px;resize:vertical")} />
             <Dropdown label={postPetLabel} open={s.fieldDropdownOpen === "postPet"} onToggle={a.togglePostPetDropdown} options={postPetOptions}
               buttonStyle="width:100%;box-sizing:border-box;padding:14px 16px;border-radius:12px;border:2px solid #201C16;font-size:14px;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:space-between;text-align:left"
@@ -189,6 +207,14 @@ export default function Modals() {
       {m.logoutConfirm && <ConfirmModal title="Log Out?" body="แน่ใจไหมว่าต้องการออกจากระบบ" confirmLabel="Log Out" onConfirm={a.confirmLogout} onCancel={a.closeLogoutConfirm} danger={false} />}
       {m.deletePost && <ConfirmModal title="Delete This Post?" body="การลบไม่สามารถย้อนกลับได้" confirmLabel="Delete" onConfirm={a.confirmDeletePost} onCancel={a.closeDeletePost} />}
       {m.deletePet && <ConfirmModal title="Delete This Pet?" body="การลบไม่สามารถย้อนกลับได้" confirmLabel="Delete" onConfirm={a.confirmDeletePet} onCancel={a.closeDeletePet} />}
+      {s.pendingImage && (
+        <ImageAdjuster
+          file={s.pendingImage.file}
+          aspect={s.pendingImage.aspect}
+          onCancel={a.cancelImageAdjust}
+          onConfirm={a.confirmImageAdjust}
+        />
+      )}
     </>
   );
 }

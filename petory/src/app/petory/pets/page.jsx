@@ -9,9 +9,10 @@ export default function MyPetsPage() {
   const myPets = s.pets.filter((p) => p.ownerId === "me").map((p, i) => ({ ...p, tilt: TILTS[i % TILTS.length] }));
 
   return (
+    <div style={sx("min-height:calc(100vh - 68px);background-color:#160707BA")}>
     <div style={sx("max-width:1100px;margin:0 auto;padding:clamp(20px,4vw,48px) clamp(20px,4vw,48px) 120px")}>
       <div style={sx("display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-bottom:32px")}>
-        <h1 style={sx("font-family:'Anton',sans-serif;font-size:clamp(2.8rem,9vw,5.5rem);line-height:0.9;text-transform:uppercase;margin:0")}>My Pets</h1>
+        <h1 style={sx("font-family:'Anton',sans-serif;font-size:clamp(2.8rem,9vw,5.5rem);line-height:0.9;text-transform:uppercase;margin:0;color:#DCDCDC")}>My Pets</h1>
         <Hoverable as="button" onClick={goAddPet} style="padding:14px 24px;border-radius:100px;border:none;background:#E3402B;color:#fff;font-weight:800;font-size:13px;letter-spacing:0.03em;text-transform:uppercase;cursor:pointer;transition:background 0.15s ease,transform 0.15s ease" hoverStyle="background:#201C16;transform:translateY(-2px)" activeStyle="transform:scale(0.95)">+ Add Pet</Hoverable>
       </div>
       <div style={sx("display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:24px")}>
@@ -26,6 +27,7 @@ export default function MyPetsPage() {
           </Hoverable>
         ))}
       </div>
+    </div>
     </div>
   );
 }

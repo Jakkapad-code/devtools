@@ -5,7 +5,7 @@ export default function HomePostCard({ post }) {
   return (
     <Hoverable style="border: none; border-radius: 20px; overflow: hidden; background: #fff; box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px; transition: transform 0.2s ease,box-shadow 0.2s ease" hoverStyle="transform:translateY(-4px);box-shadow:rgba(0, 0, 0, 0.22) 0px 4px 12px">
       <div style={sx("display: flex; align-items: center; gap: 10px; padding: 14px 16px; background-color: #FFFFFFED")}>
-        <div onClick={post.onAuthorClick} style={sx(`width:38px;height:38px;border-radius:50%;background:${post.authorColor};flex:none;cursor:pointer`)} />
+        <div onClick={post.onAuthorClick} style={sx(`width:38px;height:38px;border-radius:50%;background:${post.authorColor};flex:none;cursor:pointer;overflow:hidden`)}>{post.authorAvatarSrc && <ImageSlot shape="circle" placeholder="" src={post.authorAvatarSrc} style="width:100%;height:100%" />}</div>
         <div onClick={post.onAuthorClick} style={sx("flex:1;min-width:0;cursor:pointer")}>
           <div style={sx("font-weight:800;font-size:14px")}>{post.authorName}</div>
           {post.petName && <span style={sx("display:inline-block;margin-top:2px;background:#F4C9D6;color:#201C16;font-weight:700;font-size:11px;padding:3px 10px;border-radius:100px")}>🐾 {post.petName}</span>}

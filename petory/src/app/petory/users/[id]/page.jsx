@@ -1,8 +1,8 @@
 "use client";
 import { use, useEffect, useState } from "react";
-import { sx, Hoverable } from "../../ui";
+import { sx, Hoverable, ImageSlot } from "../../ui";
 import { usePetory } from "../../context";
-import { visiblePosts, hashColor, postTitle } from "../../helpers";
+import { visiblePosts, hashColor, postTitle, petPhotoSrc, demoPostImage } from "../../helpers";
 import BackLink from "../../components/BackLink";
 import { socialClient } from "@/features/auth/client";
 
@@ -19,7 +19,11 @@ export default function UserProfilePage({ params }) {
       .then(({ user, pets: ownedPets }) => {
         if (!active) return;
         setAccount(user);
-        setPets(ownedPets.map((pet) => ({ ...pet, photo: hashColor(pet.id) })));
+        setPets(ownedPets.map((pet, index) => ({
+          ...pet,
+          photo: hashColor(pet.id),
+          photoSrc: petPhotoSrc(pet),
+        })));
       })
       .catch(() => { if (active) setAccount(null); });
     return () => { active = false; };
@@ -48,7 +52,7 @@ export default function UserProfilePage({ params }) {
       <BackLink fallbackHref="/petory/home" style="font-weight:800;font-size:15px;color:#E3402B;cursor:pointer" />
       <div style={sx("background:#fff;border-radius:24px;box-shadow:rgba(0, 0, 0, 0.16) 0px 1px 4px;padding:28px;margin-top:20px")}>
         <div style={sx("display:flex;align-items:center;gap:28px;margin-bottom:20px;flex-wrap:wrap")}>
-          <div style={sx(`width:96px;height:96px;border-radius:50%;background:${u.color};display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:32px;flex:none;border:3px solid #fff;box-shadow:rgba(0, 0, 0, 0.16) 0px 1px 4px`)}>{u.name.charAt(0)}</div>
+          <div style={sx(`width:96px;height:96px;border-radius:50%;background:${u.color};display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:32px;flex:none;border:3px solid #fff;overflow:hidden;box-shadow:rgba(0, 0, 0, 0.16) 0px 1px 4px`)}>{account.avatarMediaId ? <ImageSlot shape="circle" placeholder="" src={`/api/media/${account.avatarMediaId}`} style="width:100%;height:100%" /> : u.name.charAt(0)}</div>
           <div style={sx("flex:1;min-width:200px")}>
             <div style={sx("display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:12px")}>
               <h1 style={sx("font-family:'Anton',sans-serif;font-size:clamp(1.6rem,4vw,2rem);text-transform:uppercase;margin:0")}>{u.name}</h1>
@@ -66,7 +70,9 @@ export default function UserProfilePage({ params }) {
         <div style={sx("display:flex;flex-wrap:wrap;gap:20px;padding:16px 0 20px")}>
           {pets.map((pet) => (
             <div key={pet.id} onClick={() => a.openPetProfile(pet.id)} style={sx("display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;width:76px")}>
-              <div style={sx(`width:64px;height:64px;border-radius:50%;background:${pet.photo};flex:none;border:2px solid #ece7db`)} />
+              <div style={sx(`width:64px;height:64px;border-radius:50%;background:${pet.photo};flex:none;border:2px solid #ece7db;overflow:hidden`)}>
+                <ImageSlot shape="circle" placeholder={pet.name} src={pet.photoSrc} style="width:100%;height:100%" />
+              </div>
               <span style={sx("font-weight:700;font-size:12px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%")}>{pet.name}</span>
             </div>
           ))}
@@ -78,7 +84,10 @@ export default function UserProfilePage({ params }) {
         <div style={sx("display:grid;grid-template-columns:repeat(3,1fr);gap:4px")}>
           {posts.map((post) => (
             <Hoverable key={post.id} onClick={() => a.openPostDetail(post.id)} style={`position: relative; aspect-ratio: 1; background: ${hashColor(post.id)}; cursor: pointer; overflow: hidden; display: flex; align-items: flex-end; padding: 10px; border-radius: 3px; opacity: 1`} hoverStyle="opacity:0.9">
-              <span style={sx("color:#fff;font-weight:800;font-size:12px;line-height:1.3;text-shadow:0 1px 4px rgba(0,0,0,0.5)")}>{postTitle(post)}</span>
+              <div style={sx("position:absolute;inset:0")}>
+                <ImageSlot shape="rect" placeholder={postTitle(post)} src={post.photoSrc || demoPostImage(post.id)} style="width:100%;height:100%" />
+              </div>
+              <span style={sx("position:relative;color:#fff;font-weight:800;font-size:12px;line-height:1.3;text-shadow:0 1px 4px rgba(0,0,0,0.5)")}>{postTitle(post)}</span>
             </Hoverable>
           ))}
         </div>

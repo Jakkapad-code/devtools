@@ -2,7 +2,8 @@ import "server-only";
 import { query } from "@/server/db/pool";
 
 const fields = `p.id, p.author_id AS "authorId", p.pet_id AS "petId", p.category, p.title,
-  p.caption, p.location_label AS "locationLabel", p.created_at AS "createdAt", p.updated_at AS "updatedAt"`;
+  p.caption, p.location_label AS "locationLabel", p.photo_media_id AS "photoMediaId",
+  p.created_at AS "createdAt", p.updated_at AS "updatedAt"`;
 
 export async function listPostsForAuthor(authorId) {
   const result = await query(
@@ -37,7 +38,7 @@ export async function listFeedPosts(viewerId, filters = {}) {
   const order = filters.sort === "popular" ? "likes DESC, p.created_at DESC, p.id DESC" : "p.created_at DESC, p.id DESC";
   const limit = add((filters.limit || 20) + 1);
   const result = await query(
-    `SELECT ${fields}, a.display_name AS "authorName", '#2B5468' AS "authorColor",
+    `SELECT ${fields}, a.display_name AS "authorName", '#2B5468' AS "authorColor", a.avatar_media_id AS "authorAvatarMediaId",
        (SELECT COUNT(*)::integer FROM post_likes pl WHERE pl.post_id = p.id) AS likes,
        EXISTS(SELECT 1 FROM post_likes pl WHERE pl.post_id = p.id AND pl.account_id = $1) AS liked,
        EXISTS(SELECT 1 FROM post_saves ps WHERE ps.post_id = p.id AND ps.account_id = $1) AS saved,
@@ -50,6 +51,24 @@ export async function listFeedPosts(viewerId, filters = {}) {
     values
   );
   return result.rows;
+}
+
+/** Any post a viewer may open, with the same extras the feed returns. */
+export async function getVisiblePost(viewerId, postId) {
+  const result = await query(
+    `SELECT ${fields}, a.display_name AS "authorName", '#2B5468' AS "authorColor", a.avatar_media_id AS "authorAvatarMediaId",
+       (SELECT COUNT(*)::integer FROM post_likes pl WHERE pl.post_id = p.id) AS likes,
+       EXISTS(SELECT 1 FROM post_likes pl WHERE pl.post_id = p.id AND pl.account_id = $1) AS liked,
+       EXISTS(SELECT 1 FROM post_saves ps WHERE ps.post_id = p.id AND ps.account_id = $1) AS saved,
+       COALESCE((SELECT json_agg(json_build_object('id', c.id, 'user', ca.display_name, 'color', '#2B5468', 'text', c.body, 'createdAt', c.created_at) ORDER BY c.created_at)
+         FROM post_comments c JOIN accounts ca ON ca.id = c.author_id
+         WHERE c.post_id = p.id AND c.deleted_at IS NULL), '[]'::json) AS comments
+     FROM posts p JOIN accounts a ON a.id = p.author_id
+     WHERE p.id = $2 AND p.deleted_at IS NULL AND a.deleted_at IS NULL
+       AND NOT EXISTS (SELECT 1 FROM blocks b WHERE (b.blocker_id = $1 AND b.blocked_id = p.author_id) OR (b.blocker_id = p.author_id AND b.blocked_id = $1))`,
+    [viewerId, postId]
+  );
+  return result.rows[0] ?? null;
 }
 
 export async function getOwnedPost(authorId, postId) {
@@ -71,9 +90,9 @@ export async function createPost(authorId, input) {
   const petId = await ownedPetId(authorId, input.petId);
   if (input.petId && !petId) return undefined;
   const result = await query(
-    `INSERT INTO posts (author_id, pet_id, category, title, caption, location_label)
-     VALUES ($1, $2, $3, NULLIF($4, ''), $5, NULLIF($6, '')) RETURNING id`,
-    [authorId, petId ?? null, input.category, input.title, input.caption, input.locationLabel]
+    `INSERT INTO posts (author_id, pet_id, category, title, caption, location_label, photo_media_id)
+     VALUES ($1, $2, $3, NULLIF($4, ''), $5, NULLIF($6, ''), $7) RETURNING id`,
+    [authorId, petId ?? null, input.category, input.title, input.caption, input.locationLabel, input.photoMediaId]
   );
   return getOwnedPost(authorId, result.rows[0].id);
 }
@@ -82,9 +101,9 @@ export async function updateOwnedPost(authorId, postId, input) {
   const petId = await ownedPetId(authorId, input.petId);
   if (input.petId && !petId) return undefined;
   const result = await query(
-    `UPDATE posts SET pet_id = $3, category = $4, title = NULLIF($5, ''), caption = $6, location_label = NULLIF($7, '')
+    `UPDATE posts SET pet_id = $3, category = $4, title = NULLIF($5, ''), caption = $6, location_label = NULLIF($7, ''), photo_media_id = $8
      WHERE id = $1 AND author_id = $2 AND deleted_at IS NULL RETURNING id`,
-    [postId, authorId, petId ?? null, input.category, input.title, input.caption, input.locationLabel]
+    [postId, authorId, petId ?? null, input.category, input.title, input.caption, input.locationLabel, input.photoMediaId]
   );
   if (!result.rows[0]) return null;
   return getOwnedPost(authorId, postId);

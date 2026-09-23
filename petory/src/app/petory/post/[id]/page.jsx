@@ -1,18 +1,43 @@
 "use client";
-import { use } from "react";
+import { use, useEffect, useState } from "react";
 import { sx, Hoverable, ImageSlot } from "../../ui";
 import { usePetory } from "../../context";
-import { userById, petById, hashColor, categoryLabel, demoPostImage } from "../../helpers";
+import { userById, petById, hashColor, categoryLabel, categoryColor, demoPostImage, avatarSrc } from "../../helpers";
 import { BLOG_TITLES } from "../../constants";
 import BackLink from "../../components/BackLink";
+import { postClient } from "@/features/auth/client";
 
 export default function PostDetailPage({ params }) {
   const { id } = use(params);
   const { state: s, ...a } = usePetory();
-  const p = s.posts.find((pp) => pp.id === id);
+  const localPost = s.posts.find((pp) => pp.id === id);
+  // undefined while loading, null when the post cannot be viewed.
+  const [remotePost, setRemotePost] = useState(undefined);
+
+  useEffect(() => {
+    if (localPost) return;
+    let active = true;
+    void postClient.get(id)
+      .then(({ post }) => { if (active) setRemotePost({ ...post, authorId: post.authorId === s.user?.id ? "me" : post.authorId, time: "now" }); })
+      .catch(() => { if (active) setRemotePost(null); });
+    return () => { active = false; };
+  }, [id, localPost, s.user?.id]);
+
+  const p = localPost || remotePost;
+  if (p === undefined) {
+    return (
+      <div style={sx("max-width:760px;margin:0 auto;padding:clamp(20px,4vw,48px) clamp(20px,4vw,48px) 120px")}>
+        <div style={sx("height:320px;border-radius:24px;background:#FFFFFFA0;margin-top:44px")} />
+      </div>
+    );
+  }
   if (!p) return <div style={sx("max-width:760px;margin:0 auto;padding:48px;text-align:center")}>ไม่พบโพสต์นี้</div>;
 
-  const author = userById(s, p.authorId);
+  const localAuthor = userById(s, p.authorId);
+  const author = localAuthor.name === "Unknown" && p.authorName
+    ? { name: p.authorName, color: p.authorColor || "#2B5468" }
+    : localAuthor;
+  const authorAvatar = avatarSrc(p.authorAvatarMediaId ?? (p.authorId === "me" ? s.user?.avatarMediaId : undefined));
   const pet = petById(s, p.petId);
   const isMine = p.authorId === "me";
 
@@ -24,14 +49,16 @@ export default function PostDetailPage({ params }) {
           <ImageSlot shape="rect" placeholder={pet ? pet.name + " PHOTO" : "POST PHOTO"} src={p.photoSrc || pet?.photoSrc || demoPostImage(p.id)} style="width:100%;height:100%" />
         </div>
         <div style={sx("display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px")}>
-          <span style={sx("background:#F4C9D6;color:#201C16;font-weight:700;font-size:12px;padding:6px 14px;border-radius:100px")}>{categoryLabel(p)}</span>
+          <span style={sx(`background:${categoryColor(p)};color:#201C16;font-weight:700;font-size:12px;padding:6px 14px;border-radius:100px`)}>{categoryLabel(p)}</span>
         </div>
         {(p.title || (p.category !== "story" && BLOG_TITLES[p.id])) && (
           <h1 style={sx("font-family:'Anton',sans-serif;font-size:clamp(1.8rem,5vw,2.6rem);line-height:1.1;text-transform:uppercase;margin:0 0 16px")}>{p.title || BLOG_TITLES[p.id]}</h1>
         )}
         <div style={sx("display:flex;align-items:center;gap:10px;margin-bottom:18px")}>
-          <div style={sx(`width:34px;height:34px;border-radius:50%;background:${author.color};display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:13px;flex:none`)}>{author.name.charAt(0)}</div>
-          <div>
+          <div onClick={() => a.openUserProfile(p.authorId)} style={sx(`width:34px;height:34px;border-radius:50%;background:${author.color};display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:13px;flex:none;cursor:pointer;overflow:hidden`)}>
+            {authorAvatar ? <ImageSlot shape="circle" placeholder="" src={authorAvatar} style="width:100%;height:100%" /> : author.name.charAt(0)}
+          </div>
+          <div onClick={() => a.openUserProfile(p.authorId)} style={sx("cursor:pointer")}>
             <div style={sx("font-weight:800;font-size:15px")}>{author.name}</div>
             <div style={sx("font-size:12px;color:#8a8378")}>{p.time}</div>
           </div>

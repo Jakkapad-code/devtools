@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { postIdSchema, postInputSchema } from "@/features/posts/schema";
 import { getCurrentAccount } from "@/server/auth/session";
-import { deleteOwnedPost, getOwnedPost, updateOwnedPost } from "@/server/posts/repository";
+import { deleteOwnedPost, getVisiblePost, updateOwnedPost } from "@/server/posts/repository";
 import { jsonError } from "@/server/http/response";
 import { requireSameOrigin } from "@/server/security/origin";
 
@@ -18,7 +18,7 @@ export const dynamic = "force-dynamic";
 
 export async function GET(_request, context) {
   const current = await resolve(context); if (current.error) return current.error;
-  const post = await getOwnedPost(current.account.id, current.postId);
+  const post = await getVisiblePost(current.account.id, current.postId);
   return post ? NextResponse.json({ post }) : jsonError("Post not found", 404);
 }
 

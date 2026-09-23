@@ -9,12 +9,12 @@ export default function ExplorePostCard({ post }) {
       </div>
       <div style={sx("padding:16px;display:flex;flex-direction:column;gap:10px;flex:1")}>
         <div style={sx("display:flex;gap:8px;flex-wrap:wrap")}>
-          <span style={sx("background:#F4C9D6;color:#201C16;font-weight:700;font-size:11px;padding:5px 12px;border-radius:100px")}>{post.categoryLabel}</span>
+          <span style={sx(`background:${post.categoryColor};color:#201C16;font-weight:700;font-size:11px;padding:5px 12px;border-radius:100px`)}>{post.categoryLabel}</span>
         </div>
         <p onClick={post.onOpen} style={sx("margin:0;font-size:16px;line-height:1.4;font-weight:800;color:#201C16;cursor:pointer")}>{post.title}</p>
         <p style={sx("margin:0;font-size:13px;line-height:1.5;color:#4a453c;flex:1")}>{post.excerpt}</p>
         <div style={sx("display:flex;align-items:center;gap:8px;margin-top:4px")}>
-          <div style={sx(`width:24px;height:24px;border-radius:50%;background:${post.authorColor};display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:11px;flex:none`)}>{post.authorInitial}</div>
+          <div style={sx(`width:24px;height:24px;border-radius:50%;background:${post.authorColor};display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:11px;flex:none;overflow:hidden`)}>{post.authorAvatarSrc ? <ImageSlot shape="circle" placeholder="" src={post.authorAvatarSrc} style="width:100%;height:100%" /> : post.authorInitial}</div>
           <span style={sx("font-size:12px;color:#8a8378;flex:1;min-width:0")}>{post.authorName} · {post.time}</span>
           <button onClick={post.onLike} style={sx(`background:none;border:none;cursor:pointer;font-weight:700;font-size:12px;color:${post.likeColor};display:flex;align-items:center;gap:3px;padding:0`)}>
             <span style={sx(`display:inline-flex;${post.likeAnim}`)}>

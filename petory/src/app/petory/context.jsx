@@ -2,8 +2,8 @@
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { initialState } from "./constants";
-import { demoPetImage } from "./helpers";
-import { authClient, matchingClient, petClient, postClient, socialClient } from "@/features/auth/client";
+import { petPhotoSrc } from "./helpers";
+import { authClient, matchingClient, mediaClient, petClient, postClient, socialClient } from "@/features/auth/client";
 
 const PetoryContext = createContext(null);
 
@@ -11,7 +11,13 @@ const PET_COLORS = ["#E9C79A", "#D9A15B", "#B0B0AE", "#EDE0C8", "#C7A374"];
 const REMEMBER_EMAIL_KEY = "petory_remember_email";
 
 function toPetView(pet, index = 0) {
-  return { ...pet, ownerId: "me", photo: PET_COLORS[index % PET_COLORS.length], photoSrc: demoPetImage(pet.name, index), distance: 0 };
+  return {
+    ...pet,
+    ownerId: "me",
+    photo: PET_COLORS[index % PET_COLORS.length],
+    photoSrc: petPhotoSrc(pet),
+    distance: 0,
+  };
 }
 
 function toPostView(post, currentAccountId) {
@@ -19,6 +25,7 @@ function toPostView(post, currentAccountId) {
     ...post,
     authorId: post.authorId === currentAccountId ? "me" : post.authorId,
     location: post.locationLabel || "",
+    photoSrc: post.photoMediaId ? `/api/media/${post.photoMediaId}` : undefined,
     likes: post.likes || 0,
     liked: Boolean(post.liked),
     saved: Boolean(post.saved),
@@ -304,12 +311,12 @@ export function PetoryProvider({ children }) {
   const unfollowUser = (userId) => toggleFollow(userId);
 
   // ---- create / edit post modal ----
-  const openCreatePost = (isBlog) => update((s2) => ({ modals: { ...s2.modals, createPost: true }, postFormIsBlog: !!isBlog, editingPostId: null, postForm: { caption: "", petId: "", category: isBlog ? "tips" : "story", location: "", title: "" } }));
+  const openCreatePost = (isBlog) => update((s2) => ({ modals: { ...s2.modals, createPost: true }, postFormIsBlog: !!isBlog, editingPostId: null, postForm: { caption: "", petId: "", category: isBlog ? "tips" : "story", location: "", title: "", photoMediaId: null } }));
   const openCreatePostBlog = () => openCreatePost(true);
   const openEditPost = (id) => {
     const p = s.posts.find((pp) => pp.id === id);
     if (!p) return;
-    update((s2) => ({ modals: { ...s2.modals, createPost: true }, postFormIsBlog: p.category !== "story", editingPostId: id, postMenuOpenId: null, postForm: { caption: p.caption, petId: p.petId || "", category: p.category, location: p.location || "", title: p.title || "" } }));
+    update((s2) => ({ modals: { ...s2.modals, createPost: true }, postFormIsBlog: p.category !== "story", editingPostId: id, postMenuOpenId: null, postForm: { caption: p.caption, petId: p.petId || "", category: p.category, location: p.location || "", title: p.title || "", photoMediaId: p.photoMediaId ?? null } }));
   };
   const togglePostMenu = (id, e) => { if (e) e.stopPropagation(); update((s2) => ({ postMenuOpenId: s2.postMenuOpenId === id ? null : id })); };
   const openDeletePost = (id) => update((s2) => ({ modals: { ...s2.modals, deletePost: true }, deletePostId: id, postMenuOpenId: null }));
@@ -333,13 +340,54 @@ export function PetoryProvider({ children }) {
   const closeCreatePost = () => update((s2) => ({ modals: { ...s2.modals, createPost: false } }));
   const onPostCaption = (e) => update((s2) => ({ postForm: { ...s2.postForm, caption: e.target.value } }));
   const onPostTitle = (e) => update((s2) => ({ postForm: { ...s2.postForm, title: e.target.value } }));
+  // Only "story" reaches the Home feed, so the choice also decides where a post lands.
+  const selectPostCategory = (category) => update((s2) => ({
+    postForm: { ...s2.postForm, category },
+    postFormIsBlog: category !== "story",
+    fieldDropdownOpen: null,
+  }));
+  const togglePostCategoryDropdown = () => update((s2) => ({ fieldDropdownOpen: s2.fieldDropdownOpen === "postCategory" ? null : "postCategory" }));
+  /** Picking a file opens the adjuster; the upload happens on confirm. */
+  const pickImage = (target, aspect) => (event) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (file) update({ pendingImage: { file, target, aspect } });
+  };
+  const cancelImageAdjust = () => update({ pendingImage: null });
+
+  const uploadPostPhoto = pickImage("post", 16 / 9);
+
+  const confirmImageAdjust = async (file) => {
+    const target = s.pendingImage?.target;
+    if (!target) return;
+    update({ pendingImage: null, [`${target}PhotoPending`]: true });
+    try {
+      if (target === "avatar") {
+        const { mediaId } = await mediaClient.uploadAvatar(file);
+        update((s2) => ({
+          user: { ...s2.user, avatarMediaId: mediaId },
+          users: s2.users.map((user) => user.id === "me" ? { ...user, avatarMediaId: mediaId } : user),
+        }));
+        showToast("อัปโหลดรูปโปรไฟล์แล้ว");
+        return;
+      }
+      const { mediaId } = await mediaClient.upload(file);
+      const formKey = target === "post" ? "postForm" : "petForm";
+      update((s2) => ({ [formKey]: { ...s2[formKey], photoMediaId: mediaId } }));
+      showToast("อัปโหลดรูปแล้ว");
+    } catch (error) {
+      showToast(error.message);
+    } finally {
+      update({ [`${target}PhotoPending`]: false });
+    }
+  };
   const selectPostPet = (id) => update((s2) => ({ postForm: { ...s2.postForm, petId: id }, fieldDropdownOpen: null }));
   const togglePostPetDropdown = () => update((s2) => ({ fieldDropdownOpen: s2.fieldDropdownOpen === "postPet" ? null : "postPet" }));
   const submitPost = async () => {
     const f = s.postForm;
     if (!f.caption.trim()) { showToast("กรุณาเขียนแคปชั่นก่อนโพสต์"); return; }
     const editId = s.editingPostId;
-    const input = { category: f.category, caption: f.caption.trim(), title: f.title.trim(), locationLabel: f.location.trim(), petId: f.petId || null };
+    const input = { category: f.category, caption: f.caption.trim(), title: f.title.trim(), locationLabel: f.location.trim(), petId: f.petId || null, photoMediaId: f.photoMediaId };
     const isBlog = s.postFormIsBlog;
     update({ postPending: true });
     try {
@@ -369,6 +417,8 @@ export function PetoryProvider({ children }) {
   const selectPetSize = (v2) => update((s2) => ({ petForm: { ...s2.petForm, size: v2 }, fieldDropdownOpen: null }));
   const onPetBreed = (e) => update((s2) => ({ petForm: { ...s2.petForm, breed: e.target.value } }));
   const onPetAge = (e) => update((s2) => ({ petForm: { ...s2.petForm, age: e.target.value } }));
+  const onPetWeight = (e) => update((s2) => ({ petForm: { ...s2.petForm, weight: e.target.value } }));
+  const uploadPetPhoto = pickImage("pet", 1);
   const onPetBio = (e) => update((s2) => ({ petForm: { ...s2.petForm, bio: e.target.value } }));
   const onPetInterests = (e) => update((s2) => ({ petForm: { ...s2.petForm, interestsRaw: e.target.value } }));
   const togglePetPersonality = (label) => update((s2) => {
@@ -377,13 +427,13 @@ export function PetoryProvider({ children }) {
     return { petForm: { ...s2.petForm, personality } };
   });
   const goAddPet = () => {
-    update({ petForm: { id: null, name: "", species: "Dog", breed: "", age: "", gender: "Male", size: "Medium", personality: [], bio: "", interestsRaw: "" } });
+    update({ petForm: { id: null, name: "", species: "Dog", breed: "", age: "", weight: "", photoMediaId: null, gender: "Male", size: "Medium", personality: [], bio: "", interestsRaw: "" } });
     router.push("/petory/pets/new");
   };
   const editPet = (id) => {
     const pet = s.pets.find((p) => p.id === id);
     if (!pet) return;
-    update({ petForm: { id: pet.id, name: pet.name, species: pet.species, breed: pet.breed, age: String(pet.age), gender: pet.gender, size: pet.size, personality: pet.personality.slice(), bio: pet.bio, interestsRaw: pet.interests.join(", ") } });
+    update({ petForm: { id: pet.id, name: pet.name, species: pet.species, breed: pet.breed, age: String(pet.age), weight: pet.weightKg == null ? "" : String(pet.weightKg), photoMediaId: pet.photoMediaId ?? null, gender: pet.gender, size: pet.size, personality: pet.personality.slice(), bio: pet.bio, interestsRaw: pet.interests.join(", ") } });
     router.push(`/petory/pets/${id}/edit`);
   };
   const cancelPetForm = () => router.push(s.petForm.id ? `/petory/pets/${s.petForm.id}` : "/petory/pets");
@@ -392,8 +442,10 @@ export function PetoryProvider({ children }) {
     if (!f.name.trim()) { showToast("กรุณากรอกชื่อสัตว์เลี้ยง"); return; }
     const age = Number(f.age);
     if (!Number.isInteger(age) || age < 0 || age > 40) { showToast("กรุณากรอกอายุระหว่าง 0 ถึง 40 ปี"); return; }
+    const weightKg = f.weight.trim() ? Number(f.weight) : null;
+    if (weightKg !== null && !(weightKg > 0 && weightKg <= 500)) { showToast("กรุณากรอกน้ำหนักระหว่าง 0 ถึง 500 กก."); return; }
     const interests = f.interestsRaw.split(",").map((x) => x.trim()).filter(Boolean);
-    const input = { name: f.name.trim(), species: f.species, breed: f.breed.trim(), age, gender: f.gender, size: f.size, personality: f.personality, bio: f.bio.trim(), interests };
+    const input = { name: f.name.trim(), species: f.species, breed: f.breed.trim(), age, weightKg, photoMediaId: f.photoMediaId, gender: f.gender, size: f.size, personality: f.personality, bio: f.bio.trim(), interests };
     update({ petPending: true });
     try {
       const response = f.id ? await petClient.update(f.id, input) : await petClient.create(input);
@@ -447,13 +499,13 @@ export function PetoryProvider({ children }) {
       return true;
     } catch (error) { showToast(error.message); return false; }
   };
-  const interestPet = async (id) => {
+  const interestPet = async (id, petName) => {
     const actorPetId = s.matchingPetId || s.pets.find((pet) => pet.ownerId === "me")?.id;
     if (!actorPetId) { showToast("กรุณาเพิ่มสัตว์เลี้ยงก่อนเริ่ม matching"); return false; }
     try {
       const { interaction } = await matchingClient.interact(actorPetId, id, "interest");
       if (interaction.matchId) {
-        update((s2) => ({ interestedPetIds: s2.interestedPetIds.concat([id]), matches: s2.matches.concat([{ id: interaction.matchId, petId: id, matchedAt: "วันนี้", updatedAt: Date.now(), messages: [] }]), newMatchPetId: id, modals: { ...s2.modals, mutualMatch: true } }));
+        update((s2) => ({ interestedPetIds: s2.interestedPetIds.concat([id]), matches: s2.matches.concat([{ id: interaction.matchId, petId: id, matchedAt: "วันนี้", updatedAt: Date.now(), messages: [] }]), newMatchPetId: id, newMatchPetName: petName ?? null, modals: { ...s2.modals, mutualMatch: true } }));
       } else {
         update((s2) => ({ interestedPetIds: s2.interestedPetIds.concat([id]) }));
         showToast("ส่งความสนใจแล้ว รอการตอบรับ");
@@ -461,11 +513,11 @@ export function PetoryProvider({ children }) {
       return true;
     } catch (error) { showToast(error.message); return false; }
   };
-  const closeMutualMatch = () => update((s2) => ({ modals: { ...s2.modals, mutualMatch: false }, newMatchPetId: null }));
+  const closeMutualMatch = () => update((s2) => ({ modals: { ...s2.modals, mutualMatch: false }, newMatchPetId: null, newMatchPetName: null }));
   const startChatFromModal = () => {
     const petId = s.newMatchPetId;
     const match = s.matches.slice().reverse().find((m) => m.petId === petId);
-    update((s2) => ({ modals: { ...s2.modals, mutualMatch: false }, newMatchPetId: null }));
+    update((s2) => ({ modals: { ...s2.modals, mutualMatch: false }, newMatchPetId: null, newMatchPetName: null }));
     router.push(match ? `/petory/messages/${match.id}` : "/petory/messages");
   };
 
@@ -569,9 +621,9 @@ export function PetoryProvider({ children }) {
     toggleLike, toggleComments, onCommentDraft, submitComment, toggleSave, openPostDetail,
     openUserProfile, toggleFollow, unfollowUser,
     openCreatePost, openCreatePostBlog, openEditPost, togglePostMenu, openDeletePost, closeDeletePost, confirmDeletePost,
-    onCreatePostBtnClick, closeCreatePost, onPostCaption, onPostTitle, selectPostPet, togglePostPetDropdown, submitPost,
+    onCreatePostBtnClick, closeCreatePost, onPostCaption, onPostTitle, selectPostCategory, togglePostCategoryDropdown, uploadPostPhoto, pickImage, cancelImageAdjust, confirmImageAdjust, selectPostPet, togglePostPetDropdown, submitPost,
     openPetProfile, onPetName, toggleSpeciesFieldDropdown, toggleGenderFieldDropdown, toggleSizeFieldDropdown,
-    selectPetSpecies, selectPetGender, selectPetSize, onPetBreed, onPetAge, onPetBio, onPetInterests, togglePetPersonality,
+    selectPetSpecies, selectPetGender, selectPetSize, onPetBreed, onPetAge, onPetWeight, uploadPetPhoto, onPetBio, onPetInterests, togglePetPersonality,
     goAddPet, editPet, cancelPetForm, savePet, openDeletePet, closeDeletePet, confirmDeletePet,
     openMatchFilter, closeMatchFilter, togglePetDropdown, selectMatchingPet, setMatchingPurpose, resetMatchFilter, setMatchFilter, toggleMatchPersonalityFilter,
     passPet, interestPet, closeMutualMatch, startChatFromModal,

@@ -8,6 +8,7 @@ export const postInputSchema = z.object({
   title: z.string().trim().max(180).default(""),
   locationLabel: z.string().trim().max(120).default(""),
   petId: z.string().uuid().nullable().optional(),
+  photoMediaId: z.string().uuid().nullable().default(null),
 });
 
 export const postIdSchema = z.string().uuid();

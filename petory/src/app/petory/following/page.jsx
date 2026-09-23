@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { sx } from "../ui";
+import { sx, ImageSlot } from "../ui";
 import { usePetory } from "../context";
 import BackLink from "../components/BackLink";
 import { socialClient } from "@/features/auth/client";
@@ -8,7 +8,7 @@ import { socialClient } from "@/features/auth/client";
 export default function FollowingPage() {
   const { state: s, ...a } = usePetory();
   const [followingUsers, setFollowingUsers] = useState([]);
-  useEffect(() => { let active = true; void socialClient.following().then(({ users }) => { if (active) setFollowingUsers(users.map((user) => ({ id: user.id, name: user.displayName, location: user.locationLabel || "", color: "#2B5468" }))); }).catch(() => { if (active) setFollowingUsers([]); }); return () => { active = false; }; }, []);
+  useEffect(() => { let active = true; void socialClient.following().then(({ users }) => { if (active) setFollowingUsers(users.map((user) => ({ id: user.id, name: user.displayName, location: user.locationLabel || "", avatarSrc: user.avatarMediaId ? `/api/media/${user.avatarMediaId}` : undefined, color: "#2B5468" }))); }).catch(() => { if (active) setFollowingUsers([]); }); return () => { active = false; }; }, []);
 
   return (
     <div style={sx("max-width:700px;margin:0 auto;padding:clamp(20px,4vw,48px) clamp(20px,4vw,48px) 120px")}>
@@ -19,7 +19,7 @@ export default function FollowingPage() {
         <div style={sx("display:flex;flex-direction:column")}>
           {followingUsers.map((fu) => (
             <div key={fu.id} style={sx("display:flex;align-items:center;gap:14px;padding:14px 0;border-top:1px solid #ece7db")}>
-              <div onClick={() => a.openUserProfile(fu.id)} style={sx(`width:44px;height:44px;border-radius:50%;background:${fu.color};display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:15px;flex:none;cursor:pointer`)}>{fu.name.charAt(0)}</div>
+              <div onClick={() => a.openUserProfile(fu.id)} style={sx(`width:44px;height:44px;border-radius:50%;background:${fu.color};display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:15px;flex:none;cursor:pointer;overflow:hidden`)}>{fu.avatarSrc ? <ImageSlot shape="circle" placeholder="" src={fu.avatarSrc} style="width:100%;height:100%" /> : fu.name.charAt(0)}</div>
               <div onClick={() => a.openUserProfile(fu.id)} style={sx("flex:1;min-width:0;cursor:pointer")}>
                 <div style={sx("font-weight:800;font-size:14px")}>{fu.name}</div>
                 <div style={sx("font-size:12px;color:#8a8378")}>{fu.location}</div>

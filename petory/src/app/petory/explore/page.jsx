@@ -14,6 +14,7 @@ const SPECIES_LABELS = { all: "ประเภทสัตว์", Dog: "หม�
 function toViewPost(post, accountId) {
   return {
     ...post, authorId: post.authorId === accountId ? "me" : post.authorId, location: post.locationLabel || "", time: "now",
+    photoSrc: post.photoMediaId ? `/api/media/${post.photoMediaId}` : undefined,
     likes: post.likes || 0, liked: Boolean(post.liked), saved: Boolean(post.saved), comments: post.comments || [],
   };
 }
@@ -21,9 +22,23 @@ function toViewPost(post, accountId) {
 export default function ExplorePage() {
   const { state: s, ...a } = usePetory();
   const ff = s.feedFilter;
-  const [remotePosts, setRemotePosts] = useState([]);
+  // Only the order lives here; the posts themselves go into shared state so that
+  // liking, saving and commenting act on the same records as the rest of the app.
+  const [remoteIds, setRemoteIds] = useState([]);
   const [nextCursor, setNextCursor] = useState(null);
   const [loadingMore, setLoadingMore] = useState(false);
+
+  const absorb = (posts) => {
+    const mapped = posts.map((post) => toViewPost(post, s.user.id));
+    const incoming = new Set(mapped.map((post) => post.id));
+    a.update((s2) => ({
+      posts: s2.posts.filter((post) => !incoming.has(post.id)).concat(mapped),
+      users: s2.users.concat(mapped
+        .filter((post) => post.authorId !== "me" && !s2.users.some((user) => user.id === post.authorId))
+        .map((post) => ({ id: post.authorId, name: post.authorName, color: post.authorColor || "#2B5468", bio: "", location: "" }))),
+    }));
+    return mapped.map((post) => post.id);
+  };
 
   useEffect(() => {
     if (!s.user?.id) return;
@@ -31,11 +46,12 @@ export default function ExplorePage() {
     void postClient.list({ scope: "explore", category: ff.category, species: ff.species, sort: ff.sort, search: ff.search, limit: "20" })
       .then(({ posts, nextCursor: cursor }) => {
         if (!active) return;
-        setRemotePosts(posts.map((post) => toViewPost(post, s.user.id)));
+        setRemoteIds(absorb(posts));
         setNextCursor(cursor);
       })
-      .catch(() => { if (active) setRemotePosts([]); });
+      .catch(() => { if (active) setRemoteIds([]); });
     return () => { active = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [s.user?.id, ff.category, ff.species, ff.sort, ff.search]);
 
   const loadMore = async () => {
@@ -43,20 +59,18 @@ export default function ExplorePage() {
     setLoadingMore(true);
     try {
       const { posts, nextCursor: cursor } = await postClient.list({ scope: "explore", category: ff.category, species: ff.species, sort: ff.sort, search: ff.search, cursor: nextCursor, limit: "20" });
-      setRemotePosts((current) => current.concat(posts.map((post) => toViewPost(post, s.user.id)).filter((post) => !current.some((existing) => existing.id === post.id))));
+      const ids = absorb(posts);
+      setRemoteIds((current) => current.concat(ids.filter((id) => !current.includes(id))));
       setNextCursor(cursor);
     } finally {
       setLoadingMore(false);
     }
   };
 
-  const feedState = useMemo(() => ({
-    ...s,
-    posts: remotePosts,
-    users: s.users.concat(remotePosts
-      .filter((post) => post.authorId !== "me" && !s.users.some((user) => user.id === post.authorId))
-      .map((post) => ({ id: post.authorId, name: post.authorName, color: post.authorColor || "#2B5468", bio: "", location: "" }))),
-  }), [s, remotePosts]);
+  const feedState = useMemo(() => {
+    const byId = new Map(s.posts.map((post) => [post.id, post]));
+    return { ...s, posts: remoteIds.map((id) => byId.get(id)).filter(Boolean) };
+  }, [s, remoteIds]);
 
   const feedPosts = visiblePosts(feedState).map((p) => mapPost(feedState, a, p)).map((p) => ({
     ...p,
@@ -84,7 +98,7 @@ export default function ExplorePage() {
       <div style={sx("max-width: 100%; margin: 0 auto; padding: clamp(20px,4vw,48px) clamp(20px,4vw,48px) 120px; padding-left: 80px; padding-right: 80px")}>
         <div style={sx("display:flex;align-items:center;gap:24px;flex-wrap:wrap;margin-bottom:28px;padding-bottom:2px")}>
           {categoryFilters.map((c) => (
-            <Hoverable key={c.key} as="span" onClick={() => a.setFeedCategory(c.key)} style={`padding-bottom: 12px; font-weight: 800; font-size: ${c.fs}; cursor: pointer; color: ${c.fg}; border-bottom: 3px solid ${c.underline}; margin-bottom: -2px; transition: color 0.15s ease,transform 0.12s ease; font-family: Arial`} hoverStyle="color:#E3402B" activeStyle="transform:scale(0.92)">
+            <Hoverable key={c.key} as="span" onClick={() => a.setFeedCategory(c.key)} style={`padding-bottom: 12px; font-weight: 800; font-size: ${c.fs}; cursor: pointer; color: ${c.fg}; border-bottom: 3px solid ${c.underline}; margin-bottom: -2px; transition: color 0.15s ease,transform 0.12s ease`} hoverStyle="color:#E3402B" activeStyle="transform:scale(0.92)">
               <span style={sx(c.pawStyle)}>{c.icon}</span>{c.label}
             </Hoverable>
           ))}

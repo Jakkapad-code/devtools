@@ -2,6 +2,10 @@ export const PERSONALITY_OPTIONS = ["Friendly", "Playful", "Energetic", "Calm", 
 
 export const CATEGORY_LABELS = { all: "ทั้งหมด", recipe: "สูตรอาหาร", place: "สถานที่ Pet Friendly", clinic: "Clinic", tips: "ทั่วไป", story: "Pet Story", event: "ทั่วไป", question: "ทั่วไป" };
 
+// Keyed to the label, not the raw category: tips/event/question all read "ทั่วไป",
+// so one shared colour keeps a single label from appearing in three tints.
+export const CATEGORY_COLORS = { recipe: "#F4C9D6", place: "#CFEEDB", clinic: "#C9E3F5", story: "#FAD9C1", tips: "#FDE6B1", event: "#FDE6B1", question: "#FDE6B1" };
+
 export const BLOG_TITLES = {
   p2: "สูตรขนมตับไก่อบ ทำง่าย หมาชอบมาก", p3: "สวนสาธารณะใจกลางเมืองที่พาหมาไปวิ่งได้ทั้งวัน",
   p4: "คลินิกทำหมันแมวราคาดี บริการดี", p5: "5 วิธีฝึกลูกสุนัขให้ขับถ่ายเป็นที่",
@@ -103,6 +107,7 @@ export function initialState() {
     userProfileFrom: "home",
     modals: { createPost: false, matchFilter: false, mutualMatch: false, reportUser: false, reportPost: false, block: false, logoutConfirm: false, deletePet: false, deletePost: false, editProfile: false },
     newMatchPetId: null,
+    newMatchPetName: null,
     reportTargetType: null,
     reportTargetId: null,
     reportReason: "",
@@ -115,11 +120,15 @@ export function initialState() {
     authPending: false,
     authError: null,
     petPending: false,
+    petPhotoPending: false,
     profilePending: false,
     postPending: false,
-    postForm: { caption: "", petId: "", category: "story", location: "", title: "" },
+    postPhotoPending: false,
+    avatarPhotoPending: false,
+    pendingImage: null,
+    postForm: { caption: "", petId: "", category: "story", location: "", title: "", photoMediaId: null },
     postFormIsBlog: false,
-    petForm: { id: null, name: "", species: "Dog", breed: "", age: "", gender: "Male", size: "Medium", personality: [], bio: "", interestsRaw: "" },
+    petForm: { id: null, name: "", species: "Dog", breed: "", age: "", weight: "", photoMediaId: null, gender: "Male", size: "Medium", personality: [], bio: "", interestsRaw: "" },
     fieldDropdownOpen: null,
     deletePetId: null,
     editingPostId: null,

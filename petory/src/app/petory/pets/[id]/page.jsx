@@ -2,7 +2,7 @@
 import { use, useEffect, useState } from "react";
 import { sx, Hoverable, ImageSlot } from "../../ui";
 import { usePetory } from "../../context";
-import { demoPetImage, hashColor } from "../../helpers";
+import { petPhotoSrc, hashColor } from "../../helpers";
 import BackLink from "../../components/BackLink";
 import { petClient } from "@/features/auth/client";
 
@@ -17,7 +17,7 @@ export default function PetProfilePage({ params }) {
     if (localPet) return;
     let active = true;
     void petClient.get(id)
-      .then(({ pet }) => { if (active) setRemotePet({ ...pet, photo: hashColor(pet.id), photoSrc: demoPetImage(pet.name) }); })
+      .then(({ pet }) => { if (active) setRemotePet({ ...pet, photo: hashColor(pet.id), photoSrc: petPhotoSrc(pet) }); })
       .catch(() => { if (active) setRemotePet(null); });
     return () => { active = false; };
   }, [id, localPet]);
@@ -35,7 +35,7 @@ export default function PetProfilePage({ params }) {
   const isMine = p.ownerId === "me" || p.ownerId === s.user?.id;
   const speciesLabel = p.species === "Dog" ? "หมา" : p.species === "Cat" ? "แมว" : "อื่นๆ";
   const genderLabel = p.gender === "Male" ? "ผู้" : "เมีย";
-  const weightLabel = p.weight ? p.weight + " กก." : "—";
+  const weightLabel = p.weightKg ? p.weightKg + " กก." : "—";
 
   return (
     <div style={sx("max-width:900px;margin:0 auto;padding:clamp(20px,4vw,48px) clamp(20px,4vw,48px) 120px")}>

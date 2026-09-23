@@ -11,7 +11,7 @@ export async function listCandidates(accountId, actorPetId, filters = {}) {
   if (filters.gender && filters.gender !== "any") where.push(`p.gender = ${add(filters.gender)}`);
   if (filters.size && filters.size !== "all") where.push(`p.size = ${add(filters.size)}`);
   if (filters.personality?.length) where.push(`p.personality && ${add(filters.personality)}::text[]`);
-  const result = await query(`SELECT p.id, p.owner_id AS "ownerId", p.name, p.species, p.breed, p.gender, p.size, p.bio, p.personality, p.interests, COALESCE(EXTRACT(YEAR FROM AGE(CURRENT_DATE, p.birth_date))::integer, 0) AS age, a.display_name AS "ownerName" FROM pets p JOIN accounts a ON a.id = p.owner_id WHERE ${where.join(" AND ")} ORDER BY p.created_at DESC LIMIT 30`, values);
+  const result = await query(`SELECT p.id, p.owner_id AS "ownerId", p.name, p.species, p.breed, p.gender, p.size, p.bio, p.personality, p.interests, p.photo_media_id AS "photoMediaId", COALESCE(EXTRACT(YEAR FROM AGE(CURRENT_DATE, p.birth_date))::integer, 0) AS age, a.display_name AS "ownerName" FROM pets p JOIN accounts a ON a.id = p.owner_id WHERE ${where.join(" AND ")} ORDER BY p.created_at DESC LIMIT 30`, values);
   return result.rows;
 }
 

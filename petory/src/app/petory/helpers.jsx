@@ -1,4 +1,4 @@
-import { CATEGORY_LABELS, BLOG_TITLES } from "./constants";
+import { CATEGORY_LABELS, CATEGORY_COLORS, BLOG_TITLES } from "./constants";
 
 const PHOTO_PALETTE = ["#E9C79A", "#D9A15B", "#EDE0C8", "#C7A374", "#D8B48A", "#B0B0AE", "#9CA3A8", "#E3C08A"];
 const DEMO_IMAGE_PATHS = [
@@ -21,6 +21,22 @@ export function demoPetImage(name, fallbackIndex = 0) {
 export function demoPostImage(id) {
   const hash = String(id).split("").reduce((sum, char) => sum + char.charCodeAt(0), 0);
   return DEMO_IMAGE_PATHS[hash % DEMO_IMAGE_PATHS.length];
+}
+
+/**
+ * One place decides a pet's picture: the uploaded file wins, otherwise a demo
+ * image keyed off the pet id. Keying off a list position instead would make the
+ * picture change whenever the pet moves in the list.
+ */
+export function petPhotoSrc(pet) {
+  if (pet.photoMediaId) return `/api/media/${pet.photoMediaId}`;
+  const stable = Math.abs(String(pet.id).split("").reduce((sum, char) => sum + char.charCodeAt(0), 0));
+  return demoPetImage(pet.name, stable);
+}
+
+/** Uploaded avatars are served from media; callers fall back to a coloured initial. */
+export function avatarSrc(mediaId) {
+  return mediaId ? `/api/media/${mediaId}` : undefined;
 }
 
 export function hashColor(id) {
@@ -74,6 +90,10 @@ export function categoryLabel(post) {
   return CATEGORY_LABELS[post.category] || post.category;
 }
 
+export function categoryColor(post) {
+  return CATEGORY_COLORS[post.category] || "#EFEAE2";
+}
+
 export function postTitle(post) {
   return post.title || BLOG_TITLES[post.id] || post.caption;
 }
@@ -85,11 +105,12 @@ export function mapPost(state, actions, p) {
   return {
     ...p,
     authorName: author.name, authorColor: author.color, isMine: p.authorId === "me", notMine: p.authorId !== "me",
+    authorAvatarSrc: avatarSrc(p.authorAvatarMediaId ?? (p.authorId === "me" ? state.user?.avatarMediaId : author.avatarMediaId)),
     petName: pet ? pet.name : null,
     isFollowing: state.followingIds.includes(p.authorId),
     onAuthorClick: () => actions.openUserProfile(p.authorId),
     onFollow: () => actions.toggleFollow(p.authorId),
-    categoryLabel: categoryLabel(p),
+    categoryLabel: categoryLabel(p), categoryColor: categoryColor(p),
     photoBg: hashColor(p.id), photoSrc: p.photoSrc || pet?.photoSrc || demoPostImage(p.id), imageLabel: pet ? pet.name + " PHOTO" : "POST PHOTO",
     likeColor: p.liked ? "#E3402B" : "#201C16", likeAnim: state.lastLikedId === p.id ? "animation:createPostPop 0.32s ease-out" : "",
     saveColor: p.saved ? "#E3402B" : "#8a8378", saveLabel: p.saved ? "Saved" : "Save",

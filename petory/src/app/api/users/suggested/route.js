@@ -10,7 +10,7 @@ export async function GET() {
   if (!account) return jsonError("Unauthorized", 401);
 
   const result = await query(
-    `SELECT a.id, a.display_name AS "displayName", a.bio, a.location_label AS "locationLabel"
+    `SELECT a.id, a.display_name AS "displayName", a.bio, a.location_label AS "locationLabel", a.avatar_media_id AS "avatarMediaId"
      FROM accounts a
      WHERE a.id <> $1 AND a.deleted_at IS NULL
        AND NOT EXISTS (SELECT 1 FROM follows f WHERE f.follower_id = $1 AND f.followed_id = a.id)

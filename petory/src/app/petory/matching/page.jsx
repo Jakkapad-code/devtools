@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { sx, Hoverable, ImageSlot } from "../ui";
 import { usePetory } from "../context";
-import { demoPetImage } from "../helpers";
+import { petPhotoSrc } from "../helpers";
 import Dropdown from "../components/Dropdown";
 import { matchingClient } from "@/features/auth/client";
 
@@ -18,7 +18,7 @@ export default function MatchingPage() {
     if (!matchingPetId) return;
     let active = true;
     void matchingClient.candidates({ actorPetId: matchingPetId, species: mf.species, gender: mf.gender, size: mf.size, personality: mf.personality })
-      .then(({ candidates: rows }) => { if (active) setCandidates(rows.map((pet, index) => ({ ...pet, photo: ["#E9C79A", "#D9A15B", "#B0B0AE"][index % 3], photoSrc: demoPetImage(pet.name, index), distance: "—" }))); })
+      .then(({ candidates: rows }) => { if (active) setCandidates(rows.map((pet, index) => ({ ...pet, photo: ["#E9C79A", "#D9A15B", "#B0B0AE"][index % 3], photoSrc: petPhotoSrc(pet), distance: "—" }))); })
       .catch(() => { if (active) setCandidates([]); });
     return () => { active = false; };
   }, [matchingPetId, mf.species, mf.gender, mf.size, mf.personality]);
@@ -35,7 +35,7 @@ export default function MatchingPage() {
   }));
 
   return (
-    <div style={sx("min-height:calc(100vh - 68px);background:#C9E3F5;padding:clamp(20px,4vw,48px);display:flex;flex-direction:column;align-items:center")}>
+    <div style={sx("min-height:calc(100vh - 68px);background:#C9E3F5;padding:clamp(20px,4vw,48px);display:flex;flex-direction:column;align-items:center;overflow-x:clip")}>
       <div style={sx("display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 60px; margin-top: -20px")}>
         <div style={sx("display:flex;align-items:center;gap:14px")}>
           <h1 style={sx("font-family:'Anton',sans-serif;font-size:clamp(2rem,6vw,2.8rem);text-transform:uppercase;color:#2B5468;margin:0")}>Matching</h1>
@@ -81,7 +81,7 @@ export default function MatchingPage() {
             </Hoverable>
           </div>
           <div style={sx("display:flex;gap:20px;margin-top:24px")}>
-            <Hoverable as="button" onClick={async () => { if (await a.interestPet(cp.id)) setCandidates((items) => items.filter((item) => item.id !== cp.id)); }} style="width:76px;height:76px;border-radius:50%;border:none;background:#E3402B;font-family:'Anton',sans-serif;font-size:11px;cursor:pointer;color:#fff;box-shadow:rgba(0, 0, 0, 0.19) 0px 10px 20px, rgba(0, 0, 0, 0.23) 0px 6px 6px;transition:transform 0.15s ease" hoverStyle="transform:scale(1.08)" activeStyle="transform:scale(0.8) rotate(-6deg)">LIKE</Hoverable>
+            <Hoverable as="button" onClick={async () => { if (await a.interestPet(cp.id, cp.name)) setCandidates((items) => items.filter((item) => item.id !== cp.id)); }} style="width:76px;height:76px;border-radius:50%;border:none;background:#E3402B;font-family:'Anton',sans-serif;font-size:11px;cursor:pointer;color:#fff;box-shadow:rgba(0, 0, 0, 0.19) 0px 10px 20px, rgba(0, 0, 0, 0.23) 0px 6px 6px;transition:transform 0.15s ease" hoverStyle="transform:scale(1.08)" activeStyle="transform:scale(0.8) rotate(-6deg)">LIKE</Hoverable>
             <Hoverable as="button" onClick={() => a.openReportUser(cp.ownerId)} style="width:56px;height:56px;align-self:center;border-radius:50%;border:none;background:#F0C93B;cursor:pointer;color:#201C16;box-shadow:rgba(0, 0, 0, 0.19) 0px 10px 20px, rgba(0, 0, 0, 0.23) 0px 6px 6px;transition:transform 0.15s ease;display:flex;align-items:center;justify-content:center" hoverStyle="transform:scale(1.08)" activeStyle="transform:scale(0.85)">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
             </Hoverable>

@@ -21,18 +21,23 @@ export default function PetForm({ title, submitLabel, photoPlaceholder }) {
     <div style={sx("max-width:640px;margin:0 auto;padding:clamp(20px,4vw,48px) clamp(20px,4vw,48px) 120px")}>
       <h1 style={sx("font-family:'Anton',sans-serif;font-size:clamp(2.4rem,8vw,4rem);line-height:0.9;text-transform:uppercase;margin:0 0 24px")}>{title}</h1>
       <div style={sx("display:flex;flex-direction:column;gap:16px")}>
-        <div style={sx("height:160px;border-radius:16px;overflow:hidden")}>
-          <ImageSlot shape="rect" placeholder={photoPlaceholder} style="width:100%;height:100%" />
-        </div>
+        <label title="อัปโหลดรูปสัตว์เลี้ยง" style={sx("height:160px;border-radius:16px;overflow:hidden;position:relative;display:block;cursor:pointer")}>
+          <ImageSlot shape="rect" placeholder={photoPlaceholder} src={f.photoMediaId ? `/api/media/${f.photoMediaId}` : undefined} style="width:100%;height:100%" />
+          <input type="file" accept="image/jpeg,image/png,image/webp" onChange={a.uploadPetPhoto} disabled={s.petPhotoPending} style={{ display: "none" }} />
+          <span style={sx("position:absolute;right:10px;bottom:10px;background:#E3402B;color:#fff;border-radius:100px;padding:6px 14px;font-size:12px;font-weight:800")}>
+            {s.petPhotoPending ? "กำลังอัปโหลด..." : f.photoMediaId ? "เปลี่ยนรูป" : "เพิ่มรูป"}
+          </span>
+        </label>
         <input placeholder="Pet Name" value={f.name} onChange={a.onPetName} style={sx("padding:14px 16px;border-radius:12px;border:2px solid #201C16;font-size:15px")} />
         <div style={sx("display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px")}>
           <Dropdown label={f.species} open={s.fieldDropdownOpen === "species"} onToggle={a.toggleSpeciesFieldDropdown} options={fieldOptions(["Dog", "Cat", "Other"], f.species, a.selectPetSpecies)} buttonStyle={FIELD_BUTTON} panelStyle={FIELD_PANEL} />
           <Dropdown label={f.gender} open={s.fieldDropdownOpen === "gender"} onToggle={a.toggleGenderFieldDropdown} options={fieldOptions(["Male", "Female"], f.gender, a.selectPetGender)} buttonStyle={FIELD_BUTTON} panelStyle={FIELD_PANEL} />
           <Dropdown label={f.size} open={s.fieldDropdownOpen === "size"} onToggle={a.toggleSizeFieldDropdown} options={fieldOptions(["Small", "Medium", "Large"], f.size, a.selectPetSize)} buttonStyle={FIELD_BUTTON} panelStyle={FIELD_PANEL} />
         </div>
-        <div style={sx("display:grid;grid-template-columns:2fr 1fr;gap:12px")}>
-          <input placeholder="Breed" value={f.breed} onChange={a.onPetBreed} style={sx("padding:14px 16px;border-radius:12px;border:2px solid #201C16;font-size:15px")} />
-          <input placeholder="Age" type="number" value={f.age} onChange={a.onPetAge} style={sx("padding:14px 16px;border-radius:12px;border:2px solid #201C16;font-size:15px")} />
+        <div style={sx("display:grid;grid-template-columns:2fr 1fr 1fr;gap:12px")}>
+          <input placeholder="Breed" value={f.breed} onChange={a.onPetBreed} style={sx("min-width:0;padding:14px 16px;border-radius:12px;border:2px solid #201C16;font-size:15px")} />
+          <input placeholder="Age" type="number" value={f.age} onChange={a.onPetAge} style={sx("min-width:0;padding:14px 16px;border-radius:12px;border:2px solid #201C16;font-size:15px")} />
+          <input placeholder="น้ำหนัก" title="น้ำหนัก (กก.)" type="number" step="0.1" min="0" value={f.weight} onChange={a.onPetWeight} style={sx("min-width:0;padding:14px 16px;border-radius:12px;border:2px solid #201C16;font-size:15px")} />
         </div>
         <div style={sx("font-weight:800;font-size:13px;text-transform:uppercase;color:#8a8378")}>Personality</div>
         <div style={sx("display:flex;gap:10px;flex-wrap:wrap")}>
