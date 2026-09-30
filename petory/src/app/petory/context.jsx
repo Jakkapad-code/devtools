@@ -200,6 +200,13 @@ export function PetoryProvider({ children }) {
         // Storage can be blocked; sign-in should still succeed.
       }
       applyAccount(account);
+      // An operator signs in to moderate, not to browse: the console is their
+      // home, and the member feed it would otherwise load is of no use there.
+      if (account.role === "admin") {
+        showToast("เข้าสู่ระบบผู้ดูแลแล้ว");
+        router.push("/petory/admin");
+        return;
+      }
       await loadAccountData(account).catch(() => {});
       showToast("เข้าสู่ระบบสำเร็จ ยินดีต้อนรับกลับ");
       router.push("/petory/home");

@@ -65,6 +65,7 @@ export async function getAccountById(accountId) {
   const result = await query(
     `SELECT a.id, a.email, a.display_name, a.bio, a.phone, a.location_label, a.avatar_url,
             a.avatar_media_id AS "avatarMediaId", a.matching_purpose AS "matchingPurpose", a.created_at,
+            a.role,
             (SELECT COUNT(*)::integer FROM follows f JOIN accounts fa ON fa.id = f.follower_id
                WHERE f.followed_id = a.id AND fa.deleted_at IS NULL) AS "followerCount",
             (SELECT COUNT(*)::integer FROM follows f JOIN accounts fa ON fa.id = f.followed_id
