@@ -49,10 +49,12 @@ export async function getCurrentAccount() {
 
   const result = await query(
     `SELECT a.id, a.email, a.display_name, a.bio, a.phone, a.location_label, a.avatar_url,
-            a.avatar_media_id AS "avatarMediaId", a.matching_purpose AS "matchingPurpose", a.created_at
+            a.avatar_media_id AS "avatarMediaId", a.matching_purpose AS "matchingPurpose", a.created_at,
+            a.role
      FROM sessions s
      JOIN accounts a ON a.id = s.account_id
-     WHERE s.token_hash = $1 AND s.expires_at > NOW() AND a.deleted_at IS NULL`,
+     WHERE s.token_hash = $1 AND s.expires_at > NOW() AND a.deleted_at IS NULL
+       AND (a.suspended_at IS NULL OR (a.suspended_until IS NOT NULL AND a.suspended_until <= NOW()))`,
     [hashToken(token)]
   );
 
@@ -77,5 +79,16 @@ export async function getAccountById(accountId) {
 export async function requireCurrentAccount() {
   const account = await getCurrentAccount();
   if (!account) throw new Error("Unauthorized");
+  return account;
+}
+
+/**
+ * The gate on every admin route. It is a separate error from Unauthorized so a
+ * signed-in member gets 403 rather than being told to sign in again.
+ */
+export async function requireAdmin() {
+  const account = await getCurrentAccount();
+  if (!account) throw new Error("Unauthorized");
+  if (account.role !== "admin") throw new Error("Forbidden");
   return account;
 }

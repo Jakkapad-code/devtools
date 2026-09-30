@@ -44,6 +44,11 @@ export default function LoginPage() {
             {state.authPending ? "Logging in..." : "Log In"}
           </Hoverable>
           <div style={sx("text-align:center;font-size:14px;margin-top:6px")}>ยังไม่มีบัญชี? <Link href="/petory/register" style={sx("text-decoration:underline;font-weight:700;cursor:pointer;color:#E3402B")}>Register</Link></div>
+          {/* There is no separate operator sign-in yet: the console sits behind the
+              same session as every other page, so this is a shortcut into it. */}
+          <div style={sx("text-align:center;font-size:13px")}>
+            <Link href="/petory/admin" style={sx("font-weight:700;cursor:pointer;color:#2B5468;text-decoration-line:underline")}>เข้าสู่ระบบผู้ดูแล (Admin)</Link>
+          </div>
         </div>
       </div>
     </div>

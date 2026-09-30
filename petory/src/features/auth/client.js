@@ -112,3 +112,22 @@ export const socialClient = {
   user: (id) => requestJson(`/api/users/${id}`),
   report: (id, reason) => postJson(`/api/users/${id}/report`, { reason }),
 };
+
+export const adminClient = {
+  overview: () => requestJson("/api/admin/overview"),
+  reports: (filters = {}) => {
+    const params = new URLSearchParams();
+    Object.entries(filters).forEach(([key, value]) => { if (value) params.set(key, value); });
+    return requestJson(`/api/admin/reports${params.size ? `?${params}` : ""}`);
+  },
+  resolveReport: (id, status, resolution) => requestJson(`/api/admin/reports/${id}`, {
+    method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status, resolution }),
+  }),
+  posts: (search) => requestJson(`/api/admin/posts${search ? `?q=${encodeURIComponent(search)}` : ""}`),
+  removePost: (id) => requestJson(`/api/admin/posts/${id}`, { method: "DELETE" }),
+  users: (search) => requestJson(`/api/admin/users${search ? `?q=${encodeURIComponent(search)}` : ""}`),
+  suspend: (id, duration, reason) => requestJson(`/api/admin/users/${id}/suspension`, {
+    method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ duration, reason }),
+  }),
+  unsuspend: (id) => requestJson(`/api/admin/users/${id}/suspension`, { method: "DELETE" }),
+};
