@@ -34,6 +34,8 @@ export async function recordInteraction(accountId, input) {
     const actor = await client.query(`SELECT owner_id FROM pets WHERE id = $1 AND deleted_at IS NULL FOR UPDATE`, [input.actorPetId]);
     const target = await client.query(`SELECT owner_id FROM pets WHERE id = $1 AND deleted_at IS NULL FOR UPDATE`, [input.targetPetId]);
     if (!actor.rows[0] || !target.rows[0] || actor.rows[0].owner_id !== accountId || actor.rows[0].owner_id === target.rows[0].owner_id) { await client.query("ROLLBACK"); return null; }
+    const blocked = await client.query(`SELECT 1 FROM blocks WHERE (blocker_id = $1 AND blocked_id = $2) OR (blocker_id = $2 AND blocked_id = $1)`, [accountId, target.rows[0].owner_id]);
+    if (blocked.rows[0]) { await client.query("ROLLBACK"); return null; }
     await client.query(`INSERT INTO match_interactions (actor_pet_id, target_pet_id, action) VALUES ($1, $2, $3) ON CONFLICT (actor_pet_id, target_pet_id) DO UPDATE SET action = EXCLUDED.action, created_at = NOW()`, [input.actorPetId, input.targetPetId, input.action]);
     let match = null;
     let conversationId = null;

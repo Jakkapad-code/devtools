@@ -5,12 +5,17 @@ import { createSession, getAccountById } from "@/server/auth/session";
 import { query } from "@/server/db/pool";
 import { isUniqueViolation, jsonError } from "@/server/http/response";
 import { requireSameOrigin } from "@/server/security/origin";
+import { checkRateLimit, rateLimitResponse } from "@/server/security/rate-limit";
 
 export async function POST(request) {
   try {
     await requireSameOrigin();
     const input = registerSchema.safeParse(await request.json());
     if (!input.success) return jsonError("Invalid registration data", 422);
+    const globalLimit = await checkRateLimit("registerGlobal", "all");
+    if (!globalLimit.allowed) return rateLimitResponse(globalLimit.retryAfter);
+    const limit = await checkRateLimit("register", input.data.email);
+    if (!limit.allowed) return rateLimitResponse(limit.retryAfter);
 
     const passwordHash = await hashPassword(input.data.password);
     const result = await query(

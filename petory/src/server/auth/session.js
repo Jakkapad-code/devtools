@@ -3,9 +3,9 @@ import { createHash, randomBytes } from "node:crypto";
 import { cookies } from "next/headers";
 import { query } from "@/server/db/pool";
 import { getServerEnv } from "@/shared/config/env";
+import { getAppConfig } from "@/server/config/config.app";
 
 const SESSION_COOKIE = "petory_session";
-const SESSION_LIFETIME_SECONDS = 60 * 60 * 24 * 15;
 
 function hashToken(token) {
   return createHash("sha256").update(token).digest("base64url");
@@ -17,7 +17,7 @@ function cookieOptions() {
     secure: getServerEnv().NODE_ENV === "production",
     sameSite: "lax",
     path: "/",
-    maxAge: SESSION_LIFETIME_SECONDS,
+    maxAge: getAppConfig().sessionLifetimeSeconds,
   };
 }
 
@@ -26,7 +26,7 @@ export async function createSession(accountId) {
   await query(
     `INSERT INTO sessions (account_id, token_hash, expires_at)
      VALUES ($1, $2, NOW() + ($3 * INTERVAL '1 second'))`,
-    [accountId, hashToken(token), SESSION_LIFETIME_SECONDS]
+    [accountId, hashToken(token), getAppConfig().sessionLifetimeSeconds]
   );
 
   const cookieStore = await cookies();

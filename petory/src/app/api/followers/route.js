@@ -15,6 +15,7 @@ export async function GET() {
      FROM follows f
      JOIN accounts a ON a.id = f.follower_id
      WHERE f.followed_id = $1 AND a.deleted_at IS NULL
+       AND NOT EXISTS (SELECT 1 FROM blocks b WHERE (b.blocker_id = $1 AND b.blocked_id = a.id) OR (b.blocker_id = a.id AND b.blocked_id = $1))
      ORDER BY f.created_at DESC`,
     [account.id]
   );

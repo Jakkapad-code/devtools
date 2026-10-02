@@ -35,7 +35,8 @@ export async function PUT(request, context) {
     const input = petInputSchema.safeParse(await request.json());
     if (!input.success) return jsonError("Invalid pet data", 422);
     const pet = await updateOwnedPet(resolved.account.id, resolved.petId, input.data);
-    if (!pet) return jsonError("Pet not found", 404);
+    if (pet === null) return jsonError("Pet not found", 404);
+    if (!pet) return jsonError("Selected photo was not found", 422);
     return NextResponse.json({ pet });
   } catch (error) {
     if (error?.message === "Forbidden cross-origin request") return jsonError("Forbidden", 403);

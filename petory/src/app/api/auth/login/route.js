@@ -5,12 +5,17 @@ import { createSession, getAccountById } from "@/server/auth/session";
 import { query } from "@/server/db/pool";
 import { jsonError } from "@/server/http/response";
 import { requireSameOrigin } from "@/server/security/origin";
+import { checkRateLimit, rateLimitResponse } from "@/server/security/rate-limit";
 
 export async function POST(request) {
   try {
     await requireSameOrigin();
     const input = loginSchema.safeParse(await request.json());
     if (!input.success) return jsonError("Invalid email or password", 422);
+    const globalLimit = await checkRateLimit("loginGlobal", "all");
+    if (!globalLimit.allowed) return rateLimitResponse(globalLimit.retryAfter);
+    const limit = await checkRateLimit("login", input.data.email);
+    if (!limit.allowed) return rateLimitResponse(limit.retryAfter);
 
     const result = await query(
       `SELECT id, email, display_name, password_hash, suspension_reason,

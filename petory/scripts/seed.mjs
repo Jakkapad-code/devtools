@@ -3,15 +3,18 @@ import { readFile } from "node:fs/promises";
 import nextEnv from "@next/env";
 import pg from "pg";
 import { hashPassword } from "../src/server/auth/password.js";
+import { parseDatabaseEnv } from "../src/shared/config/env-schema.js";
+import { demoPhotoByTitle, validateDemoPhotos } from "./demo-photos.mjs";
 
 const { loadEnvConfig } = nextEnv;
 loadEnvConfig(process.cwd());
 if (process.env.NODE_ENV === "production") throw new Error("Refusing to seed a production database.");
-if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL is required to seed.");
+const database = parseDatabaseEnv(process.env);
 
 const { Client } = pg;
-const client = new Client({ connectionString: process.env.DATABASE_URL, ssl: process.env.DATABASE_SSL === "true" ? { rejectUnauthorized: true } : false });
+const client = new Client({ connectionString: database.DATABASE_URL, ssl: database.DATABASE_SSL ? { rejectUnauthorized: true } : false, connectionTimeoutMillis: database.DB_CONNECTION_TIMEOUT_MS });
 const passwordHash = await hashPassword("petory-demo-password-2026");
+await validateDemoPhotos();
 
 const people = [
   ["Aom Supaporn", "aom", "ชอบทำขนมโฮมเมดให้น้องหมากิน", "Bangkok"],
@@ -39,12 +42,12 @@ const pets = [
 // Every post's words match its category, so each Explore tab reads as one topic.
 const posts = [
   // --- สูตรอาหาร ---
-  ["recipe", "ขนมตับไก่อบ ทำ 20 นาที", "ตับไก่ 200 ก. + ไข่ 1 ฟอง + แป้งข้าวโอ๊ต 3 ช้อน ปั่นรวมแล้วอบ 180 องศา 20 นาที ตัดเป็นชิ้นเล็ก เก็บตู้เย็นได้ 5 วัน", null],
-  ["recipe", "ไอศกรีมกล้วยโยเกิร์ต คลายร้อน", "กล้วยหอมสุก 2 ลูก บดรวมกับกรีกโยเกิร์ตรสธรรมชาติ 1 ถ้วย หยอดใส่พิมพ์แล้วแช่แข็ง 4 ชม. ห้ามใส่น้ำตาลเพิ่มนะคะ", null],
-  ["recipe", "ข้าวต้มฟักทองไก่ สำหรับน้องท้องเสีย", "อกไก่ต้มฉีกฝอย + ฟักทองนึ่งบด + ข้าวสวย ต้มรวมจนข้น ไม่ใส่เกลือ ให้ทีละน้อยวันละ 3 มื้อจนอาการดีขึ้น", null],
-  ["recipe", "เนื้อไก่อบแห้ง ไม่ใส่สารกันบูด", "สไลซ์อกไก่บางๆ อบ 90 องศา 2 ชั่วโมง พลิกครึ่งทาง ได้ขนมกรอบเก็บได้ 2 สัปดาห์ ถูกกว่าซื้อครึ่งหนึ่ง", null],
-  ["recipe", "เจลลี่แมวโฮมเมด เพิ่มน้ำให้น้อง", "ต้มน้ำซุปไก่ไม่ปรุงรส ใส่เจลาติน 1 ช้อนชาต่อน้ำ 200 มล. แช่เย็นจนเซ็ต แมวที่ไม่ค่อยกินน้ำจะชอบมาก", null],
-  ["recipe", "ขนมปังฟักทอง สำหรับน้องแพ้ง่าย", "ไม่ใส่นม ไม่ใส่ไข่ ใช้แป้งข้าวกล้อง + ฟักทองบด + น้ำมันมะพร้าว อบ 170 องศา 25 นาที น้องแพ้อาหารกินได้", null],
+  ["recipe", "ขนมตับไก่อบ ทำ 20 นาที", "โพสต์ตัวอย่างขนมโฮมเมด: เลือกตับไก่สด ปรุงสุกทั่วถึง ไม่ใส่เครื่องปรุง และให้เพียงเล็กน้อยตามคำแนะนำของสัตวแพทย์", null],
+  ["recipe", "ไอศกรีมกล้วยโยเกิร์ต คลายร้อน", "ไอเดียของว่าง: กล้วยกับโยเกิร์ตรสธรรมชาติที่ไม่มีน้ำตาลหรือสารให้ความหวาน ตรวจฉลากและถามสัตวแพทย์ก่อนให้น้องกิน", null],
+  ["recipe", "ข้าวต้มฟักทองไก่ สำหรับน้องท้องเสีย", "ภาพตัวอย่างอาหารไก่กับฟักทอง หากสัตว์เลี้ยงท้องเสียควรปรึกษาสัตวแพทย์ก่อนเปลี่ยนอาหารหรือรักษาเอง", null],
+  ["recipe", "บิสกิตรูปกระดูกสำหรับน้องหมา", "ไอเดียขนมอบรูปกระดูกสำหรับวันพิเศษ ควรเลือกส่วนผสมที่เหมาะกับสัตว์เลี้ยงแต่ละตัวและให้เป็นขนมเสริมเท่านั้น", null],
+  ["recipe", "ไอเดียอาหารเปียกเพิ่มความหลากหลายให้แมว", "ลองจัดมื้ออาหารเปียกสำหรับแมวตามปริมาณที่เหมาะสม อ่านส่วนผสมและคำแนะนำบนบรรจุภัณฑ์ก่อนเสิร์ฟ", null],
+  ["recipe", "ขนมปังฟักทองโฮมเมด", "ขนมฟักทองโฮมเมดเป็นไอเดียโพสต์ตัวอย่าง ตรวจส่วนผสมและปริมาณกับสัตวแพทย์ โดยเฉพาะสัตว์เลี้ยงที่มีประวัติแพ้อาหาร", null],
 
   // --- สถานที่ Pet Friendly ---
   ["place", "สวนลุมพินี — ลานวิ่งหมาเปิด 05:00-20:00", "มีลานกั้นรั้วแยกโซนหมาเล็กกับหมาใหญ่ มีน้ำดื่มให้ ที่จอดรถฝั่งถนนพระรามสี่ วันธรรมดาคนน้อยกว่าเยอะ", "Bangkok"],
@@ -54,10 +57,10 @@ const posts = [
   ["place", "Dog Park รัชโยธิน — แยกโซนหมาเล็ก/ใหญ่", "ค่าเข้า 100 บาทต่อตัว เล่นได้ไม่จำกัดเวลา หญ้าเทียมนุ่ม มีอ่างอาบน้ำให้ใช้ฟรีก่อนกลับ", "Bangkok"],
 
   // --- Clinic ---
-  ["clinic", "คลินิกฉุกเฉิน 24 ชม. ย่านลาดพร้าว", "พาน้องไปตอนตีสอง หมอรับเคสทันทีไม่ต้องรอคิว มีเครื่องเอกซเรย์และแล็บในที่เดียว ค่าตรวจเบื้องต้นประมาณ 800 บาท", "Bangkok"],
-  ["clinic", "ทำหมันแมว ราคามิตรภาพ 1,200 บาท", "รวมค่ายาและปลอกคอกันเลียแล้ว นัดล่วงหน้า 3 วัน งดน้ำงดอาหารก่อน 8 ชม. แผลเล็กมาก 7 วันตัดไหม", "Nonthaburi"],
-  ["clinic", "แผนกผิวหนัง — โรคภูมิแพ้ผิวหนังหมา", "หมอขูดผิวหนังตรวจเชื้อให้ละเอียด อธิบายวิธีอาบน้ำด้วยแชมพูยาให้ด้วย นัดติดตามอาการทุก 2 สัปดาห์", "Bangkok"],
-  ["clinic", "ขูดหินปูนหมา แบบไม่วางยาสลบ", "เหมาะกับน้องสูงวัยที่เสี่ยงดมยา ใช้เวลา 40 นาที ราคา 1,500 บาท หมอแนะนำให้แปรงฟันต่อที่บ้านสัปดาห์ละ 3 ครั้ง", "Bangkok"],
+  ["clinic", "เตรียมตัวพาสัตว์เลี้ยงไปตรวจที่คลินิก", "โพสต์ตัวอย่าง: เตรียมข้อมูลวัคซีน ยาที่ใช้ และอาการที่สังเกตไว้ โทรสอบถามเวลาเปิดและบริการจากคลินิกจริงก่อนเดินทาง", null],
+  ["clinic", "พาแมวไปตรวจสุขภาพครั้งแรก", "บันทึกประสบการณ์ตัวอย่าง: ใช้กระเป๋าเดินทางที่เหมาะกับแมวและแจ้งประวัติสุขภาพให้สัตวแพทย์ทราบ", null],
+  ["clinic", "คุณหมอตรวจอาการน้องแมว", "ภาพประกอบบรรยากาศการตรวจที่คลินิก การวินิจฉัยและแนวทางรักษาต้องให้สัตวแพทย์ที่ตรวจสัตว์เลี้ยงจริงเป็นผู้แนะนำ", null],
+  ["clinic", "รู้จักห้องผ่าตัดสัตวแพทย์", "ภาพตัวอย่างห้องผ่าตัดสัตวแพทย์ หากน้องต้องรับหัตถการ ควรสอบถามขั้นตอน ความเสี่ยง และการดูแลหลังทำกับทีมรักษาโดยตรง", null],
 
   // --- ทั่วไป (tips / event / question) ---
   ["tips", "5 วิธีฝึกลูกสุนัขให้ขับถ่ายเป็นที่", "1) พาไปจุดเดิมทุกครั้ง 2) ไปหลังตื่นและหลังอาหารทันที 3) ชมทันทีที่ทำถูก 4) ห้ามดุเวลาพลาด 5) ทำความสะอาดให้หมดกลิ่น", null],
@@ -134,15 +137,21 @@ try {
   }
 
   // Spread authors across categories so every Explore tab has several writers.
+  let photoPostCount = 0;
   for (const [index, [category, title, caption, location]] of ordered.entries()) {
     const author = accounts[index % accounts.length];
     const ownPet = petRows.find((pet) => pet.ownerId === author.id);
+    const photoFile = demoPhotoByTitle.get(title);
+    if (["recipe", "clinic"].includes(category) && !photoFile) throw new Error(`Missing demo photo for ${title}`);
+    const photoMediaId = photoFile ? await storePhoto(author.id, photoFile) : null;
+    if (photoMediaId) photoPostCount += 1;
     await client.query(
-      `INSERT INTO posts (author_id, pet_id, category, title, caption, location_label, created_at)
-       VALUES ($1, $2, $3, $4, $5, $6, NOW() - ($7 * INTERVAL '3 hours'))`,
-      [author.id, category === "story" ? ownPet.id : null, category, title, caption, location, index],
+      `INSERT INTO posts (author_id, pet_id, category, title, caption, location_label, photo_media_id, created_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, NOW() - ($8 * INTERVAL '3 hours'))`,
+      [author.id, ownPet.id, category, title, caption, location, photoMediaId, index],
     );
   }
+  if (photoPostCount !== demoPhotoByTitle.size) throw new Error("Not all demo photos were attached to posts");
 
   const postRows = (await client.query(
     "SELECT id, author_id FROM posts WHERE author_id = ANY($1::uuid[]) ORDER BY created_at DESC",

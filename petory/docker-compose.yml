@@ -9,7 +9,7 @@ services:
       POSTGRES_USER: petory
       POSTGRES_PASSWORD: petory_dev_password
     ports:
-      - "5433:5432"
+      - "127.0.0.1:5433:5432"
     volumes:
       - petory-postgres-data:/var/lib/postgresql/data
     healthcheck:

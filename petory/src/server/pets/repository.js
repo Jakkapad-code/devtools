@@ -50,11 +50,14 @@ export async function getVisiblePet(viewerId, petId) {
 export async function createPet(ownerId, input) {
   const result = await query(
     `INSERT INTO pets (owner_id, name, species, breed, gender, size, birth_date, bio, personality, interests, weight_kg, photo_media_id)
-     VALUES ($1, $2, $3, NULLIF($4, ''), $5, $6, $7, $8, $9, $10, $11, $12)
+     SELECT $1, $2, $3, NULLIF($4, ''), $5, $6, $7, $8, $9, $10, $11, $12
+     WHERE $12::uuid IS NULL OR EXISTS (
+       SELECT 1 FROM media_files m WHERE m.id = $12 AND m.owner_id = $1 AND m.deleted_at IS NULL
+     )
      RETURNING id`,
     [ownerId, input.name, input.species, input.breed, input.gender, input.size, birthDateFromAge(input.age), input.bio, input.personality, input.interests, input.weightKg, input.photoMediaId]
   );
-  return getOwnedPet(ownerId, result.rows[0].id);
+  return result.rows[0] ? getOwnedPet(ownerId, result.rows[0].id) : undefined;
 }
 
 export async function updateOwnedPet(ownerId, petId, input) {
@@ -63,10 +66,13 @@ export async function updateOwnedPet(ownerId, petId, input) {
      SET name = $3, species = $4, breed = NULLIF($5, ''), gender = $6, size = $7,
          birth_date = $8, bio = $9, personality = $10, interests = $11, weight_kg = $12, photo_media_id = $13
      WHERE id = $1 AND owner_id = $2 AND deleted_at IS NULL
+       AND ($13::uuid IS NULL OR EXISTS (
+         SELECT 1 FROM media_files m WHERE m.id = $13 AND m.owner_id = $2 AND m.deleted_at IS NULL
+       ))
      RETURNING id`,
     [petId, ownerId, input.name, input.species, input.breed, input.gender, input.size, birthDateFromAge(input.age), input.bio, input.personality, input.interests, input.weightKg, input.photoMediaId]
   );
-  if (!result.rows[0]) return null;
+  if (!result.rows[0]) return await getOwnedPet(ownerId, petId) ? undefined : null;
   return getOwnedPet(ownerId, petId);
 }
 

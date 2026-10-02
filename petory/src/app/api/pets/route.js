@@ -23,6 +23,7 @@ export async function POST(request) {
     if (!input.success) return jsonError("Invalid pet data", 422);
 
     const pet = await createPet(account.id, input.data);
+    if (!pet) return jsonError("Selected photo was not found", 422);
     return NextResponse.json({ pet }, { status: 201 });
   } catch (error) {
     if (error?.message === "Forbidden cross-origin request") return jsonError("Forbidden", 403);

@@ -24,7 +24,7 @@ export default function ProfilePage() {
   const myPets = s.pets.filter((p) => p.ownerId === "me");
   const myPosts = visiblePosts(s).filter((p) => p.authorId === "me");
   const savedPosts = visiblePosts(s).filter((p) => p.saved);
-  const blockedUsers = s.blockedUserIds.map((id) => s.users.find((u) => u.id === id));
+  const blockedUsers = s.blockedUserIds.map((id) => s.users.find((u) => u.id === id)).filter(Boolean);
   const displayName = s.user?.display_name || "";
   const handle = displayName ? "@" + displayName.toLowerCase().replace(/[^a-z]/g, "") : "";
 

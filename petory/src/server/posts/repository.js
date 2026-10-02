@@ -91,10 +91,13 @@ export async function createPost(authorId, input) {
   if (input.petId && !petId) return undefined;
   const result = await query(
     `INSERT INTO posts (author_id, pet_id, category, title, caption, location_label, photo_media_id)
-     VALUES ($1, $2, $3, NULLIF($4, ''), $5, NULLIF($6, ''), $7) RETURNING id`,
+     SELECT $1, $2, $3, NULLIF($4, ''), $5, NULLIF($6, ''), $7
+     WHERE $7::uuid IS NULL OR EXISTS (
+       SELECT 1 FROM media_files m WHERE m.id = $7 AND m.owner_id = $1 AND m.deleted_at IS NULL
+     ) RETURNING id`,
     [authorId, petId ?? null, input.category, input.title, input.caption, input.locationLabel, input.photoMediaId]
   );
-  return getOwnedPost(authorId, result.rows[0].id);
+  return result.rows[0] ? getOwnedPost(authorId, result.rows[0].id) : undefined;
 }
 
 export async function updateOwnedPost(authorId, postId, input) {
@@ -102,10 +105,13 @@ export async function updateOwnedPost(authorId, postId, input) {
   if (input.petId && !petId) return undefined;
   const result = await query(
     `UPDATE posts SET pet_id = $3, category = $4, title = NULLIF($5, ''), caption = $6, location_label = NULLIF($7, ''), photo_media_id = $8
-     WHERE id = $1 AND author_id = $2 AND deleted_at IS NULL RETURNING id`,
+     WHERE id = $1 AND author_id = $2 AND deleted_at IS NULL
+       AND ($8::uuid IS NULL OR EXISTS (
+         SELECT 1 FROM media_files m WHERE m.id = $8 AND m.owner_id = $2 AND m.deleted_at IS NULL
+       )) RETURNING id`,
     [postId, authorId, petId ?? null, input.category, input.title, input.caption, input.locationLabel, input.photoMediaId]
   );
-  if (!result.rows[0]) return null;
+  if (!result.rows[0]) return await getOwnedPost(authorId, postId) ? undefined : null;
   return getOwnedPost(authorId, postId);
 }
 

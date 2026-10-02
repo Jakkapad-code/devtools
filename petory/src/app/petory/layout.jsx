@@ -8,7 +8,7 @@ import BottomNav from "./components/BottomNav";
 import Modals from "./components/Modals";
 import Toast from "./components/Toast";
 
-const AUTH_PATHS = new Set(["/petory", "/petory/login", "/petory/register", "/petory/forgot", "/petory/onboarding"]);
+const AUTH_PATHS = new Set(["/petory", "/petory/login", "/petory/register", "/petory/forgot", "/petory/reset", "/petory/onboarding"]);
 
 function Shell({ children }) {
   const pathname = usePathname();

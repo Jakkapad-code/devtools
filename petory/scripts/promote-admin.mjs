@@ -16,6 +16,7 @@ import process from "node:process";
 import nextEnv from "@next/env";
 import pg from "pg";
 import { hashPassword } from "../src/server/auth/password.js";
+import { parseDatabaseEnv } from "../src/shared/config/env-schema.js";
 
 const { loadEnvConfig } = nextEnv;
 loadEnvConfig(process.cwd());
@@ -28,11 +29,11 @@ const password = args.find((arg) => arg.startsWith("--password="))?.slice("--pas
 const name = args.find((arg) => arg.startsWith("--name="))?.slice("--name=".length);
 const email = args.find((arg) => !arg.startsWith("--"));
 
-if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL is required.");
+const database = parseDatabaseEnv(process.env);
 if (!list && !email) throw new Error("Usage: node scripts/promote-admin.mjs <email> [--revoke] [--create --password=...] | --list");
 if (create && (!password || password.length < 8)) throw new Error("--create needs --password= of at least 8 characters.");
 
-const client = new pg.Client({ connectionString: process.env.DATABASE_URL });
+const client = new pg.Client({ connectionString: database.DATABASE_URL, ssl: database.DATABASE_SSL ? { rejectUnauthorized: true } : false, connectionTimeoutMillis: database.DB_CONNECTION_TIMEOUT_MS });
 await client.connect();
 
 try {

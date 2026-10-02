@@ -3,19 +3,19 @@ import path from "node:path";
 import process from "node:process";
 import nextEnv from "@next/env";
 import pg from "pg";
+import { parseDatabaseEnv } from "../src/shared/config/env-schema.js";
 
 const { loadEnvConfig } = nextEnv;
 loadEnvConfig(process.cwd());
 
 const { Client } = pg;
 const migrationsDirectory = path.resolve("db/migrations");
-const databaseUrl = process.env.DATABASE_URL;
-
-if (!databaseUrl) {
-  throw new Error("DATABASE_URL is required to run migrations.");
-}
-
-const client = new Client({ connectionString: databaseUrl });
+const database = parseDatabaseEnv(process.env);
+const client = new Client({
+  connectionString: database.DATABASE_URL,
+  ssl: database.DATABASE_SSL ? { rejectUnauthorized: true } : false,
+  connectionTimeoutMillis: database.DB_CONNECTION_TIMEOUT_MS,
+});
 await client.connect();
 
 try {

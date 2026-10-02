@@ -5,6 +5,7 @@ import { getCurrentAccount } from "@/server/auth/session";
 import { query } from "@/server/db/pool";
 import { isUniqueViolation, jsonError } from "@/server/http/response";
 import { requireSameOrigin } from "@/server/security/origin";
+import { checkRateLimit, rateLimitResponse } from "@/server/security/rate-limit";
 
 const inputSchema = z.object({ reason: z.string().trim().min(2).max(500) });
 
@@ -15,6 +16,8 @@ export async function POST(request, context) {
     const { postId } = await context.params;
     const id = postIdSchema.safeParse(postId); const input = inputSchema.safeParse(await request.json());
     if (!id.success || !input.success) return jsonError("Invalid report", 422);
+    const limit = await checkRateLimit("report", account.id);
+    if (!limit.allowed) return rateLimitResponse(limit.retryAfter);
     const post = await query(`SELECT id FROM posts WHERE id = $1 AND deleted_at IS NULL`, [id.data]);
     if (!post.rows[0]) return jsonError("Post not found", 404);
     await query(`INSERT INTO reports (reporter_id, target_type, target_id, reason) VALUES ($1, 'post', $2, $3)`, [account.id, id.data, input.data.reason]);

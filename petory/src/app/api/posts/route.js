@@ -47,7 +47,7 @@ export async function POST(request) {
     const input = postInputSchema.safeParse(await request.json());
     if (!input.success) return jsonError("Invalid post data", 422);
     const post = await createPost(account.id, input.data);
-    if (!post) return jsonError("Selected pet was not found", 422);
+    if (!post) return jsonError("Selected pet or photo was not found", 422);
     return NextResponse.json({ post }, { status: 201 });
   } catch (error) {
     if (error?.message === "Forbidden cross-origin request") return jsonError("Forbidden", 403);

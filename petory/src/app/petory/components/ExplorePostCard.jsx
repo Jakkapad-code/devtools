@@ -3,7 +3,7 @@ import { sx, Hoverable, ImageSlot } from "../ui";
 
 export default function ExplorePostCard({ post }) {
   return (
-    <Hoverable style="border:none;border-radius:18px;overflow:hidden;background:#fff;display:flex;flex-direction:column;box-shadow:rgba(0, 0, 0, 0.16) 0px 1px 4px;transition:transform 0.2s ease,box-shadow 0.2s ease" hoverStyle="transform:translateY(-4px);box-shadow:rgba(0, 0, 0, 0.22) 0px 4px 12px">
+    <Hoverable data-testid="explore-card" style="border:none;border-radius:18px;overflow:hidden;background:#fff;display:flex;flex-direction:column;box-shadow:rgba(0, 0, 0, 0.16) 0px 1px 4px;transition:transform 0.2s ease,box-shadow 0.2s ease" hoverStyle="transform:translateY(-4px);box-shadow:rgba(0, 0, 0, 0.22) 0px 4px 12px">
       <div onClick={post.onOpen} style={sx(`cursor:pointer;height:220px;background:${post.photoBg}`)}>
         <ImageSlot shape="rect" placeholder="รูปโพสต์" src={post.photoSrc} style="width:100%;height:100%" />
       </div>

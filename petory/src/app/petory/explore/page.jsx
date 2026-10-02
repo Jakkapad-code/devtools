@@ -9,7 +9,7 @@ import ExplorePostCard from "../components/ExplorePostCard";
 import { postClient } from "@/features/auth/client";
 
 const CATEGORY_ICONS = { all: "🐾", recipe: "🍲", place: "📍", clinic: "🏥", tips: "💡" };
-const SPECIES_LABELS = { all: "ประเภทสัตว์", Dog: "หมา", Cat: "แมว", other: "อื่นๆ" };
+const SPECIES_LABELS = { all: "ประเภทสัตว์", Dog: "หมา", Cat: "แมว", Other: "อื่นๆ" };
 
 function toViewPost(post, accountId) {
   return {
@@ -87,7 +87,7 @@ export default function ExplorePage() {
   }));
 
   const feedSpeciesLabel = SPECIES_LABELS[ff.species] || "ประเภทสัตว์";
-  const feedSpeciesOptions = ["all", "Dog", "Cat", "other"].map((val) => ({
+  const feedSpeciesOptions = ["all", "Dog", "Cat", "Other"].map((val) => ({
     label: SPECIES_LABELS[val], onSelect: () => a.selectFeedSpecies(val),
     optionStyle: "padding:9px 14px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;" + (val === ff.species ? "background:#FDEDEA;color:#E4412C" : "color:#201C16"),
   }));
@@ -98,7 +98,7 @@ export default function ExplorePage() {
       <div style={sx("max-width: 100%; margin: 0 auto; padding: clamp(20px,4vw,48px) clamp(20px,4vw,48px) 120px; padding-left: 80px; padding-right: 80px")}>
         <div style={sx("display:flex;align-items:center;gap:24px;flex-wrap:wrap;margin-bottom:28px;padding-bottom:2px")}>
           {categoryFilters.map((c) => (
-            <Hoverable key={c.key} as="span" onClick={() => a.setFeedCategory(c.key)} style={`padding-bottom: 12px; font-weight: 800; font-size: ${c.fs}; cursor: pointer; color: ${c.fg}; border-bottom: 3px solid ${c.underline}; margin-bottom: -2px; transition: color 0.15s ease,transform 0.12s ease`} hoverStyle="color:#E3402B" activeStyle="transform:scale(0.92)">
+            <Hoverable key={c.key} as="span" data-testid={`category-${c.key}`} onClick={() => a.setFeedCategory(c.key)} style={`padding-bottom: 12px; font-weight: 800; font-size: ${c.fs}; cursor: pointer; color: ${c.fg}; border-bottom: 3px solid ${c.underline}; margin-bottom: -2px; transition: color 0.15s ease,transform 0.12s ease`} hoverStyle="color:#E3402B" activeStyle="transform:scale(0.92)">
               <span style={sx(c.pawStyle)}>{c.icon}</span>{c.label}
             </Hoverable>
           ))}

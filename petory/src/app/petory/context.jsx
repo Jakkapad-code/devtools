@@ -102,20 +102,32 @@ export function PetoryProvider({ children }) {
 
   /** Replaces the placeholder feed with this account's real data. */
   const loadAccountData = async (account, isActive = () => true) => {
-    const [{ pets }, { posts }, { users: following }, { users: suggested }] = await Promise.all([
-      petClient.list(), postClient.list(), socialClient.following(), socialClient.suggested(),
+    const [{ pets }, { posts }, { users: following }, { users: suggested }, { users: blocked }] = await Promise.all([
+      petClient.list(), postClient.list(), socialClient.following(), socialClient.suggested(), socialClient.blocked(),
     ]);
     if (!isActive()) return;
-    setState((previous) => ({
-      ...previous,
-      pets: previous.pets.filter((pet) => pet.ownerId !== "me").concat(pets.map(toPetView)),
-      posts: posts.map((post) => toPostView(post, account.id)),
-      users: previous.users.concat(posts
-        .filter((post) => post.authorId !== account.id && !previous.users.some((user) => user.id === post.authorId))
-        .map((post) => ({ id: post.authorId, name: post.authorName, color: post.authorColor || "#2B5468", bio: "", location: "" }))),
-      followingIds: following.map((user) => user.id),
-      suggestedUsers: suggested,
-    }));
+    setState((previous) => {
+      const users = [...previous.users];
+      for (const post of posts) {
+        if (post.authorId !== account.id && !users.some((user) => user.id === post.authorId)) {
+          users.push({ id: post.authorId, name: post.authorName, color: post.authorColor || "#2B5468", bio: "", location: "" });
+        }
+      }
+      for (const blockedUser of blocked) {
+        if (!users.some((user) => user.id === blockedUser.id)) {
+          users.push({ id: blockedUser.id, name: blockedUser.displayName, color: "#2B5468", bio: "", location: "" });
+        }
+      }
+      return {
+        ...previous,
+        pets: previous.pets.filter((pet) => pet.ownerId !== "me").concat(pets.map(toPetView)),
+        posts: posts.map((post) => toPostView(post, account.id)),
+        users,
+        followingIds: following.map((user) => user.id),
+        blockedUserIds: blocked.map((user) => user.id),
+        suggestedUsers: suggested,
+      };
+    });
   };
 
   useEffect(() => {
@@ -243,7 +255,6 @@ export function PetoryProvider({ children }) {
       update({ authPending: false });
     }
   };
-  const sendResetLink = () => { showToast("ส่งลิงก์รีเซ็ตรหัสผ่านไปที่อีเมลแล้ว"); router.push("/petory/login"); };
 
   const openLogoutConfirm = () => update((s2) => ({ modals: { ...s2.modals, logoutConfirm: true } }));
   const closeLogoutConfirm = () => update((s2) => ({ modals: { ...s2.modals, logoutConfirm: false } }));
@@ -659,7 +670,7 @@ export function PetoryProvider({ children }) {
     state, update, showToast,
     goHome, goExplore, goExploreCategory, goMatching, goMessages, goMyPets, goProfile, goFollowing, goFollowers, goSettings, goNotifications,
     onLoginEmail, onLoginPassword, onToggleRemember, loadRememberedEmail, onRegName, onRegEmail, onRegPassword, onRegConfirm,
-    goForgot, login, loginBtnClick, register, sendResetLink,
+    goForgot, login, loginBtnClick, register,
     openLogoutConfirm, closeLogoutConfirm, confirmLogout,
     toggleSpeciesDropdown, selectFeedSpecies, onFeedSearch, toggleSearchOpen, onSearchBlur, setFeedCategory, loadHomeFeed,
     toggleLike, toggleComments, onCommentDraft, submitComment, toggleSave, openPostDetail,

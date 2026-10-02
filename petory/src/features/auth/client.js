@@ -104,6 +104,7 @@ export const notificationClient = {
 };
 
 export const socialClient = {
+  blocked: () => requestJson("/api/blocked"),
   following: () => requestJson("/api/following"),
   followers: () => requestJson("/api/followers"),
   suggested: () => requestJson("/api/users/suggested"),
