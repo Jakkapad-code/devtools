@@ -24,6 +24,10 @@ CLAUDE*
 # misc
 .DS_Store
 *.pem
+*.key
+*.p12
+*.pfx
+certs/
 
 # debug
 npm-debug.log*

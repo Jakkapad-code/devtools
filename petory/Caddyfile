@@ -1,0 +1,17 @@
+http://{$APP_DOMAIN} {
+	redir https://{host}{uri} permanent
+}
+
+{$APP_DOMAIN} {
+	tls /etc/caddy/certs/origin.pem /etc/caddy/certs/origin-key.pem
+	encode zstd gzip
+
+	request_body {
+		max_size 4MB
+	}
+
+	@private path /api/* /petory/*
+	header @private >Cache-Control "private, no-store"
+
+	reverse_proxy app:3000
+}

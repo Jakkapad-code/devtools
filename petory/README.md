@@ -102,6 +102,7 @@ Playwright's headless Chromium first with
 written to ignored `test-results/`. GitHub Actions runs the same gate from the
 repository-root `.github/workflows/verify.yml`; the app is in `petory/`.
 
-The Linux Docker and Cloudflare deployment is tracked separately and requires
-real database, mail, DNS, TLS, backup, and monitoring configuration before a
-public release.
+The Linux Docker stack and release procedure are in
+[DEPLOYMENT.md](DEPLOYMENT.md); backup and restore requirements are in
+[BACKUP.md](BACKUP.md). Real DNS, TLS, mail, monitoring, and off-host backups
+are required before a public release.
