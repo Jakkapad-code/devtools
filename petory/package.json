@@ -5,6 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "next dev",
+    "demo:start": "node scripts/demo.mjs start",
+    "demo:stop": "node scripts/demo.mjs stop",
+    "demo:status": "node scripts/demo.mjs status",
     "build": "npm run lint && npm run test && next build --webpack",
     "start": "next start",
     "lint": "eslint",

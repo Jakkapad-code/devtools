@@ -1,0 +1,68 @@
+# Isolated, mock-only demo. No Caddy, host ports, or production env files.
+services:
+  database:
+    image: postgis/postgis:17-3.5
+    platform: linux/amd64
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: petory_demo
+      POSTGRES_USER: petory
+      POSTGRES_PASSWORD: ${PETORY_DEMO_DB_PASSWORD:?Use npm run demo:start}
+    volumes:
+      - demo-data:/var/lib/postgresql/data
+    healthcheck:
+      test: [CMD-SHELL, pg_isready -U petory -d petory_demo]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  migrate:
+    build:
+      context: .
+      target: migrator
+    environment: &database-env
+      DATABASE_URL: postgresql://petory:${PETORY_DEMO_DB_PASSWORD:?Use npm run demo:start}@database:5432/petory_demo
+      DATABASE_SSL: "false"
+
+  seed:
+    build:
+      context: .
+      target: migrator
+    command: [node, scripts/seed.mjs]
+    environment:
+      <<: *database-env
+      NODE_ENV: development
+    volumes:
+      - ./scripts/seed.mjs:/app/scripts/seed.mjs:ro
+      - ./scripts/demo-photos.mjs:/app/scripts/demo-photos.mjs:ro
+      - ./src/server/auth/password.js:/app/src/server/auth/password.js:ro
+      - ./public/uploads/demo:/app/public/uploads/demo:ro
+
+  app:
+    build:
+      context: .
+      target: runner
+      args:
+        NEXT_PUBLIC_APP_URL: ${PETORY_DEMO_URL:-https://demo.invalid}
+        ALLOWED_ORIGINS: ${PETORY_DEMO_URL:-https://demo.invalid}
+    restart: unless-stopped
+    environment:
+      <<: *database-env
+      NEXT_PUBLIC_APP_URL: ${PETORY_DEMO_URL:-https://demo.invalid}
+      ALLOWED_ORIGINS: ${PETORY_DEMO_URL:-https://demo.invalid}
+      SESSION_SECRET: ${PETORY_DEMO_SESSION_SECRET:?Use npm run demo:start}
+      MAIL_PROVIDER: disabled
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://127.0.0.1:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
+
+  tunnel:
+    image: cloudflare/cloudflared:2026.5.2
+    command: [tunnel, --no-autoupdate, --url, "http://app:3000", --protocol, http2]
+    restart: unless-stopped
+
+volumes:
+  demo-data:

@@ -4,6 +4,39 @@ Petory is a Next.js and PostgreSQL application for a pet-owner community.
 
 ## Run locally
 
+### Public Docker demo with a free Cloudflare Quick Tunnel
+
+Requires Docker Compose v2 and Node.js 22+. From this directory run:
+
+```bash
+npm run demo:start
+```
+
+This builds and starts Next.js, PostgreSQL/PostGIS and cloudflared in Docker,
+using a separate `petory_quick_demo` project and database volume. No Caddy,
+domain, local npm install, host ports or production `.env` file is needed.
+The launcher migrates the demo DB, seeds only an empty DB, gets a fresh public
+URL, builds the app for that exact origin, and verifies public health and login.
+Open the `READY: https://...trycloudflare.com/petory/login` link printed at the end.
+Use `aom@petory.local` / `petory-demo-password-2026`.
+
+```bash
+npm run demo:status
+npm run demo:stop
+```
+
+Stopping preserves data. Run `demo:start` to reopen and get a new URL; it does
+not reseed existing data. Keep Docker, the machine and internet running.
+Quick Tunnels have no uptime guarantee and are for demos, not production.
+If the tunnel becomes invalid, rerun `demo:start` (the URL will change).
+Anyone with the URL can access the app: use mock data only. The launcher
+refuses to publish a database with non-`@petory.local` accounts.
+Do not delete `.env.quick-demo` while retaining the demo database: it contains
+the randomly generated DB credentials, is Git/Docker-ignored, and must not be
+included in source ZIPs. No files under `/private/tmp` are needed.
+
+### Local development (not the public demo)
+
 Requirements: Node.js 20.9 or newer and npm.
 
 ```bash
