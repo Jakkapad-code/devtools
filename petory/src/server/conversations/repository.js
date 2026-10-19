@@ -46,9 +46,27 @@ export async function listMessages(accountId, conversationId) {
 }
 
 export async function addMessage(accountId, conversationId, body) {
-  if (!await canUseConversation(accountId, conversationId)) return null;
-  const result = await query(`INSERT INTO messages (conversation_id, sender_id, body) VALUES ($1, $2, $3) RETURNING id, sender_id AS "senderId", body, created_at AS "createdAt"`, [conversationId, accountId, body]);
-  const recipient = await query(`SELECT account_id FROM conversation_members WHERE conversation_id = $1 AND account_id <> $2`, [conversationId, accountId]);
-  if (recipient.rows[0]) await query(`INSERT INTO notifications (account_id, actor_id, type, resource_type, resource_id) VALUES ($1, $2, 'message', 'conversation', $3)`, [recipient.rows[0].account_id, accountId, conversationId]);
-  return result.rows[0];
+  // Serialize sends with unmatch so no message commits after room closure.
+  const result = await query(`WITH permitted AS MATERIALIZED (
+    SELECT c.id FROM conversations c
+    JOIN conversation_members self ON self.conversation_id = c.id AND self.account_id = $2
+    JOIN matches mt ON mt.id = c.match_id AND mt.status = 'active'
+    WHERE c.id = $1 AND c.closed_at IS NULL
+      AND NOT EXISTS (
+        SELECT 1 FROM conversation_members other JOIN blocks b
+          ON (b.blocker_id = $2 AND b.blocked_id = other.account_id)
+          OR (b.blocker_id = other.account_id AND b.blocked_id = $2)
+        WHERE other.conversation_id = c.id AND other.account_id <> $2
+      ) FOR UPDATE OF mt, c
+  ), inserted AS (
+    INSERT INTO messages (conversation_id, sender_id, body)
+    SELECT id, $2, $3 FROM permitted
+    RETURNING id, conversation_id, sender_id AS "senderId", body, created_at AS "createdAt"
+  ), notified AS (
+    INSERT INTO notifications (account_id, actor_id, type, resource_type, resource_id)
+    SELECT member.account_id, $2, 'message', 'conversation', inserted.conversation_id
+    FROM inserted JOIN conversation_members member ON member.conversation_id = inserted.conversation_id
+    WHERE member.account_id <> $2
+  ) SELECT id, "senderId", body, "createdAt" FROM inserted`, [conversationId, accountId, body]);
+  return result.rows[0] ?? null;
 }

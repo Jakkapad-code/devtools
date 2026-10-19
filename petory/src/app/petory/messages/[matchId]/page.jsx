@@ -8,11 +8,18 @@ import { conversationClient } from "@/features/auth/client";
 
 export default function ChatPage({ params }) {
   const { matchId: conversationId } = use(params);
-  const { state } = usePetory();
+  const { state, unmatch } = usePetory();
   const [messages, setMessages] = useState([]);
   const [conversation, setConversation] = useState(null);
   const [draft, setDraft] = useState("");
   const [error, setError] = useState("");
+  const [unmatching, setUnmatching] = useState(false);
+
+  const cancelMatch = async () => {
+    if (!conversation?.matchId || unmatching || !window.confirm("ยกเลิก Match และปิดห้องสนทนานี้ใช่ไหม?")) return;
+    setUnmatching(true);
+    if (!await unmatch(conversation.matchId)) setUnmatching(false);
+  };
 
   useEffect(() => {
     let active = true;
@@ -28,7 +35,7 @@ export default function ChatPage({ params }) {
 
   const send = async () => {
     const body = draft.trim();
-    if (!body) return;
+    if (!body || unmatching) return;
     try {
       const { message } = await conversationClient.send(conversationId, body);
       setMessages((current) => current.concat([message]));
@@ -67,6 +74,11 @@ export default function ChatPage({ params }) {
       </div>
     </div>
 
+    {conversation && <div style={sx("display:flex;justify-content:flex-end;padding:8px 16px;background:#fff")}>
+      <button type="button" onClick={() => void cancelMatch()} disabled={unmatching} style={sx("border:2px solid #B42318;border-radius:100px;background:#fff;color:#B42318;padding:9px 14px;font-weight:800;cursor:pointer")}>
+        {unmatching ? "กำลังยกเลิก..." : "ยกเลิก Match"}
+      </button>
+    </div>}
     <div style={sx("flex:1;overflow-y:auto;padding:20px clamp(16px,3vw,24px);display:flex;flex-direction:column;gap:14px;background:#fff")}>
       {error && (
         <div role="alert" style={sx("text-align:center;padding:40px 20px")}>

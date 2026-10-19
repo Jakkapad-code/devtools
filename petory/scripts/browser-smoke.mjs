@@ -90,3 +90,41 @@ export async function runAuthenticatedView(baseUrl, { email, path, text, screens
     await browser.close();
   }
 }
+
+/** Unmatch must persist on the server; cancellation/errors must leave the room intact. */
+export async function runUnmatchSmoke(baseUrl, conversationId) {
+  const browser = await chromium.launch(process.platform === "darwin" ? { channel: "chrome" } : {});
+  try {
+    const page = await browser.newPage();
+    page.setDefaultTimeout(20_000);
+    await page.goto(`${baseUrl}/petory/login`);
+    await page.getByPlaceholder("Email").fill("aom@petory.local");
+    await page.getByPlaceholder("Password").fill("petory-demo-password-2026");
+    await page.getByRole("button", { name: "Log In" }).click();
+    await page.waitForURL("**/petory/home");
+    await page.goto(`${baseUrl}/petory/messages/${conversationId}`);
+    const button = page.getByRole("button", { name: "ยกเลิก Match", exact: true });
+    await button.waitFor();
+
+    page.once("dialog", dialog => dialog.dismiss());
+    await button.click();
+    assert.equal((await page.request.get(`${baseUrl}/api/conversations/${conversationId}/messages`)).status(), 200);
+
+    await page.route("**/api/matching/matches/*", route => route.fulfill({ status: 500, contentType: "application/json", body: JSON.stringify({ error: "Simulated unmatch failure" }) }));
+    page.once("dialog", dialog => dialog.accept());
+    await button.click();
+    await page.getByText("Simulated unmatch failure").waitFor();
+    assert.equal((await page.request.get(`${baseUrl}/api/conversations/${conversationId}/messages`)).status(), 200);
+    await page.unroute("**/api/matching/matches/*");
+
+    page.once("dialog", dialog => dialog.accept());
+    await button.click();
+    await page.waitForURL(`${baseUrl}/petory/messages`);
+    await page.reload();
+    assert.equal((await page.request.get(`${baseUrl}/api/conversations/${conversationId}/messages`)).status(), 404);
+    await mkdir("test-results", { recursive: true });
+    await page.screenshot({ path: "test-results/unmatched.png", fullPage: true });
+  } finally {
+    await browser.close();
+  }
+}

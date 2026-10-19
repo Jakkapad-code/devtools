@@ -15,12 +15,20 @@ export async function PUT(request, context) {
     const input = inputSchema.safeParse(await request.json());
     if (!id.success || !input.success || id.data === account.id) return jsonError("Invalid request", 422);
     if (input.data.active) {
-      const result = await query(`INSERT INTO follows (follower_id, followed_id)
+      const result = await query(`WITH followed AS (
+        INSERT INTO follows (follower_id, followed_id)
         SELECT $1, a.id FROM accounts a WHERE a.id = $2 AND a.deleted_at IS NULL
           AND NOT EXISTS (SELECT 1 FROM blocks b WHERE (b.blocker_id = $1 AND b.blocked_id = a.id) OR (b.blocker_id = a.id AND b.blocked_id = $1))
-        ON CONFLICT DO NOTHING RETURNING follower_id`, [account.id, id.data]);
+        ON CONFLICT DO NOTHING RETURNING follower_id, followed_id
+      ), notified AS (
+        INSERT INTO notifications (account_id, actor_id, type, resource_type, resource_id)
+        SELECT followed_id, follower_id, 'follow', 'account', follower_id FROM followed
+      ) SELECT follower_id FROM followed`, [account.id, id.data]);
       if (!result.rows[0]) {
-        const existing = await query("SELECT 1 FROM follows WHERE follower_id = $1 AND followed_id = $2", [account.id, id.data]);
+        const existing = await query(`SELECT 1 FROM follows f JOIN accounts a ON a.id = f.followed_id
+          WHERE f.follower_id = $1 AND f.followed_id = $2 AND a.deleted_at IS NULL
+            AND NOT EXISTS (SELECT 1 FROM blocks b WHERE (b.blocker_id = $1 AND b.blocked_id = $2)
+              OR (b.blocker_id = $2 AND b.blocked_id = $1))`, [account.id, id.data]);
         if (!existing.rows[0]) return jsonError("User not found or blocked", 404);
       }
     } else await query("DELETE FROM follows WHERE follower_id = $1 AND followed_id = $2", [account.id, id.data]);

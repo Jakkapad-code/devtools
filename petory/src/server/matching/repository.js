@@ -31,10 +31,12 @@ export async function recordInteraction(accountId, input) {
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
-    const actor = await client.query(`SELECT owner_id FROM pets WHERE id = $1 AND deleted_at IS NULL FOR UPDATE`, [input.actorPetId]);
-    const target = await client.query(`SELECT owner_id FROM pets WHERE id = $1 AND deleted_at IS NULL FOR UPDATE`, [input.targetPetId]);
-    if (!actor.rows[0] || !target.rows[0] || actor.rows[0].owner_id !== accountId || actor.rows[0].owner_id === target.rows[0].owner_id) { await client.query("ROLLBACK"); return null; }
-    const blocked = await client.query(`SELECT 1 FROM blocks WHERE (blocker_id = $1 AND blocked_id = $2) OR (blocker_id = $2 AND blocked_id = $1)`, [accountId, target.rows[0].owner_id]);
+    // Lock pets in a stable order even when both owners click simultaneously.
+    const pets = await client.query(`SELECT id, owner_id FROM pets WHERE id = ANY($1::uuid[]) AND deleted_at IS NULL ORDER BY id FOR UPDATE`, [[input.actorPetId, input.targetPetId]]);
+    const actor = pets.rows.find(pet => pet.id === input.actorPetId);
+    const target = pets.rows.find(pet => pet.id === input.targetPetId);
+    if (!actor || !target || actor.owner_id !== accountId || actor.owner_id === target.owner_id) { await client.query("ROLLBACK"); return null; }
+    const blocked = await client.query(`SELECT 1 FROM blocks WHERE (blocker_id = $1 AND blocked_id = $2) OR (blocker_id = $2 AND blocked_id = $1)`, [accountId, target.owner_id]);
     if (blocked.rows[0]) { await client.query("ROLLBACK"); return null; }
     await client.query(`INSERT INTO match_interactions (actor_pet_id, target_pet_id, action) VALUES ($1, $2, $3) ON CONFLICT (actor_pet_id, target_pet_id) DO UPDATE SET action = EXCLUDED.action, created_at = NOW()`, [input.actorPetId, input.targetPetId, input.action]);
     let match = null;
@@ -43,11 +45,14 @@ export async function recordInteraction(accountId, input) {
       const reverse = await client.query(`SELECT 1 FROM match_interactions WHERE actor_pet_id = $1 AND target_pet_id = $2 AND action = 'interest'`, [input.targetPetId, input.actorPetId]);
       if (reverse.rows[0]) {
         const [petA, petB] = [input.actorPetId, input.targetPetId].sort();
-        const created = await client.query(`INSERT INTO matches (pet_a_id, pet_b_id) VALUES ($1, $2) ON CONFLICT (pet_a_id, pet_b_id) DO UPDATE SET status = 'active', unmatched_at = NULL RETURNING id`, [petA, petB]);
+        // Old interests/retries must not reopen a cancelled match or its history.
+        const created = await client.query(`INSERT INTO matches (pet_a_id, pet_b_id) VALUES ($1, $2) ON CONFLICT (pet_a_id, pet_b_id) DO UPDATE SET status = 'active' WHERE matches.status = 'active' RETURNING id`, [petA, petB]);
         match = created.rows[0];
-        const conversation = await client.query(`INSERT INTO conversations (match_id) VALUES ($1) ON CONFLICT (match_id) DO UPDATE SET closed_at = NULL RETURNING id`, [match.id]);
-        conversationId = conversation.rows[0].id;
-        await client.query(`INSERT INTO conversation_members (conversation_id, account_id) VALUES ($1, $2), ($1, $3) ON CONFLICT DO NOTHING`, [conversationId, actor.rows[0].owner_id, target.rows[0].owner_id]);
+        if (match) {
+          const conversation = await client.query(`INSERT INTO conversations (match_id) VALUES ($1) ON CONFLICT (match_id) DO UPDATE SET closed_at = NULL RETURNING id`, [match.id]);
+          conversationId = conversation.rows[0].id;
+          await client.query(`INSERT INTO conversation_members (conversation_id, account_id) VALUES ($1, $2), ($1, $3) ON CONFLICT DO NOTHING`, [conversationId, actor.owner_id, target.owner_id]);
+        }
       }
     }
     await client.query("COMMIT");
@@ -55,4 +60,19 @@ export async function recordInteraction(accountId, input) {
     // the conversation id to open the new room.
     return { action: input.action, matchId: match?.id ?? null, conversationId };
   } catch (error) { await client.query("ROLLBACK"); throw error; } finally { client.release(); }
+}
+
+export async function unmatch(accountId, matchId) {
+  // Authorization, cancellation and room closure commit together.
+  const result = await query(`WITH cancelled AS (
+    UPDATE matches m SET status = 'unmatched', unmatched_at = COALESCE(m.unmatched_at, NOW())
+    WHERE m.id = $1 AND EXISTS (
+      SELECT 1 FROM pets p WHERE p.id IN (m.pet_a_id, m.pet_b_id)
+        AND p.owner_id = $2 AND p.deleted_at IS NULL
+    ) RETURNING m.id
+  ), closed AS (
+    UPDATE conversations c SET closed_at = COALESCE(c.closed_at, NOW())
+    FROM cancelled m WHERE c.match_id = m.id RETURNING c.id
+  ) SELECT id AS "matchId", (SELECT id FROM closed) AS "conversationId" FROM cancelled`, [matchId, accountId]);
+  return result.rows[0] ?? null;
 }

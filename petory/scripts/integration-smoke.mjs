@@ -6,7 +6,7 @@ import { spawn } from "node:child_process";
 import { setTimeout as delay } from "node:timers/promises";
 import nextEnv from "@next/env";
 import pg from "pg";
-import { runAuthenticatedView, runBrowserSmoke } from "./browser-smoke.mjs";
+import { runAuthenticatedView, runBrowserSmoke, runUnmatchSmoke } from "./browser-smoke.mjs";
 
 nextEnv.loadEnvConfig(process.cwd());
 if (process.env.PETORY_INTEGRATION_DB !== "1") {
@@ -78,6 +78,12 @@ async function login(email, password = "petory-demo-password-2026") {
   return { cookie: response.headers.get("set-cookie").split(";")[0], id: (await response.json()).account.id };
 }
 
+async function notifications(cookie) {
+  const response = await request("/api/notifications", { cookie });
+  assert.equal(response.status, 200);
+  return (await response.json()).notifications;
+}
+
 try {
   let ready = false;
   for (let attempt = 0; attempt < 100; attempt += 1) {
@@ -125,7 +131,9 @@ try {
 
   const post = { category: "recipe", title: "Integration smoke", caption: "Temporary test post", locationLabel: "", petId: null, photoMediaId: mediaId };
   assert.equal((await request("/api/posts", { method: "POST", cookie: niran.cookie, body: post })).status, 422);
-  assert.equal((await request("/api/posts", { method: "POST", cookie: aom.cookie, body: post })).status, 201);
+  const createdPost = await request("/api/posts", { method: "POST", cookie: aom.cookie, body: post });
+  assert.equal(createdPost.status, 201);
+  const createdPostId = (await createdPost.json()).post.id;
   assert.equal((await request(`/api/media/${mediaId}`, { cookie: niran.cookie })).status, 200);
 
   const pet = { name: "Integration Pet", species: "Dog", breed: "Mixed", age: 2, weightKg: 8, photoMediaId: mediaId, gender: "Unknown", size: "Medium", bio: "", personality: [], interests: [] };
@@ -143,6 +151,17 @@ try {
   const temporaryPost = await request("/api/posts", { method: "POST", cookie: aom.cookie, body: { ...post, photoMediaId: secondMediaId } });
   assert.equal(temporaryPost.status, 201);
   const temporaryPostId = (await temporaryPost.json()).post.id;
+  const commentNotices = (items) => items.filter(item => item.type === "comment" && item.resourceId === temporaryPostId);
+  const initialComments = commentNotices(await notifications(aom.cookie)).length;
+  assert.equal((await request(`/api/posts/${temporaryPostId}/comments`, { method: "POST", cookie: niran.cookie, body: { body: "Comment notification test" } })).status, 201);
+  const ownerComments = commentNotices(await notifications(aom.cookie));
+  assert.equal(ownerComments.length, initialComments + 1);
+  assert(ownerComments.some(item => item.actorName === "Niran Kittisak" && item.resourceType === "post" && !item.readAt));
+  assert.equal(commentNotices(await notifications(niran.cookie)).length, 0);
+  assert.equal((await request(`/api/posts/${temporaryPostId}/comments`, { method: "POST", cookie: aom.cookie, body: { body: "Self comment" } })).status, 201);
+  assert.equal(commentNotices(await notifications(aom.cookie)).length, initialComments + 1);
+  assert.equal((await request(`/api/posts/${temporaryPostId}/comments`, { method: "POST", cookie: niran.cookie, body: { body: " " } })).status, 422);
+  assert.equal(commentNotices(await notifications(aom.cookie)).length, initialComments + 1);
   assert.equal((await request(`/api/media/${secondMediaId}`, { cookie: niran.cookie })).status, 200);
   const niranPets = (await (await request("/api/pets", { cookie: niran.cookie })).json()).pets;
   const targetPetId = niranPets[0].id;
@@ -152,6 +171,8 @@ try {
   assert.equal((await request(`/api/media/${secondMediaId}`, { cookie: niran.cookie })).status, 404);
   assert.equal((await request(`/api/media/${secondMediaId}`, { cookie: aom.cookie })).status, 200);
   assert.equal((await request(`/api/posts/${temporaryPostId}`, { method: "DELETE", cookie: aom.cookie })).status, 204);
+  assert.equal((await request(`/api/posts/${temporaryPostId}/comments`, { method: "POST", cookie: niran.cookie, body: { body: "Deleted post" } })).status, 404);
+  assert.equal(commentNotices(await notifications(aom.cookie)).length, initialComments + 1);
   const cleanupDb = new pg.Client({ connectionString: process.env.DATABASE_URL });
   await cleanupDb.connect();
   try { await cleanupDb.query("UPDATE media_files SET created_at = NOW() - INTERVAL '25 hours' WHERE id = $1", [secondMediaId]); }
@@ -172,13 +193,50 @@ try {
   assert.equal((await firstInterest.json()).interaction.matchId, null);
   const mutualInterest = await request("/api/matching/interactions", { method: "POST", cookie: niran.cookie, body: { actorPetId: targetPetId, targetPetId: petId, action: "interest" } });
   assert.equal(mutualInterest.status, 200);
-  const newConversationId = (await mutualInterest.json()).interaction.conversationId;
+  const newInteraction = (await mutualInterest.json()).interaction;
+  const newConversationId = newInteraction.conversationId;
   assert(newConversationId, "Mutual interest should create a conversation");
   assert.equal((await request(`/api/conversations/${newConversationId}/messages`, { method: "POST", cookie: aom.cookie, body: { body: "A fresh match says hello" } })).status, 201);
   await runAuthenticatedView(base, { email: "aom@petory.local", path: `/petory/messages/${newConversationId}`, text: "A fresh match says hello", screenshot: "new-match-chat" });
 
+  const maliViewer = await login("mali@petory.local");
+  const unmatchPath = `/api/matching/matches/${newInteraction.matchId}`;
+  assert.equal((await request(unmatchPath, { method: "DELETE" })).status, 401);
+  assert.equal((await request(unmatchPath, { method: "DELETE", cookie: maliViewer.cookie })).status, 404);
+  assert.equal((await request(`/api/matching/matches/${newConversationId}`, { method: "DELETE", cookie: aom.cookie })).status, 404);
+  assert.equal((await request("/api/matching/matches/not-a-uuid", { method: "DELETE", cookie: aom.cookie })).status, 422);
+  assert.equal((await fetch(networkBase + unmatchPath, { method: "DELETE", headers: { Cookie: aom.cookie, Origin: "https://untrusted.example" } })).status, 403);
+  assert.equal((await request(`/api/conversations/${newConversationId}/messages`, { cookie: aom.cookie })).status, 200);
+  await runUnmatchSmoke(base, newConversationId);
+  // Either owner may retry safely; cancellation must survive fresh server reads.
+  assert.equal((await request(unmatchPath, { method: "DELETE", cookie: niran.cookie })).status, 200);
+  for (const owner of [aom, niran]) {
+    assert.equal((await request(`/api/conversations/${newConversationId}/messages`, { cookie: owner.cookie })).status, 404);
+    assert.equal((await request(`/api/conversations/${newConversationId}/messages`, { method: "POST", cookie: owner.cookie, body: { body: "Must not be saved after unmatch" } })).status, 404);
+    const rooms = (await (await request("/api/conversations", { cookie: owner.cookie })).json()).conversations;
+    assert(!rooms.some(room => room.id === newConversationId));
+    const retry = await request("/api/matching/interactions", { method: "POST", cookie: owner.cookie, body: { actorPetId: owner.id === aom.id ? petId : targetPetId, targetPetId: owner.id === aom.id ? targetPetId : petId, action: "interest" } });
+    assert.equal(retry.status, 200);
+    assert.equal((await retry.json()).interaction.matchId, null);
+  }
+  const unmatchDb = new pg.Client({ connectionString: process.env.DATABASE_URL });
+  await unmatchDb.connect();
+  try {
+    const persisted = await unmatchDb.query(`SELECT m.status, m.unmatched_at IS NOT NULL AS cancelled, c.closed_at IS NOT NULL AS closed FROM matches m JOIN conversations c ON c.match_id = m.id WHERE m.id = $1`, [newInteraction.matchId]);
+    assert.deepEqual(persisted.rows[0], { status: "unmatched", cancelled: true, closed: true });
+    assert.equal((await unmatchDb.query("SELECT 1 FROM messages WHERE conversation_id = $1 AND body = 'Must not be saved after unmatch'", [newConversationId])).rowCount, 0);
+  } finally { await unmatchDb.end(); }
+
+  await request(`/api/users/${niran.id}/follow`, { method: "PUT", cookie: aom.cookie, body: { active: false } });
+  const followNotices = (items) => items.filter(item => item.type === "follow" && item.resourceType === "account" && item.resourceId === aom.id);
+  const initialFollows = followNotices(await notifications(niran.cookie)).length;
   const follow = await request(`/api/users/${niran.id}/follow`, { method: "PUT", cookie: aom.cookie, body: { active: true } });
   assert.equal(follow.status, 200);
+  assert.equal(followNotices(await notifications(niran.cookie)).length, initialFollows + 1);
+  assert.equal((await request(`/api/users/${niran.id}/follow`, { method: "PUT", cookie: aom.cookie, body: { active: true } })).status, 200);
+  assert.equal(followNotices(await notifications(niran.cookie)).length, initialFollows + 1);
+  assert.equal((await request(`/api/users/${aom.id}/follow`, { method: "PUT", cookie: aom.cookie, body: { active: true } })).status, 422);
+  await runAuthenticatedView(base, { email: "niran@petory.local", path: "/petory/notifications", text: "Aom Supaporn เริ่มติดตามคุณ", screenshot: "follow-notification" });
   const following = await request("/api/following", { cookie: aom.cookie });
   assert((await following.json()).users.some((user) => user.id === niran.id));
   await runAuthenticatedView(base, { email: "aom@petory.local", path: "/petory/following", text: "Niran Kittisak", screenshot: "following" });
@@ -197,6 +255,14 @@ try {
   assert.equal((await request(`/api/media/${mediaId}`, { cookie: niran.cookie })).status, 404);
   assert.equal((await request(`/api/users/${niran.id}`, { cookie: aom.cookie })).status, 404);
   assert.equal((await request(`/api/users/${niran.id}/follow`, { method: "PUT", cookie: aom.cookie, body: { active: true } })).status, 404);
+  assert.equal((await request(`/api/posts/${createdPostId}/comments`, { method: "POST", cookie: niran.cookie, body: { body: "Blocked comment" } })).status, 404);
+  const notificationDb = new pg.Client({ connectionString: process.env.DATABASE_URL });
+  await notificationDb.connect();
+  try {
+    assert.equal((await notificationDb.query("SELECT 1 FROM post_comments WHERE post_id = $1 AND body = 'Blocked comment'", [createdPostId])).rowCount, 0);
+    const count = await notificationDb.query("SELECT COUNT(*)::int AS count FROM notifications WHERE account_id = $1 AND actor_id = $2 AND type = 'follow'", [niran.id, aom.id]);
+    assert.equal(count.rows[0].count, initialFollows + 1);
+  } finally { await notificationDb.end(); }
   assert((await (await request("/api/blocked", { cookie: aom.cookie })).json()).users.some((user) => user.id === niran.id));
   await runAuthenticatedView(base, { email: "aom@petory.local", path: "/petory/profile", text: "ผู้ใช้ที่ถูกบล็อก (1)", screenshot: "blocked" });
   assert.equal((await request(`/api/conversations/${withNiran.id}/messages`, { cookie: aom.cookie })).status, 404);
@@ -248,7 +314,7 @@ try {
   const globallyLimited = await request("/api/auth/register", { method: "POST", body: { displayName: "Global limit", email: "global-limit@petory.local", password: "valid-password-2026" } });
   assert.equal(globallyLimited.status, 429);
   assert(Number(globallyLimited.headers.get("retry-after")) > 0);
-  console.log("Integration smoke passed: browser register/pet/post/Explore/follow/block/admin, media lifecycle, chat/matching policy, report/suspension, reset, session revocation, 429.");
+  console.log("Integration smoke passed: browser register/pet/post/Explore/follow/block/admin, comment/follow notifications, persistent authorized unmatch and closed chat, media lifecycle, report/suspension, reset, session revocation, 429.");
 } finally {
   child.kill("SIGTERM");
   await new Promise((resolve) => mailServer.close(resolve));

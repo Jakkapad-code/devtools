@@ -141,12 +141,25 @@ export async function setPostSave(accountId, postId, active) {
 }
 
 export async function addPostComment(accountId, postId, body) {
-  if (!await existingPost(postId)) return null;
   const result = await query(
-    `INSERT INTO post_comments (post_id, author_id, body) VALUES ($1, $2, $3)
-     RETURNING id, body AS text, created_at AS "createdAt"`,
+    `WITH visible_post AS (
+       SELECT p.id, p.author_id FROM posts p JOIN accounts a ON a.id = p.author_id
+       WHERE p.id = $1 AND p.deleted_at IS NULL AND a.deleted_at IS NULL
+         AND NOT EXISTS (SELECT 1 FROM blocks b
+           WHERE (b.blocker_id = $2 AND b.blocked_id = p.author_id)
+              OR (b.blocker_id = p.author_id AND b.blocked_id = $2))
+     ), inserted AS (
+       INSERT INTO post_comments (post_id, author_id, body)
+       SELECT id, $2, $3 FROM visible_post
+       RETURNING id, body AS text, created_at AS "createdAt"
+     ), notified AS (
+       INSERT INTO notifications (account_id, actor_id, type, resource_type, resource_id)
+       SELECT p.author_id, $2, 'comment', 'post', p.id
+       FROM visible_post p CROSS JOIN inserted WHERE p.author_id <> $2
+     )
+     SELECT inserted.*, a.display_name AS "user", '#E3402B' AS color
+     FROM inserted JOIN accounts a ON a.id = $2`,
     [postId, accountId, body]
   );
-  const account = await query(`SELECT display_name AS "user" FROM accounts WHERE id = $1`, [accountId]);
-  return { ...result.rows[0], ...account.rows[0], color: "#E3402B" };
+  return result.rows[0] ?? null;
 }

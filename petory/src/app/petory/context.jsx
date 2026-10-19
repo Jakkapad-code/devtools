@@ -578,10 +578,18 @@ export function PetoryProvider({ children }) {
 
   // ---- messages ----
   const openChat = (matchId) => router.push(`/petory/messages/${matchId}`);
-  const unmatch = (matchId) => {
-    update((s2) => ({ matches: s2.matches.filter((m) => m.id !== matchId) }));
-    showToast("ยกเลิกการ Match แล้ว");
-    router.push("/petory/messages");
+  const unmatch = async (matchId) => {
+    try {
+      await matchingClient.unmatch(matchId);
+      update((s2) => ({ matches: s2.matches.filter((m) => m.id !== matchId) }));
+      window.dispatchEvent(new CustomEvent("petory:match-ended"));
+      showToast("ยกเลิกการ Match แล้ว");
+      router.replace("/petory/messages");
+      return true;
+    } catch (error) {
+      showToast(error.message || "ยกเลิก Match ไม่สำเร็จ กรุณาลองใหม่");
+      return false;
+    }
   };
   const onChatDraft = (e) => update({ chatDraft: e.target.value });
   const sendMessage = (matchId) => {

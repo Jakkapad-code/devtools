@@ -80,6 +80,7 @@ export const postClient = {
 };
 
 export const matchingClient = {
+  unmatch: (matchId) => requestJson(`/api/matching/matches/${matchId}`, { method: "DELETE" }),
   candidates: (filters) => {
     const params = new URLSearchParams();
     Object.entries(filters).forEach(([key, value]) => {

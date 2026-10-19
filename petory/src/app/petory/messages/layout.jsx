@@ -18,7 +18,11 @@ export default function MessagesLayout({ children }) {
   useEffect(() => {
     const bump = () => setRefreshKey((current) => current + 1);
     window.addEventListener("petory:message-sent", bump);
-    return () => window.removeEventListener("petory:message-sent", bump);
+    window.addEventListener("petory:match-ended", bump);
+    return () => {
+      window.removeEventListener("petory:message-sent", bump);
+      window.removeEventListener("petory:match-ended", bump);
+    };
   }, []);
 
   useEffect(() => {
