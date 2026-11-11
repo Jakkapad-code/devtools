@@ -5,8 +5,33 @@ on:
   push:
 
 jobs:
-  verify:
-    runs-on: ubuntu-latest
+  code:
+    name: Lint, unit tests and build
+    runs-on: ubuntu-24.04
+    env:
+      DATABASE_URL: postgresql://petory:petory@127.0.0.1:5433/petory
+      DATABASE_SSL: "false"
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+      ALLOWED_ORIGINS: http://localhost:3000
+      SESSION_SECRET: ci-session-secret-that-is-longer-than-32-characters
+    defaults:
+      run:
+        working-directory: petory
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: petory/package-lock.json
+      - run: npm ci
+      - run: npm audit --omit=dev --audit-level=high
+      # The build script runs lint and unit tests before building Next.js.
+      - run: npm run build
+
+  integration:
+    name: PostgreSQL and browser integration
+    runs-on: ubuntu-24.04
     defaults:
       run:
         working-directory: petory
@@ -35,12 +60,15 @@ jobs:
           cache: npm
           cache-dependency-path: petory/package-lock.json
       - run: npm ci
-      - run: npm audit --omit=dev --audit-level=high
-      - run: npx playwright install --with-deps --only-shell chromium
+      - name: Install and verify Chromium
+        run: |
+          npx playwright install --only-shell chromium
+          if ! node -e 'require("playwright").chromium.launch().then(browser => browser.close()).catch(error => { console.error(error); process.exit(1); })'; then
+            echo "Chromium could not launch; installing system dependencies."
+            npx playwright install-deps chromium
+            node -e 'require("playwright").chromium.launch().then(browser => browser.close()).catch(error => { console.error(error); process.exit(1); })'
+          fi
       - run: npm run db:migrate
-      - run: npm run lint
-      - run: npm run test
-      - run: npm run build
       - run: npm run db:seed
       - run: npm run test:integration
         env:
