@@ -12,10 +12,10 @@ export async function POST(request) {
     await requireSameOrigin();
     const input = loginSchema.safeParse(await request.json());
     if (!input.success) return jsonError("Invalid email or password", 422);
-    const globalLimit = await checkRateLimit("loginGlobal", "all");
-    if (!globalLimit.allowed) return rateLimitResponse(globalLimit.retryAfter);
     const limit = await checkRateLimit("login", input.data.email);
     if (!limit.allowed) return rateLimitResponse(limit.retryAfter);
+    const globalLimit = await checkRateLimit("loginGlobal", "all");
+    if (!globalLimit.allowed) return rateLimitResponse(globalLimit.retryAfter);
 
     const result = await query(
       `SELECT id, email, display_name, password_hash, suspension_reason,

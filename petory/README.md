@@ -4,6 +4,8 @@ Petory is a Next.js and PostgreSQL application for a pet-owner community.
 
 ## Run locally
 
+For the instructor-provided Linux image, see [INSTRUCTOR.md](./INSTRUCTOR.md).
+
 ### Public Docker demo with a free Cloudflare Quick Tunnel
 
 Requires Docker Compose v2 and Node.js 22+. From this directory run:

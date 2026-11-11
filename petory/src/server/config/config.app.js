@@ -22,12 +22,16 @@ export function getAppConfig() {
       resetConfirm: { attempts: env.RATE_LIMIT_RESET_CONFIRM, windowSeconds: 60 * 60 },
       upload: { attempts: env.RATE_LIMIT_UPLOAD, windowSeconds: 60 * 60 },
       report: { attempts: env.RATE_LIMIT_REPORT, windowSeconds: 60 * 60 },
+      locationUpdate: { attempts: 10, windowSeconds: 60 * 60 },
+      matchingCandidates: { attempts: 120, windowSeconds: 60 * 60 },
     },
     mail: {
       provider: env.MAIL_PROVIDER,
       from: env.MAIL_FROM,
       apiKey: env.RESEND_API_KEY,
       apiUrl: env.MAIL_API_URL ?? "https://api.resend.com/emails",
+      gmailUser: env.GMAIL_USER,
+      gmailAppPassword: env.GMAIL_APP_PASSWORD,
     },
   };
 }

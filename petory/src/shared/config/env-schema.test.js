@@ -49,6 +49,13 @@ describe("parseServerEnv", () => {
     expect(parseServerEnv({ ...validEnvironment, MAIL_PROVIDER: "resend", MAIL_FROM: "hello@petory.test", RESEND_API_KEY: "test-key" }).MAIL_PROVIDER).toBe("resend");
   });
 
+  it("requires matching sender and credentials for Gmail without exposing secrets", () => {
+    const gmail = { ...validEnvironment, MAIL_PROVIDER: "gmail", MAIL_FROM: "demo@gmail.com", GMAIL_USER: "demo@gmail.com", GMAIL_APP_PASSWORD: "test-password" };
+    expect(parseServerEnv(gmail).MAIL_PROVIDER).toBe("gmail");
+    expect(() => parseServerEnv({ ...gmail, GMAIL_APP_PASSWORD: undefined })).toThrow("GMAIL_APP_PASSWORD");
+    expect(() => parseServerEnv({ ...gmail, MAIL_FROM: "other@gmail.com" })).toThrow("MAIL_FROM");
+  });
+
   it("lets CLI scripts parse only the database settings", () => {
     expect(parseDatabaseEnv({ DATABASE_URL: validEnvironment.DATABASE_URL })).toMatchObject({
       DATABASE_SSL: false,

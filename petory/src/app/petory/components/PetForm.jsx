@@ -37,11 +37,19 @@ export default function PetForm({ title, submitLabel, photoPlaceholder }) {
       <div style={sx("background:#fff;border:2px solid #201C16;border-radius:24px;padding:clamp(18px,4vw,28px);box-shadow:8px 8px 0 rgba(32,28,22,0.12);display:flex;flex-direction:column;gap:18px")}>
         <label title="อัปโหลดรูปสัตว์เลี้ยง" style={sx(`height:200px;border-radius:18px;overflow:hidden;position:relative;display:block;cursor:pointer;border:2px ${f.photoMediaId ? "solid" : "dashed"} #C9BFAE;background:#F6F1E8`)}>
           <ImageSlot shape="rect" placeholder={photoPlaceholder} src={f.photoMediaId ? `/api/media/${f.photoMediaId}` : undefined} style="width:100%;height:100%" />
-          <input type="file" accept="image/jpeg,image/png,image/webp" onChange={a.uploadPetPhoto} disabled={s.petPhotoPending} style={{ display: "none" }} />
+          <input type="file" accept="image/jpeg,image/png,image/webp" onChange={a.uploadPetPhoto} disabled={s.petPhotoPending || (f.photoMediaIds ?? []).length >= 5} style={{ display: "none" }} />
           <span style={sx("position:absolute;right:12px;bottom:12px;background:#E3402B;color:#fff;border-radius:100px;padding:8px 16px;font-size:12px;font-weight:800;box-shadow:0 2px 8px rgba(0,0,0,0.18)")}>
-            {s.petPhotoPending ? "กำลังอัปโหลด..." : f.photoMediaId ? "เปลี่ยนรูป" : "เพิ่มรูป"}
+            {s.petPhotoPending ? "กำลังอัปโหลด..." : (f.photoMediaIds ?? []).length >= 5 ? "ครบ 5 รูปแล้ว" : "เพิ่มรูป"}
           </span>
         </label>
+        <div style={sx("display:flex;gap:12px;flex-wrap:wrap")}>
+          {(f.photoMediaIds ?? []).map((id, index) => <div key={id} data-testid="pet-gallery-item" style={sx("width:100px")}>
+            <ImageSlot shape="rect" src={`/api/media/${id}`} placeholder="PHOTO" style="width:100px;height:80px;border-radius:8px" />
+            <button type="button" onClick={() => a.setPrimaryPetPhoto(id)} disabled={index === 0} style={sx("font-size:12px")}>{index === 0 ? "รูปหลัก" : "ตั้งรูปหลัก"}</button>
+            <button type="button" onClick={() => a.removePetPhoto(id)} style={sx("font-size:12px;color:#b00020;margin-left:4px")}>ลบ</button>
+          </div>)}
+        </div>
+        <small>เพิ่มได้สูงสุด 5 รูป · กดบันทึกเพื่อยืนยันการเปลี่ยนแปลง</small>
 
         <Field label="Pet Name">
           <input placeholder="เช่น Mochi" value={f.name} onChange={a.onPetName} style={sx(INPUT)} />
@@ -63,7 +71,7 @@ export default function PetForm({ title, submitLabel, photoPlaceholder }) {
           <Field label="Breed">
             <input placeholder="Shiba Inu" value={f.breed} onChange={a.onPetBreed} style={sx(INPUT)} />
           </Field>
-          <Field label="Age">
+          <Field label="Age (โดยประมาณ)">
             <input placeholder="ปี" type="number" value={f.age} onChange={a.onPetAge} style={sx(INPUT)} />
           </Field>
           <Field label="น้ำหนัก">
@@ -94,7 +102,7 @@ export default function PetForm({ title, submitLabel, photoPlaceholder }) {
         </Field>
 
         <div style={sx("display:flex;gap:12px;margin-top:4px;flex-wrap:wrap")}>
-          <button disabled={s.petPending} onClick={a.savePet} style={sx(`flex:1;min-width:160px;background:#E3402B;color:#fff;font-weight:800;font-size:14px;letter-spacing:0.03em;text-transform:uppercase;padding:15px;border-radius:100px;border:none;cursor:${s.petPending ? "wait" : "pointer"};opacity:${s.petPending ? "0.7" : "1"}`)}>{s.petPending ? "Saving..." : submitLabel}</button>
+          <button disabled={s.petPending || s.petPhotoPending} onClick={a.savePet} style={sx(`flex:1;min-width:160px;background:#E3402B;color:#fff;font-weight:800;font-size:14px;letter-spacing:0.03em;text-transform:uppercase;padding:15px;border-radius:100px;border:none;cursor:${s.petPending ? "wait" : "pointer"};opacity:${s.petPending || s.petPhotoPending ? "0.7" : "1"}`)}>{s.petPending ? "Saving..." : submitLabel}</button>
           <button onClick={a.cancelPetForm} style={sx("border:2px solid #201C16;background:#fff;font-weight:700;font-size:14px;text-transform:uppercase;padding:15px 24px;border-radius:100px;cursor:pointer")}>Cancel</button>
         </div>
       </div>

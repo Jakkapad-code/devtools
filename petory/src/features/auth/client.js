@@ -95,13 +95,16 @@ export const matchingClient = {
 
 export const conversationClient = {
   list: () => requestJson("/api/conversations"),
-  messages: (id) => requestJson(`/api/conversations/${id}/messages`),
+  messages: (id, cursor = {}) => {
+    const params = new URLSearchParams(cursor);
+    return requestJson(`/api/conversations/${id}/messages${params.size ? `?${params}` : ""}`, { cache: "no-store" });
+  },
   send: (id, body) => postJson(`/api/conversations/${id}/messages`, { body }),
 };
 
 export const notificationClient = {
   list: () => requestJson("/api/notifications"),
-  markAllRead: () => postJson("/api/notifications/read", {}),
+  markRead: (ids) => postJson("/api/notifications/read", { ids }),
 };
 
 export const socialClient = {

@@ -6,7 +6,9 @@ import { spawn } from "node:child_process";
 import { setTimeout as delay } from "node:timers/promises";
 import nextEnv from "@next/env";
 import pg from "pg";
-import { runAuthenticatedView, runBrowserSmoke, runUnmatchSmoke } from "./browser-smoke.mjs";
+import { runAuthenticatedView, runBrowserSmoke, runPasswordResetSmoke, runUnmatchSmoke } from "./browser-smoke.mjs";
+import { runMatchingPetsSmoke } from "./matching-pets-smoke.mjs";
+import { runChatPaginationSmoke } from "./chat-pagination-smoke.mjs";
 
 nextEnv.loadEnvConfig(process.cwd());
 if (process.env.PETORY_INTEGRATION_DB !== "1") {
@@ -98,6 +100,7 @@ try {
 
   const aom = await login("aom@petory.local");
   const niran = await login("niran@petory.local");
+  await runMatchingPetsSmoke(request, aom, niran);
   const allPhotos = [];
   for (const [category, count] of [["recipe", 6], ["clinic", 4]]) {
     const response = await request(`/api/posts?scope=explore&category=${category}`, { cookie: aom.cookie });
@@ -164,8 +167,10 @@ try {
   assert.equal(commentNotices(await notifications(aom.cookie)).length, initialComments + 1);
   assert.equal((await request(`/api/media/${secondMediaId}`, { cookie: niran.cookie })).status, 200);
   const niranPets = (await (await request("/api/pets", { cookie: niran.cookie })).json()).pets;
-  const targetPetId = niranPets[0].id;
-  const niranPhoto = niranPets[0].photoMediaId;
+  const targetPet = niranPets.find((item) => item.photoMediaId);
+  assert(targetPet, "The seeded target must have a photo for the ownership test");
+  const targetPetId = targetPet.id;
+  const niranPhoto = targetPet.photoMediaId;
   assert.equal((await request(`/api/posts/${temporaryPostId}`, { method: "PUT", cookie: aom.cookie, body: { ...post, photoMediaId: niranPhoto } })).status, 422);
   assert.equal((await request(`/api/posts/${temporaryPostId}`, { method: "PUT", cookie: aom.cookie, body: { ...post, photoMediaId: null } })).status, 200);
   assert.equal((await request(`/api/media/${secondMediaId}`, { cookie: niran.cookie })).status, 404);
@@ -198,6 +203,7 @@ try {
   assert(newConversationId, "Mutual interest should create a conversation");
   assert.equal((await request(`/api/conversations/${newConversationId}/messages`, { method: "POST", cookie: aom.cookie, body: { body: "A fresh match says hello" } })).status, 201);
   await runAuthenticatedView(base, { email: "aom@petory.local", path: `/petory/messages/${newConversationId}`, text: "A fresh match says hello", screenshot: "new-match-chat" });
+  await runChatPaginationSmoke(request, aom, niran, newConversationId);
 
   const maliViewer = await login("mali@petory.local");
   const unmatchPath = `/api/matching/matches/${newInteraction.matchId}`;
@@ -250,8 +256,27 @@ try {
   assert((await messages.json()).messages.some((message) => message.body === "Integration hello"));
   await runAuthenticatedView(base, { email: "aom@petory.local", path: `/petory/messages/${withNiran.id}`, text: "Integration hello", screenshot: "chat" });
 
+  const niranPostResponse = await request("/api/posts", { method: "POST", cookie: niran.cookie, body: { ...post, photoMediaId: null } });
+  assert.equal(niranPostResponse.status, 201);
+  const niranPostId = (await niranPostResponse.json()).post.id;
+  for (const interaction of ["like", "save"]) {
+    assert.equal((await request(`/api/posts/${createdPostId}/${interaction}`, { method: "PUT", cookie: niran.cookie, body: { active: true } })).status, 200);
+    assert.equal((await request(`/api/posts/${niranPostId}/${interaction}`, { method: "PUT", cookie: aom.cookie, body: { active: true } })).status, 200);
+  }
   const block = await request(`/api/users/${niran.id}/block`, { method: "PUT", cookie: aom.cookie, body: { active: true } });
   assert.equal(block.status, 200);
+  for (const interaction of ["like", "save"]) {
+    for (const active of [true, false]) {
+      assert.equal((await request(`/api/posts/${createdPostId}/${interaction}`, { method: "PUT", cookie: niran.cookie, body: { active } })).status, 404);
+      assert.equal((await request(`/api/posts/${niranPostId}/${interaction}`, { method: "PUT", cookie: aom.cookie, body: { active } })).status, 404);
+    }
+  }
+  assert.equal((await request(`/api/users/${niran.id}/block`, { method: "PUT", cookie: aom.cookie, body: { active: false } })).status, 200);
+  for (const interaction of ["like", "save"]) {
+    assert.equal((await request(`/api/posts/${createdPostId}/${interaction}`, { method: "PUT", cookie: niran.cookie, body: { active: false } })).status, 200);
+    assert.equal((await request(`/api/posts/${niranPostId}/${interaction}`, { method: "PUT", cookie: aom.cookie, body: { active: false } })).status, 200);
+  }
+  assert.equal((await request(`/api/users/${niran.id}/block`, { method: "PUT", cookie: aom.cookie, body: { active: true } })).status, 200);
   assert.equal((await request(`/api/media/${mediaId}`, { cookie: niran.cookie })).status, 404);
   assert.equal((await request(`/api/users/${niran.id}`, { cookie: aom.cookie })).status, 404);
   assert.equal((await request(`/api/users/${niran.id}/follow`, { method: "PUT", cookie: aom.cookie, body: { active: true } })).status, 404);
@@ -293,16 +318,24 @@ try {
   assert.deepEqual(await known.json(), await unknown.json());
   const token = new URL(lastMail.text.match(/https?:\/\/\S+/)[0]).searchParams.get("token");
   assert(token);
-  assert.equal((await request("/api/auth/reset", { method: "POST", body: { token, password: "integration-new-password" } })).status, 200);
+  await runPasswordResetSmoke(base, token, "integration-new-password");
   assert.equal((await request("/api/auth/reset", { method: "POST", body: { token, password: "another-password" } })).status, 400);
   assert.equal((await request("/api/me", { cookie: aom.cookie })).status, 401);
   await login("aom@petory.local", "integration-new-password");
 
-  const loginStatuses = [];
-  for (let index = 0; index < 11; index += 1) {
-    loginStatuses.push((await request("/api/auth/login", { method: "POST", body: { email: "smoke-limit@petory.local", password: "wrong" } })).status);
-  }
-  assert.deepEqual(loginStatuses, [...Array(10).fill(401), 429]);
+  const loginGlobalHash = createHmac("sha256", process.env.SESSION_SECRET).update("loginGlobal:all").digest("hex");
+  const rateDb = new pg.Client({ connectionString: process.env.DATABASE_URL });
+  await rateDb.connect();
+  try {
+    const globalBefore = (await rateDb.query("SELECT attempts FROM rate_limit_counters WHERE scope = 'loginGlobal' AND key_hash = $1", [loginGlobalHash])).rows[0]?.attempts ?? 0;
+    const loginStatuses = [];
+    for (let index = 0; index < 11; index += 1) {
+      loginStatuses.push((await request("/api/auth/login", { method: "POST", body: { email: "smoke-limit@petory.local", password: "wrong" } })).status);
+    }
+    assert.deepEqual(loginStatuses, [...Array(10).fill(401), 429]);
+    const globalAfter = (await rateDb.query("SELECT attempts FROM rate_limit_counters WHERE scope = 'loginGlobal' AND key_hash = $1", [loginGlobalHash])).rows[0]?.attempts ?? 0;
+    assert.equal(globalAfter - globalBefore, 10, "Per-email limited requests should not consume the shared budget");
+  } finally { await rateDb.end(); }
   const globalHash = createHmac("sha256", process.env.SESSION_SECRET).update("registerGlobal:all").digest("hex");
   const counterDb = new pg.Client({ connectionString: process.env.DATABASE_URL });
   await counterDb.connect();

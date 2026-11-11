@@ -22,7 +22,7 @@ export default function MyPetsPage() {
             <div style={sx("padding:16px")}>
               <div style={sx("font-family:'Anton',sans-serif;font-size:22px;text-transform:uppercase")}>{pet.name}</div>
               <div style={sx("font-size:13px;color:#4a453c")}>{pet.breed}</div>
-              <div style={sx("font-size:12px;color:#8a8378;margin-top:4px;text-transform:uppercase;font-weight:700")}>{pet.age} yrs · {pet.gender}</div>
+              <div style={sx("font-size:12px;color:#8a8378;margin-top:4px;text-transform:uppercase;font-weight:700")}>{pet.age ?? "—"} yrs · {pet.gender}</div>
             </div>
           </Hoverable>
         ))}

@@ -8,6 +8,7 @@ function bottomKeyFor(pathname) {
   if (pathname.startsWith("/petory/explore")) return "explore";
   if (pathname.startsWith("/petory/matching")) return "matching";
   if (pathname.startsWith("/petory/messages")) return "messages";
+  if (pathname.startsWith("/petory/notifications")) return "notifications";
   if (pathname.startsWith("/petory/profile") || pathname.startsWith("/petory/pets")) return "profile";
   return null;
 }
@@ -35,6 +36,7 @@ export default function BottomNav() {
       {item("explore", "Explore", "/petory/explore")}
       {item("matching", "Match", "/petory/matching")}
       {item("messages", "Chat", "/petory/messages")}
+      {item("notifications", "แจ้งเตือน", "/petory/notifications")}
       {item("profile", "Profile", "/petory/profile")}
     </div>
   );

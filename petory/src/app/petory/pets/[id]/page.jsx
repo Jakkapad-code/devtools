@@ -46,6 +46,9 @@ export default function PetProfilePage({ params }) {
         <div style={sx(`height:340px;border-radius:24px 24px 0 0;overflow:hidden;background:${p.photo}`)}>
           <ImageSlot shape="rect" placeholder={`${p.name} PHOTO`} src={p.photoSrc} style="width:100%;height:100%" />
         </div>
+        {(p.photoMediaIds ?? []).length > 1 && <div style={sx("display:flex;gap:10px;overflow-x:auto;padding:12px 28px")}>
+          {p.photoMediaIds.map((id) => <ImageSlot key={id} shape="rect" placeholder="PHOTO" src={`/api/media/${id}`} style="min-width:100px;width:100px;height:100px;border-radius:10px" />)}
+        </div>}
         <div style={sx("padding:24px 28px 28px")}>
           <div style={sx("display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:20px")}>
             <h1 style={sx("font-family:'Anton',sans-serif;font-size:clamp(2rem,6vw,2.8rem);text-transform:uppercase;margin:0")}>{p.name}</h1>
@@ -71,7 +74,7 @@ export default function PetProfilePage({ params }) {
             </div>
             <div style={sx("border-radius: 14px; padding: 14px 16px; background-color: #784E31DE")}>
               <div style={sx("font-size: 12px; font-weight: 700; color: #FFFFFF; margin-bottom: 4px")}>อายุ</div>
-              <div style={sx("font-size: 17px; font-weight: 700; color: #FFDEAC")}>{p.age} ปี</div>
+              <div style={sx("font-size: 17px; font-weight: 700; color: #FFDEAC")}>{p.age ?? "—"} ปี</div>
             </div>
             <div style={sx("border-radius: 14px; padding: 14px 16px; background-color: #784E31DE")}>
               <div style={sx("font-size: 12px; font-weight: 700; color: #FFFFFF; margin-bottom: 4px")}>เพศ</div>

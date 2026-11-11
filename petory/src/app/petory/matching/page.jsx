@@ -13,16 +13,38 @@ export default function MatchingPage() {
   const matchingPetId = s.matchingPetId || (myPetsForMatching[0] && myPetsForMatching[0].id) || "";
   const matchingPetName = (myPetsForMatching.find((p) => p.id === matchingPetId) || {}).name || "";
   const [candidates, setCandidates] = useState([]);
+  const [locationShared, setLocationShared] = useState(false);
+  const [locationMessage, setLocationMessage] = useState("");
+
+  useEffect(() => {
+    void fetch("/api/matching/location").then((response) => response.ok ? response.json() : null).then((value) => { if (value) setLocationShared(value.shared); }).catch(() => {});
+  }, []);
+
+  const setSharing = async (position) => {
+    const response = await fetch("/api/matching/location", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(position) });
+    if (!response.ok) throw new Error("ไม่สามารถบันทึกตำแหน่งได้");
+    setLocationShared(position !== null);
+    if (!position) a.setMatchFilter("distance", "anywhere");
+    setLocationMessage(position ? "แชร์ตำแหน่งโดยประมาณแล้ว" : "หยุดแชร์ตำแหน่งแล้ว");
+  };
+  const shareLocation = () => {
+    if (!navigator.geolocation) { setLocationMessage("เบราว์เซอร์นี้ไม่รองรับตำแหน่ง"); return; }
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => { void setSharing({ latitude: coords.latitude, longitude: coords.longitude }).catch((error) => setLocationMessage(error.message)); },
+      () => setLocationMessage("ไม่สามารถเข้าถึงตำแหน่งได้ กรุณาตรวจสอบสิทธิ์เบราว์เซอร์"),
+      { enableHighAccuracy: false, timeout: 10000 }
+    );
+  };
 
   useEffect(() => {
     if (!matchingPetId) return;
     let active = true;
-    void matchingClient.candidates({ actorPetId: matchingPetId, species: mf.species, gender: mf.gender, size: mf.size, personality: mf.personality })
-      .then(({ candidates: rows }) => { if (active) setCandidates(rows.map((pet, index) => ({ ...pet, photo: ["#E9C79A", "#D9A15B", "#B0B0AE"][index % 3], photoSrc: petPhotoSrc(pet), distance: "—" }))); })
-      .catch(() => { if (active) setCandidates([]); });
+    void matchingClient.candidates({ actorPetId: matchingPetId, species: mf.species, gender: mf.gender, size: mf.size, personality: mf.personality, minAge: mf.minAge, maxAge: mf.maxAge, distance: mf.distance === "anywhere" ? "" : mf.distance })
+      .then(({ candidates: rows }) => { if (active) setCandidates(rows.map((pet, index) => ({ ...pet, photo: ["#E9C79A", "#D9A15B", "#B0B0AE"][index % 3], photoSrc: petPhotoSrc(pet), distance: pet.distanceKm ?? "—" }))); })
+      .catch((error) => { if (active) { setCandidates([]); setLocationMessage(error.message); } });
     return () => { active = false; };
     // The purpose narrows the query server side, so switching it refetches.
-  }, [matchingPetId, s.matchingPurpose, mf.species, mf.gender, mf.size, mf.personality]);
+  }, [matchingPetId, s.matchingPurpose, mf.species, mf.gender, mf.size, mf.personality, mf.minAge, mf.maxAge, mf.distance, locationShared]);
 
   const cp = candidates[0];
   const stackRotations = [{ rotate: "rotate(-7deg) translateX(-14px)", z: 2 }, { rotate: "rotate(7deg) translateX(14px)", z: 1 }];
@@ -59,6 +81,11 @@ export default function MatchingPage() {
           <button onClick={a.openMatchFilter} style={sx("border:none;background:#fff;border-radius:100px;padding:10px 18px;font-weight:700;font-size:12px;text-transform:uppercase;cursor:pointer;color:#2B5468;box-shadow:rgba(0, 0, 0, 0.19) 0px 10px 20px, rgba(0, 0, 0, 0.23) 0px 6px 6px")}>Filters</button>
         </div>
       </div>
+      <div style={sx("text-align:center;margin:-40px 0 36px;font-size:13px;color:#2B5468")}>
+        <p>แชร์ตำแหน่งโดยประมาณเพื่อกรองระยะทาง · ผู้ใช้อื่นอาจคาดเดาพื้นที่ของคุณจากระยะทางได้</p>
+        {locationShared ? <button onClick={() => void setSharing(null).catch((error) => setLocationMessage(error.message))}>หยุดแชร์ตำแหน่ง</button> : <button onClick={shareLocation}>ยินยอมแชร์ตำแหน่ง</button>}
+        <div role="status">{locationMessage || (!locationShared && mf.distance !== "anywhere" ? "กรุณาแชร์ตำแหน่งก่อนใช้ตัวกรองระยะทาง" : "")}</div>
+      </div>
       {cp ? (
         <>
           <div style={sx("position:relative;width:100%;max-width:480px;margin-top:-28px")}>
@@ -70,7 +97,7 @@ export default function MatchingPage() {
               <div style={sx("padding:22px")}>
                 <h2 style={sx("font-family:'Anton',sans-serif;font-size:clamp(2rem,7vw,2.8rem);text-transform:uppercase;margin:0")}>{cp.name}</h2>
                 <div style={sx("font-size:15px;color:#4a453c;margin-bottom:6px")}>{cp.breed}</div>
-                <div style={sx("font-family:'Anton',sans-serif;font-size:13px;letter-spacing:0.04em;color:#E3402B;margin-bottom:14px")}>{cp.age} YEARS · {cp.gender.toUpperCase()} · {cp.distance} KM AWAY</div>
+                <div style={sx("font-family:'Anton',sans-serif;font-size:13px;letter-spacing:0.04em;color:#E3402B;margin-bottom:14px")}>{cp.age ?? "—"} YEARS · {cp.gender.toUpperCase()} · ประมาณ {cp.distance} KM</div>
                 <div style={sx("display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px")}>
                   {cp.personality.map((chip, i) => (
                     <span key={i} style={sx("border:none;background:#fff;border-radius:100px;padding:6px 14px;font-weight:700;font-size:11px;text-transform:uppercase;box-shadow:rgba(0, 0, 0, 0.19) 0px 10px 20px, rgba(0, 0, 0, 0.23) 0px 6px 6px")}>{chip}</span>

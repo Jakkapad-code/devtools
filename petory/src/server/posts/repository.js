@@ -120,23 +120,35 @@ export async function deleteOwnedPost(authorId, postId) {
   return result.rowCount === 1;
 }
 
-async function existingPost(postId) {
-  const result = await query(`SELECT id FROM posts WHERE id = $1 AND deleted_at IS NULL`, [postId]);
-  return result.rows[0]?.id ?? null;
+// Use the same visibility policy as the feed and comments inside the write
+// statement: knowing a post ID must not bypass a block in either direction.
+async function setPostInteraction(table, accountId, postId, active) {
+  const action = active
+    ? `INSERT INTO ${table} (account_id, post_id)
+       SELECT $1, id FROM visible_post WHERE true ON CONFLICT DO NOTHING RETURNING post_id`
+    : `DELETE FROM ${table} WHERE account_id = $1 AND post_id IN (SELECT id FROM visible_post) RETURNING post_id`;
+  const result = await query(
+    `WITH visible_post AS (
+       SELECT p.id FROM posts p JOIN accounts a ON a.id = p.author_id
+       WHERE p.id = $2 AND p.deleted_at IS NULL AND a.deleted_at IS NULL
+         AND NOT EXISTS (SELECT 1 FROM blocks b
+           WHERE (b.blocker_id = $1 AND b.blocked_id = p.author_id)
+              OR (b.blocker_id = p.author_id AND b.blocked_id = $1))
+     ), changed AS (${action})
+     SELECT id FROM visible_post`,
+    [accountId, postId]
+  );
+  return result.rowCount > 0;
 }
 
 export async function setPostLike(accountId, postId, active) {
-  if (!await existingPost(postId)) return null;
-  if (active) await query(`INSERT INTO post_likes (account_id, post_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`, [accountId, postId]);
-  else await query(`DELETE FROM post_likes WHERE account_id = $1 AND post_id = $2`, [accountId, postId]);
+  if (!await setPostInteraction("post_likes", accountId, postId, active)) return null;
   const count = await query(`SELECT COUNT(*)::integer AS likes FROM post_likes WHERE post_id = $1`, [postId]);
   return { liked: active, likes: count.rows[0].likes };
 }
 
 export async function setPostSave(accountId, postId, active) {
-  if (!await existingPost(postId)) return null;
-  if (active) await query(`INSERT INTO post_saves (account_id, post_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`, [accountId, postId]);
-  else await query(`DELETE FROM post_saves WHERE account_id = $1 AND post_id = $2`, [accountId, postId]);
+  if (!await setPostInteraction("post_saves", accountId, postId, active)) return null;
   return { saved: active };
 }
 

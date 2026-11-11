@@ -11,10 +11,10 @@ export async function POST(request) {
     await requireSameOrigin();
     const input = requestSchema.safeParse(await request.json());
     if (!input.success) return jsonError("Invalid email", 422);
-    const globalLimit = await checkRateLimit("resetRequestGlobal", "all");
-    if (!globalLimit.allowed) return rateLimitResponse(globalLimit.retryAfter);
     const limit = await checkRateLimit("resetRequest", input.data.email);
     if (!limit.allowed) return rateLimitResponse(limit.retryAfter);
+    const globalLimit = await checkRateLimit("resetRequestGlobal", "all");
+    if (!globalLimit.allowed) return rateLimitResponse(globalLimit.retryAfter);
     const result = await requestPasswordReset(input.data.email);
     if (!result.configured) return jsonError("Password reset email is not configured", 503);
     return Response.json({ message: "If this email has an account, a reset link will be sent." });

@@ -39,10 +39,20 @@ async function canUseConversation(accountId, conversationId) {
   return Boolean(result.rows[0]);
 }
 
-export async function listMessages(accountId, conversationId) {
+export async function listMessages(accountId, conversationId, { before, after } = {}) {
   if (!await canUseConversation(accountId, conversationId)) return null;
-  const result = await query(`SELECT id, sender_id AS "senderId", body, created_at AS "createdAt" FROM messages WHERE conversation_id = $1 AND deleted_at IS NULL ORDER BY created_at ASC LIMIT 100`, [conversationId]);
-  return result.rows;
+  const cursor = before || after || null;
+  const comparison = after ? ">" : "<";
+  const direction = after ? "ASC" : "DESC";
+  const result = await query(`SELECT id, sender_id AS "senderId", body,
+    to_char(created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"') AS "createdAt"
+    FROM messages WHERE conversation_id = $1 AND deleted_at IS NULL
+      AND ($2::uuid IS NULL OR (created_at, id) ${comparison} (SELECT created_at, id FROM messages WHERE id = $2 AND conversation_id = $1 AND deleted_at IS NULL))
+    ORDER BY created_at ${direction}, id ${direction} LIMIT 101`, [conversationId, cursor]);
+  const hasMore = result.rows.length > 100;
+  const messages = result.rows.slice(0, 100);
+  if (!after) messages.reverse();
+  return { messages, hasMore };
 }
 
 export async function addMessage(accountId, conversationId, body) {
@@ -61,7 +71,8 @@ export async function addMessage(accountId, conversationId, body) {
   ), inserted AS (
     INSERT INTO messages (conversation_id, sender_id, body)
     SELECT id, $2, $3 FROM permitted
-    RETURNING id, conversation_id, sender_id AS "senderId", body, created_at AS "createdAt"
+    RETURNING id, conversation_id, sender_id AS "senderId", body,
+      to_char(created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"') AS "createdAt"
   ), notified AS (
     INSERT INTO notifications (account_id, actor_id, type, resource_type, resource_id)
     SELECT member.account_id, $2, 'message', 'conversation', inserted.conversation_id

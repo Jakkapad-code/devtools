@@ -12,10 +12,10 @@ export async function POST(request) {
     await requireSameOrigin();
     const input = registerSchema.safeParse(await request.json());
     if (!input.success) return jsonError("Invalid registration data", 422);
-    const globalLimit = await checkRateLimit("registerGlobal", "all");
-    if (!globalLimit.allowed) return rateLimitResponse(globalLimit.retryAfter);
     const limit = await checkRateLimit("register", input.data.email);
     if (!limit.allowed) return rateLimitResponse(limit.retryAfter);
+    const globalLimit = await checkRateLimit("registerGlobal", "all");
+    if (!globalLimit.allowed) return rateLimitResponse(globalLimit.retryAfter);
 
     const passwordHash = await hashPassword(input.data.password);
     const result = await query(

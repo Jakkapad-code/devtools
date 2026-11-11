@@ -126,6 +126,12 @@ export default function Modals() {
                   <span key={i} onClick={c.onClick} style={sx(`border:none;border-radius:100px;padding:8px 14px;font-weight:700;font-size:12px;cursor:pointer;background:${c.bg};color:${c.fg};box-shadow:rgba(0, 0, 0, 0.16) 0px 1px 4px`)}>{c.label}</span>
                 ); })}
               </div>
+              <small>ต้องแชร์ตำแหน่งในหน้า Matching และจะแสดงเฉพาะสัตว์ที่เจ้าของแชร์ตำแหน่ง</small>
+            </div>
+            <div>
+              <div style={sx("font-weight:800;font-size:12px;text-transform:uppercase;color:#8a8378;margin-bottom:8px")}>อายุ (ปี)</div>
+              <label>ตั้งแต่ <input aria-label="อายุตั้งแต่" type="number" min="0" max="40" value={mf.minAge ?? ""} onChange={(e) => a.setMatchFilter("minAge", e.target.value)} style={sx("width:65px;margin-right:12px")} /></label>
+              <label>ถึง <input aria-label="อายุถึง" type="number" min="0" max="40" value={mf.maxAge ?? ""} onChange={(e) => a.setMatchFilter("maxAge", e.target.value)} style={sx("width:65px")} /></label>
             </div>
             <div>
               <div style={sx("font-weight:800;font-size:12px;text-transform:uppercase;color:#8a8378;margin-bottom:8px")}>Gender</div>

@@ -22,4 +22,11 @@ describe("petInputSchema", () => {
     expect(petInputSchema.safeParse({ ...validPet, species: "Bird" }).success).toBe(false);
     expect(petInputSchema.safeParse({ ...validPet, age: 41 }).success).toBe(false);
   });
+
+  it("accepts up to five distinct gallery photos and rejects duplicates or six photos", () => {
+    const ids = Array.from({ length: 6 }, (_, i) => `00000000-0000-4000-8000-${String(i + 1).padStart(12, "0")}`);
+    expect(petInputSchema.safeParse({ ...validPet, photoMediaIds: ids.slice(0, 5) }).success).toBe(true);
+    expect(petInputSchema.safeParse({ ...validPet, photoMediaIds: ids }).success).toBe(false);
+    expect(petInputSchema.safeParse({ ...validPet, photoMediaIds: [ids[0], ids[0]] }).success).toBe(false);
+  });
 });

@@ -46,6 +46,7 @@ export default function TopNav() {
         {item("myPets", "My Pets", "/petory/pets")}
       </div>
       <div style={sx("display:flex;align-items:center;gap:10px;flex:none;margin-left:auto")}>
+        <Link href="/petory/notifications" aria-label="การแจ้งเตือน" title="การแจ้งเตือน" style={sx("font-size:20px;text-decoration:none")}>🔔</Link>
         <Link href="/petory/profile" style={sx("width:32px;height:32px;border-radius:50%;border:2px solid #201C16;overflow:hidden;cursor:pointer;position:relative;display:flex;align-items:center;justify-content:center;background:#F5F1E8")}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="#201C16" strokeWidth="2" /><path d="M4.5 19.5c0-4.1 3.4-6.5 7.5-6.5s7.5 2.4 7.5 6.5" stroke="#201C16" strokeWidth="2" strokeLinecap="round" /></svg>
         </Link>

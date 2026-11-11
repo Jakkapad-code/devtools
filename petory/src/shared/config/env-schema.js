@@ -29,16 +29,23 @@ const environmentSchema = databaseSchema.extend({
   RATE_LIMIT_RESET_CONFIRM: positiveInteger(10, 1_000),
   RATE_LIMIT_UPLOAD: positiveInteger(30, 1_000),
   RATE_LIMIT_REPORT: positiveInteger(10, 1_000),
-  MAIL_PROVIDER: z.enum(["disabled", "resend"]).default("disabled"),
+  MAIL_PROVIDER: z.enum(["disabled", "resend", "gmail"]).default("disabled"),
   MAIL_FROM: z.email().optional(),
   RESEND_API_KEY: z.string().min(1).optional(),
   MAIL_API_URL: z.url().optional(),
+  GMAIL_USER: z.email().optional(),
+  GMAIL_APP_PASSWORD: z.string().min(1).optional(),
 }).superRefine((values, context) => {
-  if (values.MAIL_PROVIDER !== "resend") return;
-  for (const name of ["MAIL_FROM", "RESEND_API_KEY"]) {
-    if (!values[name]) context.addIssue({ code: "custom", path: [name], message: `${name} is required for Resend mail` });
+  const required = values.MAIL_PROVIDER === "resend"
+    ? ["MAIL_FROM", "RESEND_API_KEY"]
+    : values.MAIL_PROVIDER === "gmail" ? ["MAIL_FROM", "GMAIL_USER", "GMAIL_APP_PASSWORD"] : [];
+  for (const name of required) {
+    if (!values[name]) context.addIssue({ code: "custom", path: [name], message: `${name} is required for ${values.MAIL_PROVIDER} mail` });
   }
-  if (values.NODE_ENV === "production" && values.MAIL_API_URL && values.MAIL_API_URL !== "https://api.resend.com/emails") {
+  if (values.MAIL_PROVIDER === "gmail" && values.MAIL_FROM && values.GMAIL_USER && values.MAIL_FROM.toLowerCase() !== values.GMAIL_USER.toLowerCase()) {
+    context.addIssue({ code: "custom", path: ["MAIL_FROM"], message: "Gmail sender must match GMAIL_USER" });
+  }
+  if (values.MAIL_PROVIDER === "resend" && values.NODE_ENV === "production" && values.MAIL_API_URL && values.MAIL_API_URL !== "https://api.resend.com/emails") {
     context.addIssue({ code: "custom", path: ["MAIL_API_URL"], message: "Production mail must use the official Resend endpoint" });
   }
 });

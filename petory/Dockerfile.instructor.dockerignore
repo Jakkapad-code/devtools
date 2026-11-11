@@ -1,0 +1,25 @@
+# This image must contain the app Dockerfile and Compose files for Docker-in-Docker.
+# Keep runtime data, build products, local credentials and macOS metadata out.
+.git
+.github
+.omx
+.codex
+.agents
+.aws
+**/node_modules
+**/.next
+**/coverage
+**/test-results
+**/playwright-report
+**/.DS_Store
+**/._*
+**/*.log
+**/.env
+**/.env.*
+!/.env.example
+!/.env.production.example
+**/*.pem
+**/*.key
+**/*.p12
+**/*.pfx
+**/certs

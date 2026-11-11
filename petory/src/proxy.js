@@ -5,6 +5,7 @@ const PUBLIC_PATHS = new Set([
   "/petory/login",
   "/petory/register",
   "/petory/forgot",
+  "/petory/reset",
 ]);
 
 export function proxy(request) {

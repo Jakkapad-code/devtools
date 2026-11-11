@@ -35,6 +35,7 @@ jobs:
           cache: npm
           cache-dependency-path: petory/package-lock.json
       - run: npm ci
+      - run: npm audit --omit=dev --audit-level=high
       - run: npx playwright install --with-deps --only-shell chromium
       - run: npm run db:migrate
       - run: npm run lint

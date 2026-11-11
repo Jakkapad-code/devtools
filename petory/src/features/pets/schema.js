@@ -10,6 +10,7 @@ export const petInputSchema = z.object({
   age: z.coerce.number().int().min(0).max(40),
   weightKg: z.coerce.number().positive().max(500).nullable().default(null),
   photoMediaId: z.string().uuid().nullable().default(null),
+  photoMediaIds: z.array(z.string().uuid()).max(5).refine((ids) => new Set(ids).size === ids.length).optional(),
   gender: z.enum(["Male", "Female", "Unknown"]),
   size: z.enum(["Small", "Medium", "Large", "Unknown"]),
   bio: optionalText,

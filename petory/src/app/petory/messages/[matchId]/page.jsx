@@ -1,19 +1,33 @@
 "use client";
-import { use, useEffect, useState } from "react";
+import { use, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { sx, ImageSlot } from "../../ui";
 import { usePetory } from "../../context";
 import { avatarSrc, avatarInitial, mediaSrc, shortTime, daysAgoLabel, hashColor } from "../../helpers";
 import { conversationClient } from "@/features/auth/client";
+import { mergeMessages } from "@/features/conversations/messages";
 
 export default function ChatPage({ params }) {
   const { matchId: conversationId } = use(params);
+  return <Conversation key={conversationId} conversationId={conversationId} />;
+}
+
+function Conversation({ conversationId }) {
   const { state, unmatch } = usePetory();
   const [messages, setMessages] = useState([]);
   const [conversation, setConversation] = useState(null);
   const [draft, setDraft] = useState("");
   const [error, setError] = useState("");
   const [unmatching, setUnmatching] = useState(false);
+  const [hasOlder, setHasOlder] = useState(false);
+  const [loadingOlder, setLoadingOlder] = useState(false);
+  const [unavailable, setUnavailable] = useState(false);
+  const [ready, setReady] = useState(false);
+  const [sending, setSending] = useState(false);
+  const sendingRef = useRef(false);
+  const latestId = useRef(null);
+  const messageList = useRef(null);
+  const pinnedToBottom = useRef(true);
 
   const cancelMatch = async () => {
     if (!conversation?.matchId || unmatching || !window.confirm("ยกเลิก Match และปิดห้องสนทนานี้ใช่ไหม?")) return;
@@ -23,26 +37,83 @@ export default function ChatPage({ params }) {
 
   useEffect(() => {
     let active = true;
-    void conversationClient.messages(conversationId)
-      .then(({ messages: rows }) => { if (active) setMessages(rows); })
-      .catch(() => { if (active) setError("ไม่พบห้องสนทนานี้"); });
+    let timer;
+    latestId.current = null;
+    pinnedToBottom.current = true;
+    async function poll(initial = false) {
+      try {
+        const cursor = initial || !latestId.current ? {} : { after: latestId.current };
+        const { messages: rows, hasMore } = await conversationClient.messages(conversationId, cursor);
+        if (!active) return;
+        if (initial) {
+          setMessages(rows);
+          setHasOlder(hasMore);
+          setReady(true);
+        } else {
+          setMessages((current) => mergeMessages(current, rows));
+          // When a room was initially empty, this is another latest-page query.
+          // Preserve access to older messages even if over 100 arrived meanwhile.
+          if (!cursor.after) setHasOlder(hasMore);
+        }
+        if (rows.length) latestId.current = rows[rows.length - 1].id;
+        setError("");
+        timer = setTimeout(() => void poll(), hasMore && !initial ? 0 : 5000);
+      } catch (requestError) {
+        if (!active) return;
+        if (["Not found", "Unauthorized"].includes(requestError.message)) {
+          setMessages([]);
+          setConversation(null);
+          setUnavailable(true);
+          setError("ไม่พบห้องสนทนานี้ หรือคุณไม่มีสิทธิ์เข้าถึงแล้ว");
+          return;
+        }
+        setError("โหลดข้อความไม่สำเร็จ กำลังลองใหม่");
+        timer = setTimeout(() => void poll(initial), 5000);
+      }
+    }
+    void poll(true);
     // The header and the matched date come from the conversation list entry.
     void conversationClient.list()
       .then(({ conversations }) => { if (active) setConversation(conversations.find((item) => item.id === conversationId) ?? null); })
       .catch(() => {});
-    return () => { active = false; };
+    return () => { active = false; clearTimeout(timer); };
   }, [conversationId]);
 
+  useEffect(() => {
+    if (pinnedToBottom.current && messageList.current) messageList.current.scrollTop = messageList.current.scrollHeight;
+  }, [messages]);
+
+  const loadOlder = async () => {
+    if (loadingOlder || !messages.length) return;
+    setLoadingOlder(true);
+    try {
+      const { messages: rows, hasMore } = await conversationClient.messages(conversationId, { before: messages[0].id });
+      setMessages((current) => mergeMessages(current, rows));
+      setHasOlder(hasMore);
+    } catch {
+      setError("โหลดข้อความเก่าไม่สำเร็จ");
+    } finally {
+      setLoadingOlder(false);
+    }
+  };
+
   const send = async () => {
-    const body = draft.trim();
-    if (!body || unmatching) return;
+    const submittedDraft = draft;
+    const body = submittedDraft.trim();
+    if (!body || unmatching || unavailable || !ready || sendingRef.current) return;
+    sendingRef.current = true;
+    setSending(true);
     try {
       const { message } = await conversationClient.send(conversationId, body);
-      setMessages((current) => current.concat([message]));
-      setDraft("");
+      pinnedToBottom.current = true;
+      setMessages((current) => mergeMessages(current, [message]));
+      setDraft((current) => current === submittedDraft ? "" : current);
       window.dispatchEvent(new CustomEvent("petory:message-sent"));
     } catch (requestError) {
       setError(requestError.message);
+    } finally {
+      sendingRef.current = false;
+      setSending(false);
     }
   };
 
@@ -79,7 +150,7 @@ export default function ChatPage({ params }) {
         {unmatching ? "กำลังยกเลิก..." : "ยกเลิก Match"}
       </button>
     </div>}
-    <div style={sx("flex:1;overflow-y:auto;padding:20px clamp(16px,3vw,24px);display:flex;flex-direction:column;gap:14px;background:#fff")}>
+    <div ref={messageList} onScroll={(event) => { const el = event.currentTarget; pinnedToBottom.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80; }} style={sx("flex:1;overflow-y:auto;padding:20px clamp(16px,3vw,24px);display:flex;flex-direction:column;gap:14px;background:#fff")}>
       {error && (
         <div role="alert" style={sx("text-align:center;padding:40px 20px")}>
           <p style={sx("color:#B42318;margin:0 0 12px")}>{error}</p>
@@ -91,6 +162,7 @@ export default function ChatPage({ params }) {
           MATCHED {daysAgoLabel(conversation.matchedAt)}
         </div>
       )}
+      {hasOlder && <button type="button" onClick={() => void loadOlder()} disabled={loadingOlder} style={sx("align-self:center;border:0;background:none;color:#E3402B;font-weight:700;cursor:pointer")}>{loadingOlder ? "กำลังโหลด..." : "โหลดข้อความเก่า"}</button>}
       {messages.map((message) => {
         const mine = message.senderId === state.user?.id;
         return (
@@ -112,8 +184,8 @@ export default function ChatPage({ params }) {
     </div>
 
     <div style={sx("display:flex;gap:10px;padding:16px clamp(16px,3vw,24px);background:#F6F1E8")}>
-      <input placeholder="พิมพ์ข้อความ..." value={draft} onChange={(event) => setDraft(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") void send(); }} style={sx("flex:1;min-width:0;padding:13px 16px;border-radius:100px;border:none;font-size:14px")} />
-      <button onClick={() => void send()} style={sx("background:#E3402B;color:#fff;border:none;border-radius:100px;padding:13px 22px;font-weight:800;font-size:13px;text-transform:uppercase;cursor:pointer;flex:none")}>Send</button>
+      <input disabled={unavailable || !ready} placeholder="พิมพ์ข้อความ..." value={draft} onChange={(event) => setDraft(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") void send(); }} style={sx("flex:1;min-width:0;padding:13px 16px;border-radius:100px;border:none;font-size:14px")} />
+      <button disabled={unavailable || !ready || sending} onClick={() => void send()} style={sx("background:#E3402B;color:#fff;border:none;border-radius:100px;padding:13px 22px;font-weight:800;font-size:13px;text-transform:uppercase;cursor:pointer;flex:none")}>{sending ? "กำลังส่ง..." : "Send"}</button>
     </div>
   </>;
 }

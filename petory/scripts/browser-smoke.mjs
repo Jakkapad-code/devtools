@@ -7,7 +7,7 @@ import { chromium } from "playwright";
 export async function runBrowserSmoke(baseUrl) {
   const browser = await chromium.launch(process.platform === "darwin" ? { channel: "chrome" } : {});
   try {
-    const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+    const page = await browser.newPage({ viewport: { width: 1440, height: 900 }, permissions: ["geolocation"], geolocation: { latitude: 13.75, longitude: 100.50 } });
     page.setDefaultTimeout(20_000);
     const email = `browser-${randomUUID()}@petory.local`;
     const imagePath = "public/uploads/demo/recipe-dog-biscuits.jpg";
@@ -22,14 +22,50 @@ export async function runBrowserSmoke(baseUrl) {
 
     await page.getByRole("button", { name: "Add Your First Pet" }).click();
     await page.waitForURL("**/petory/pets/new");
-    await page.locator('label[title="อัปโหลดรูปสัตว์เลี้ยง"] input[type="file"]').setInputFiles(imagePath);
-    await page.getByRole("button", { name: "ใช้รูปนี้" }).click();
+    const photoInput = page.locator('label[title="อัปโหลดรูปสัตว์เลี้ยง"] input[type="file"]');
+    const uploadPhoto = async (index) => {
+      await photoInput.setInputFiles(imagePath);
+      await page.getByRole("button", { name: "ใช้รูปนี้" }).click();
+      await page.getByTestId("pet-gallery-item").nth(index).waitFor();
+      if (index < 4) await page.waitForFunction(() => !document.querySelector('label[title="อัปโหลดรูปสัตว์เลี้ยง"] input[type="file"]').disabled);
+    };
+    for (let index = 0; index < 5; index += 1) await uploadPhoto(index);
+    assert.equal(await page.getByTestId("pet-gallery-item").count(), 5);
+    assert.equal(await photoInput.isDisabled(), true, "the sixth photo must not be selectable");
+    const galleryIds = async () => page.getByTestId("pet-gallery-item").evaluateAll((items) => items.map((item) => {
+      const image = item.firstElementChild?.style.backgroundImage ?? "";
+      return image.match(/\/api\/media\/([0-9a-f-]+)/)?.[1];
+    }));
+    const before = await galleryIds();
+    assert(before.every(Boolean));
+    assert.equal(new Set(before).size, 5);
+    await page.getByTestId("pet-gallery-item").nth(4).getByRole("button", { name: "ตั้งรูปหลัก" }).click();
+    assert.equal((await galleryIds())[0], before[4]);
+    const removedId = (await galleryIds())[4];
+    await page.getByTestId("pet-gallery-item").nth(4).getByRole("button", { name: "ลบ" }).click();
+    assert.equal(await page.getByTestId("pet-gallery-item").count(), 4);
+    assert(!(await galleryIds()).includes(removedId));
+    await uploadPhoto(4);
+    const expectedPhotos = await galleryIds();
     await page.getByPlaceholder("เช่น Mochi").fill("Browser Pet");
     await page.getByPlaceholder("Shiba Inu").fill("Mixed");
     await page.getByPlaceholder("ปี").fill("2");
     await page.getByRole("button", { name: "Save Pet" }).click();
     await page.waitForURL("**/petory/pets");
     assert.equal(await page.getByText("Browser Pet", { exact: true }).count(), 1);
+    const pets = await (await page.request.get(`${baseUrl}/api/pets`)).json();
+    const savedPet = pets.pets.find((pet) => pet.name === "Browser Pet");
+    assert.deepEqual(savedPet.photoMediaIds, expectedPhotos);
+    assert.equal(savedPet.photoMediaId, before[4]);
+    await page.goto(`${baseUrl}/petory/pets/${savedPet.id}`);
+    for (const id of expectedPhotos) assert.equal((await page.request.get(`${baseUrl}/api/media/${id}`)).status(), 200);
+
+    await page.goto(`${baseUrl}/petory/matching`);
+    await page.getByRole("button", { name: "ยินยอมแชร์ตำแหน่ง" }).click();
+    await page.getByText("แชร์ตำแหน่งโดยประมาณแล้ว").waitFor();
+    assert.equal((await page.request.get(`${baseUrl}/api/matching/location`)).status(), 200);
+    await page.getByRole("button", { name: "หยุดแชร์ตำแหน่ง" }).click();
+    await page.getByText("หยุดแชร์ตำแหน่งแล้ว").waitFor();
 
     await page.goto(`${baseUrl}/petory/explore`);
     await page.getByRole("button", { name: "+ สร้างโพสต์" }).click();
@@ -86,6 +122,22 @@ export async function runAuthenticatedView(baseUrl, { email, path, text, screens
       await mkdir("test-results", { recursive: true });
       await page.screenshot({ path: `test-results/${screenshot}.png`, fullPage: true });
     }
+  } finally {
+    await browser.close();
+  }
+}
+
+/** Open the emailed link without a session and complete the reset form. */
+export async function runPasswordResetSmoke(baseUrl, token, password) {
+  const browser = await chromium.launch(process.platform === "darwin" ? { channel: "chrome" } : {});
+  try {
+    const page = await browser.newPage();
+    page.setDefaultTimeout(20_000);
+    await page.goto(`${baseUrl}/petory/reset?token=${encodeURIComponent(token)}`);
+    await page.getByPlaceholder("รหัสผ่านใหม่", { exact: true }).fill(password);
+    await page.getByPlaceholder("ยืนยันรหัสผ่านใหม่").fill(password);
+    await page.getByRole("button", { name: "ตั้งรหัสผ่านใหม่" }).click();
+    await page.getByText("ตั้งรหัสผ่านใหม่สำเร็จ กรุณาเข้าสู่ระบบอีกครั้ง").waitFor();
   } finally {
     await browser.close();
   }

@@ -94,10 +94,11 @@ try {
   await client.query("DELETE FROM accounts WHERE email LIKE '%@petory.local'");
 
   const accounts = [];
-  for (const [name, slug, bio, location] of people) {
+  for (const [index, [name, slug, bio, location]] of people.entries()) {
     const result = await client.query(
-      `INSERT INTO accounts (display_name, email, password_hash, bio, location_label) VALUES ($1, $2, $3, $4, $5) RETURNING id`,
-      [name, `${slug}@petory.local`, passwordHash, bio, location],
+      `INSERT INTO accounts (display_name, email, password_hash, bio, location_label, location) VALUES ($1, $2, $3, $4, $5, ST_SetSRID(ST_MakePoint($6, $7), 4326)::geography) RETURNING id`,
+      // Synthetic demo-only points; deliberately not the location of real people.
+      [name, `${slug}@petory.local`, passwordHash, bio, location, 100.50 + index * 0.03, 13.75 + index * 0.02],
     );
     accounts.push({ id: result.rows[0].id, name });
   }

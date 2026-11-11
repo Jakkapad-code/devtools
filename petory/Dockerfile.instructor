@@ -1,0 +1,11 @@
+# The instructor image provides Linux, SSH, Node.js and Docker-in-Docker.
+# Keep its original startup command so sshd and dockerd are started as provided.
+FROM tuchsanai/devtools:2569_1
+
+# Pass the Git commit when building a committed release (see INSTRUCTOR.md).
+ARG PETORY_SOURCE_REVISION=unspecified
+LABEL org.opencontainers.image.title="Petory instructor environment" \
+      org.opencontainers.image.revision="${PETORY_SOURCE_REVISION}"
+
+WORKDIR /workspace/petory
+COPY . .

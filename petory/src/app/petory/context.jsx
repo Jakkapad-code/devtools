@@ -410,7 +410,9 @@ export function PetoryProvider({ children }) {
       }
       const { mediaId } = await mediaClient.upload(file);
       const formKey = target === "post" ? "postForm" : "petForm";
-      update((s2) => ({ [formKey]: { ...s2[formKey], photoMediaId: mediaId } }));
+      update((s2) => target === "pet"
+        ? { petForm: { ...s2.petForm, photoMediaIds: [...(s2.petForm.photoMediaIds ?? []), mediaId].slice(0, 5), photoMediaId: s2.petForm.photoMediaId ?? mediaId } }
+        : { [formKey]: { ...s2[formKey], photoMediaId: mediaId } });
       showToast("อัปโหลดรูปแล้ว");
     } catch (error) {
       showToast(error.message);
@@ -456,6 +458,14 @@ export function PetoryProvider({ children }) {
   const onPetAge = (e) => update((s2) => ({ petForm: { ...s2.petForm, age: e.target.value } }));
   const onPetWeight = (e) => update((s2) => ({ petForm: { ...s2.petForm, weight: e.target.value } }));
   const uploadPetPhoto = pickImage("pet", 1);
+  const removePetPhoto = (id) => update((s2) => {
+    const photoMediaIds = (s2.petForm.photoMediaIds ?? []).filter((item) => item !== id);
+    return { petForm: { ...s2.petForm, photoMediaIds, photoMediaId: photoMediaIds[0] ?? null } };
+  });
+  const setPrimaryPetPhoto = (id) => update((s2) => {
+    const photoMediaIds = [id, ...(s2.petForm.photoMediaIds ?? []).filter((item) => item !== id)];
+    return { petForm: { ...s2.petForm, photoMediaIds, photoMediaId: id } };
+  });
   const onPetBio = (e) => update((s2) => ({ petForm: { ...s2.petForm, bio: e.target.value } }));
   const onPetInterests = (e) => update((s2) => ({ petForm: { ...s2.petForm, interestsRaw: e.target.value } }));
   const togglePetPersonality = (label) => update((s2) => {
@@ -464,13 +474,13 @@ export function PetoryProvider({ children }) {
     return { petForm: { ...s2.petForm, personality } };
   });
   const goAddPet = () => {
-    update({ petForm: { id: null, name: "", species: "Dog", breed: "", age: "", weight: "", photoMediaId: null, gender: "Male", size: "Medium", personality: [], bio: "", interestsRaw: "" } });
+    update({ petForm: { id: null, name: "", species: "Dog", breed: "", age: "", weight: "", photoMediaId: null, photoMediaIds: [], gender: "Male", size: "Medium", personality: [], bio: "", interestsRaw: "" } });
     router.push("/petory/pets/new");
   };
   const editPet = (id) => {
     const pet = s.pets.find((p) => p.id === id);
     if (!pet) return;
-    update({ petForm: { id: pet.id, name: text(pet.name), species: pet.species, breed: text(pet.breed), age: String(pet.age), weight: pet.weightKg == null ? "" : String(pet.weightKg), photoMediaId: pet.photoMediaId ?? null, gender: pet.gender, size: pet.size, personality: (pet.personality ?? []).slice(), bio: text(pet.bio), interestsRaw: (pet.interests ?? []).join(", ") } });
+    update({ petForm: { id: pet.id, name: text(pet.name), species: pet.species, breed: text(pet.breed), age: pet.age == null ? "" : String(pet.age), weight: pet.weightKg == null ? "" : String(pet.weightKg), photoMediaId: pet.photoMediaId ?? null, photoMediaIds: pet.photoMediaIds?.length ? pet.photoMediaIds : pet.photoMediaId ? [pet.photoMediaId] : [], gender: pet.gender, size: pet.size, personality: (pet.personality ?? []).slice(), bio: text(pet.bio), interestsRaw: (pet.interests ?? []).join(", ") } });
     router.push(`/petory/pets/${id}/edit`);
   };
   const cancelPetForm = () => router.push(s.petForm.id ? `/petory/pets/${s.petForm.id}` : "/petory/pets");
@@ -481,12 +491,12 @@ export function PetoryProvider({ children }) {
     const name = text(f.name).trim();
     if (!name) { showToast("กรุณากรอกชื่อสัตว์เลี้ยง"); return; }
     const age = Number(f.age);
-    if (!Number.isInteger(age) || age < 0 || age > 40) { showToast("กรุณากรอกอายุระหว่าง 0 ถึง 40 ปี"); return; }
+    if (text(f.age).trim() === "" || !Number.isInteger(age) || age < 0 || age > 40) { showToast("กรุณากรอกอายุระหว่าง 0 ถึง 40 ปี"); return; }
     const weight = text(f.weight).trim();
     const weightKg = weight ? Number(weight) : null;
     if (weightKg !== null && !(weightKg > 0 && weightKg <= 500)) { showToast("กรุณากรอกน้ำหนักระหว่าง 0 ถึง 500 กก."); return; }
     const interests = text(f.interestsRaw).split(",").map((x) => x.trim()).filter(Boolean);
-    const input = { name, species: f.species, breed: text(f.breed).trim(), age, weightKg, photoMediaId: f.photoMediaId, gender: f.gender, size: f.size, personality: f.personality ?? [], bio: text(f.bio).trim(), interests };
+    const input = { name, species: f.species, breed: text(f.breed).trim(), age, weightKg, photoMediaId: f.photoMediaId, photoMediaIds: f.photoMediaIds ?? [], gender: f.gender, size: f.size, personality: f.personality ?? [], bio: text(f.bio).trim(), interests };
     update({ petPending: true });
     try {
       const response = f.id ? await petClient.update(f.id, input) : await petClient.create(input);
@@ -537,7 +547,7 @@ export function PetoryProvider({ children }) {
       showToast(error.message);
     }
   };
-  const resetMatchFilter = () => update({ matchFilters: { species: "all", distance: "anywhere", gender: "any", size: "all", personality: [] } });
+  const resetMatchFilter = () => update({ matchFilters: { species: "all", distance: "anywhere", minAge: "", maxAge: "", gender: "any", size: "all", personality: [] } });
   const setMatchFilter = (key, value) => update((s2) => ({ matchFilters: { ...s2.matchFilters, [key]: value } }));
   const toggleMatchPersonalityFilter = (label) => update((s2) => {
     const has = s2.matchFilters.personality.includes(label);
@@ -686,7 +696,7 @@ export function PetoryProvider({ children }) {
     openCreatePost, openCreatePostBlog, openEditPost, togglePostMenu, openDeletePost, closeDeletePost, confirmDeletePost,
     onCreatePostBtnClick, closeCreatePost, onPostCaption, onPostTitle, selectPostCategory, togglePostCategoryDropdown, uploadPostPhoto, pickImage, cancelImageAdjust, confirmImageAdjust, selectPostPet, togglePostPetDropdown, submitPost,
     openPetProfile, onPetName, toggleSpeciesFieldDropdown, toggleGenderFieldDropdown, toggleSizeFieldDropdown,
-    selectPetSpecies, selectPetGender, selectPetSize, onPetBreed, onPetAge, onPetWeight, uploadPetPhoto, onPetBio, onPetInterests, togglePetPersonality,
+    selectPetSpecies, selectPetGender, selectPetSize, onPetBreed, onPetAge, onPetWeight, uploadPetPhoto, removePetPhoto, setPrimaryPetPhoto, onPetBio, onPetInterests, togglePetPersonality,
     goAddPet, editPet, cancelPetForm, savePet, openDeletePet, closeDeletePet, confirmDeletePet,
     openMatchFilter, closeMatchFilter, togglePetDropdown, selectMatchingPet, setMatchingPurpose, resetMatchFilter, setMatchFilter, toggleMatchPersonalityFilter,
     passPet, interestPet, closeMutualMatch, startChatFromModal,
