@@ -33,6 +33,9 @@ Terminal หรือส่งให้ผู้ทดสอบ ระบบเ�
 ```text
 Email:    aom@petory.local
 Password: petory-demo-password-2026
+
+Admin:    admin@petory.local
+Password: petory-admin-password-2026
 ```
 
 บน Mac ARM หาก build ภายใน container มีปัญหากับ Rosetta ให้ลอง
