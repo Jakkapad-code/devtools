@@ -69,6 +69,7 @@ async function main() {
   if (!demoDatabaseIsSafe(counts)) throw new Error("Refusing to publish: this demo DB contains non-demo accounts. Existing data was not deleted.");
   if (counts === "0|0") compose(["run", "--rm", "--no-deps", "seed"]);
   else console.log("Existing demo data preserved; seed will not run again.");
+  compose(["run", "--rm", "--no-deps", "seed", "node", "scripts/demo-admin.mjs"]);
 
   try {
     compose(["up", "-d", "--no-deps", "--force-recreate", "tunnel"]);
@@ -106,7 +107,7 @@ async function main() {
       method: "POST", headers: { Origin: publicUrl, Cookie: cookie }, signal: AbortSignal.timeout(20_000),
     });
     if (!logout.ok) throw new Error(`Demo logout failed (${logout.status}).`);
-    console.log(`\nREADY: ${publicUrl}/petory/login\nEmail: aom@petory.local\nPassword: petory-demo-password-2026\nStop: npm run demo:stop\nKeep Docker, your computer and internet on. Use mock data only.`);
+    console.log(`\nREADY: ${publicUrl}/petory/login\nUser: aom@petory.local / petory-demo-password-2026\nAdmin: admin@petory.local / petory-admin-password-2026\nAdmin page: ${publicUrl}/petory/admin\nIf an existing demo admin password was changed, it is preserved.\nStop: npm run demo:stop\nPublic demo: fixed credentials, mock data only; never use in production.`);
   } catch (error) {
     compose(["stop", "tunnel"]);
     throw error;

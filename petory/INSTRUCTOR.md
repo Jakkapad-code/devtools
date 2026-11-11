@@ -48,7 +48,11 @@ npm run demo:start
 บน Mac ARM ที่เจอปัญหา BuildKit กับ Rosetta ให้ใช้
 `DOCKER_BUILDKIT=0 npm run demo:start` ภายใน container แทน
 ลิงก์จะอยู่หลัง `READY:` และเปลี่ยนทุกครั้งที่เริ่ม demo ใหม่
-บัญชีตัวอย่างคือ `aom@petory.local` รหัสผ่าน `petory-demo-password-2026`
+บัญชีผู้ใช้คือ `aom@petory.local` รหัสผ่าน `petory-demo-password-2026`
+บัญชีผู้ดูแลคือ `admin@petory.local` รหัสผ่าน `petory-admin-password-2026`
+เข้าสู่ระบบด้วยบัญชีผู้ดูแลแล้วเปิด `/petory/admin` ต่อท้ายโดเมน Quick Tunnel
+หากมีฐานข้อมูลเดโมเดิม `npm run demo:start` จะเพิ่ม admin โดยไม่ล้างข้อมูล
+บัญชีรหัสผ่านคงที่นี้สำหรับเดโมข้อมูลสมมุติเท่านั้น ห้ามใช้กับ production
 
 หรือเข้า container ผ่าน SSH ด้วย `ssh root@localhost -p 2223` และรหัสผ่าน
 ที่อาจารย์กำหนด คำสั่ง `docker run` ข้างต้นใช้พอร์ต 2223 เพื่อไม่ชนกับ

@@ -100,6 +100,9 @@ try {
 
   const aom = await login("aom@petory.local");
   const niran = await login("niran@petory.local");
+  const demoAdmin = await login("admin@petory.local", "petory-admin-password-2026");
+  assert.equal((await request("/api/admin/reports", { cookie: demoAdmin.cookie })).status, 200);
+  assert.equal((await request("/api/admin/reports", { cookie: aom.cookie })).status, 403);
   await runMatchingPetsSmoke(request, aom, niran);
   const allPhotos = [];
   for (const [category, count] of [["recipe", 6], ["clinic", 4]]) {

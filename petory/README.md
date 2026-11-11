@@ -20,7 +20,10 @@ domain, local npm install, host ports or production `.env` file is needed.
 The launcher migrates the demo DB, seeds only an empty DB, gets a fresh public
 URL, builds the app for that exact origin, and verifies public health and login.
 Open the `READY: https://...trycloudflare.com/petory/login` link printed at the end.
-Use `aom@petory.local` / `petory-demo-password-2026`.
+Demo user: `aom@petory.local` / `petory-demo-password-2026`.
+Demo admin: `admin@petory.local` / `petory-admin-password-2026`; sign in and
+open `/petory/admin` on the same demo URL. These public, fixed credentials are
+for isolated mock demos only; never use them in production.
 
 ```bash
 npm run demo:status
@@ -28,7 +31,8 @@ npm run demo:stop
 ```
 
 Stopping preserves data. Run `demo:start` to reopen and get a new URL; it does
-not reseed existing data. Keep Docker, the machine and internet running.
+not reseed existing data; it adds the demo admin to an existing mock database
+without resetting it. Keep Docker, the machine and internet running.
 Quick Tunnels have no uptime guarantee and are for demos, not production.
 If the tunnel becomes invalid, rerun `demo:start` (the URL will change).
 Anyone with the URL can access the app: use mock data only. The launcher
@@ -105,6 +109,15 @@ npm run db:seed
 Log in with `aom@petory.local` (or `niran@petory.local`) and password
 `petory-demo-password-2026`. The script refuses `NODE_ENV=production` and only
 removes earlier `@petory.local` demo accounts before it rebuilds the dataset.
+The seeded admin is `admin@petory.local` / `petory-admin-password-2026`; open
+`http://localhost:3000/petory/admin` after signing in. For an existing local mock
+database, add the demo admin without reseeding the entire dataset:
+
+```bash
+npm run db:seed:admin
+```
+
+Never use these fixed demo credentials in production.
 
 ## Quality checks
 

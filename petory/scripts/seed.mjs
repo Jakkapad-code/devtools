@@ -5,6 +5,7 @@ import pg from "pg";
 import { hashPassword } from "../src/server/auth/password.js";
 import { parseDatabaseEnv } from "../src/shared/config/env-schema.js";
 import { demoPhotoByTitle, validateDemoPhotos } from "./demo-photos.mjs";
+import { ensureDemoAdmin } from "./demo-admin.mjs";
 
 const { loadEnvConfig } = nextEnv;
 loadEnvConfig(process.cwd());
@@ -222,11 +223,13 @@ try {
     await client.query("INSERT INTO notifications (account_id, actor_id, type, resource_type, resource_id) VALUES ($1, $2, 'match', 'match', $3)", [petA.ownerId, petB.ownerId, match.rows[0].id]);
   }
 
+  await ensureDemoAdmin(client);
   await client.query("COMMIT");
   const byCategory = posts.reduce((acc, [category]) => ({ ...acc, [category]: (acc[category] || 0) + 1 }), {});
   console.log(`Seeded ${accounts.length} accounts, ${petRows.length} pets, ${posts.length} posts`);
   console.log("Posts per category:", byCategory);
   console.log("Demo password for all seed accounts: petory-demo-password-2026");
+  console.log("Demo admin: admin@petory.local / petory-admin-password-2026 (mock/demo only)");
 } catch (error) {
   await client.query("ROLLBACK");
   throw error;

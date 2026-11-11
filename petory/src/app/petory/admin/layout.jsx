@@ -19,7 +19,7 @@ function NavIcon({ path, size = 18 }) {
 function Sidebar() {
   const router = useRouter();
   const pathname = usePathname();
-  const { openLogoutConfirm } = usePetory();
+  const { openLogoutConfirm, state } = usePetory();
   const { ui, counts, toggleSidebar } = useAdmin();
   const open = !ui.sidebarCollapsed;
   const width = open ? 232 : 76;
@@ -89,7 +89,7 @@ function Sidebar() {
             <div style={sx("width:34px;height:34px;border-radius:50%;background:#201C16;color:#F0C93B;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;flex:none")}>A</div>
             <div style={sx("min-width:0")}>
               <div style={sx("font-weight:800;font-size:13px")}>ผู้ดูแลระบบ</div>
-              <div style={sx("font-size:12px;color:#8a8378;overflow:hidden;text-overflow:ellipsis")}>admin@petory.co</div>
+              <div style={sx("font-size:12px;color:#8a8378;overflow:hidden;text-overflow:ellipsis")}>{state.user?.email || ""}</div>
             </div>
           </div>
         )}

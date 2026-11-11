@@ -31,9 +31,17 @@ npm run demo:start
 Terminal หรือส่งให้ผู้ทดสอบ ระบบเตรียม database, migration และข้อมูลเดโมให้
 
 ```text
-Email:    aom@petory.local
+User:     aom@petory.local
 Password: petory-demo-password-2026
+
+Admin:    admin@petory.local
+Password: petory-admin-password-2026
 ```
+
+เข้าสู่ระบบด้วยบัญชี Admin แล้วเปิด `/petory/admin` ต่อท้ายโดเมน Quick Tunnel
+บัญชีและรหัสผ่านคงที่นี้ใช้เฉพาะเดโมข้อมูลสมมุติที่แยกจากระบบจริงเท่านั้น
+ห้ามใช้กับ production เพราะทุกคนที่เข้าถึง source จะทราบรหัสผ่าน
+หากมีฐานข้อมูลเดโมเดิม `npm run demo:start` จะเพิ่ม admin โดยไม่ต้องล้างข้อมูล
 
 บน Mac ARM หาก build ภายใน container มีปัญหากับ Rosetta ให้ลอง
 `DOCKER_BUILDKIT=0 npm run demo:start` แทน

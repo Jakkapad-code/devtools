@@ -35,6 +35,7 @@ services:
     volumes:
       - ./scripts/seed.mjs:/app/scripts/seed.mjs:ro
       - ./scripts/demo-photos.mjs:/app/scripts/demo-photos.mjs:ro
+      - ./scripts/demo-admin.mjs:/app/scripts/demo-admin.mjs:ro
       - ./src/server/auth/password.js:/app/src/server/auth/password.js:ro
       - ./public/uploads/demo:/app/public/uploads/demo:ro
 

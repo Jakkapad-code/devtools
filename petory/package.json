@@ -15,7 +15,8 @@
     "test:integration": "node scripts/integration-smoke.mjs",
     "test:watch": "vitest",
     "db:migrate": "node scripts/migrate.mjs",
-    "db:seed": "node scripts/seed.mjs"
+    "db:seed": "node scripts/seed.mjs",
+    "db:seed:admin": "node scripts/demo-admin.mjs"
   },
   "dependencies": {
     "@fontsource/anton": "^5.3.0",
