@@ -60,12 +60,29 @@ export async function runBrowserSmoke(baseUrl) {
     await page.goto(`${baseUrl}/petory/pets/${savedPet.id}`);
     for (const id of expectedPhotos) assert.equal((await page.request.get(`${baseUrl}/api/media/${id}`)).status(), 200);
 
-    await page.goto(`${baseUrl}/petory/matching`);
-    await page.getByRole("button", { name: "ยินยอมแชร์ตำแหน่ง" }).click();
-    await page.getByText("แชร์ตำแหน่งโดยประมาณแล้ว").waitFor();
-    assert.equal((await page.request.get(`${baseUrl}/api/matching/location`)).status(), 200);
-    await page.getByRole("button", { name: "หยุดแชร์ตำแหน่ง" }).click();
-    await page.getByText("หยุดแชร์ตำแหน่งแล้ว").waitFor();
+    // Wait for the client component to hydrate before clicking; a visible SSR
+    // button can otherwise receive a click before React attaches its handler.
+    const [initialLocation] = await Promise.all([
+      page.waitForResponse((response) => response.url().endsWith("/api/matching/location") && response.request().method() === "GET"),
+      page.goto(`${baseUrl}/petory/matching`),
+    ]);
+    assert.equal(initialLocation.status(), 200, "could not load location sharing state");
+    const [shareResponse] = await Promise.all([
+      page.waitForResponse((response) => response.url().endsWith("/api/matching/location") && response.request().method() === "PUT"),
+      page.getByRole("button", { name: "ยินยอมแชร์ตำแหน่ง" }).click(),
+    ]);
+    assert.equal(shareResponse.status(), 200, `sharing location failed: ${await shareResponse.text()}`);
+    assert.equal((await shareResponse.json()).shared, true);
+    await page.getByRole("button", { name: "หยุดแชร์ตำแหน่ง" }).waitFor();
+    assert.equal((await (await page.request.get(`${baseUrl}/api/matching/location`)).json()).shared, true);
+    const [revokeResponse] = await Promise.all([
+      page.waitForResponse((response) => response.url().endsWith("/api/matching/location") && response.request().method() === "PUT"),
+      page.getByRole("button", { name: "หยุดแชร์ตำแหน่ง" }).click(),
+    ]);
+    assert.equal(revokeResponse.status(), 200, `revoking location failed: ${await revokeResponse.text()}`);
+    assert.equal((await revokeResponse.json()).shared, false);
+    await page.getByRole("button", { name: "ยินยอมแชร์ตำแหน่ง" }).waitFor();
+    assert.equal((await (await page.request.get(`${baseUrl}/api/matching/location`)).json()).shared, false);
 
     await page.goto(`${baseUrl}/petory/explore`);
     await page.getByRole("button", { name: "+ สร้างโพสต์" }).click();
