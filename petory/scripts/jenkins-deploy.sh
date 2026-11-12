@@ -14,7 +14,7 @@ case "${BUILD_NUMBER:-}" in ''|*[!0-9]*) echo 'A Jenkins BUILD_NUMBER is require
 
 previous="${name}-previous-${BUILD_NUMBER}"
 failed="${name}-failed-${BUILD_NUMBER}"
-if docker inspect "$previous" >/dev/null 2>&1 || docker inspect "$failed" >/dev/null 2>&1; then
+if docker container inspect "$previous" >/dev/null 2>&1 || docker container inspect "$failed" >/dev/null 2>&1; then
   echo 'A container with this build number already exists; refusing to overwrite it.' >&2
   exit 1
 fi
@@ -29,8 +29,8 @@ for volume in petory-jenkins-docker-data petory-jenkins-demo-state; do
 done
 
 had_previous=0
-if docker inspect "$name" >/dev/null 2>&1; then
-  owner=$(docker inspect --format '{{ index .Config.Labels "org.petory.owner" }}' "$name")
+if docker container inspect "$name" >/dev/null 2>&1; then
+  owner=$(docker container inspect --format '{{ index .Config.Labels "org.petory.owner" }}' "$name")
   if [ "$owner" != jenkins-demo ]; then echo 'Container name belongs to another workload; refusing to change it.' >&2; exit 1; fi
   had_previous=1
   docker stop "$name" >/dev/null
@@ -39,7 +39,7 @@ fi
 
 rollback() {
   echo 'Deployment failed. Retaining the failed container and persistent volumes.' >&2
-  if docker inspect "$name" >/dev/null 2>&1; then
+  if docker container inspect "$name" >/dev/null 2>&1; then
     docker stop "$name" >/dev/null 2>&1 || true
     docker rename "$name" "$failed" || true
   fi

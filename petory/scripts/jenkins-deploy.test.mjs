@@ -30,7 +30,10 @@ case "$1 $2" in
       exit 0
     fi
     exit 1 ;;
-  'inspect petory-jenkins-instructor'|'inspect petory-jenkins-instructor-previous-12'|'inspect petory-jenkins-instructor-failed-12') exit 1 ;;
+  # A generic inspect finds the identically named image, even though no container exists.
+  'inspect petory-jenkins-instructor') exit 0 ;;
+  'inspect --format') echo '<no value>'; exit 0 ;;
+  'container inspect') exit 1 ;;
 esac
 exit 0
 `, { mode: 0o755 });
@@ -57,11 +60,13 @@ describe("Jenkins demo deploy safety", () => {
     expect(result.log).not.toContain("run -d");
   });
 
-  it("deploys only its named demo with persistent Docker and state volumes", async () => {
+  it("ignores an image with the container's name and deploys with persistent volumes", async () => {
     const result = await runDeploy();
     expect(result.stderr).toBe("");
     expect(result.status).toBe(0);
     expect(result.log).toContain("--name petory-jenkins-instructor");
+    expect(result.log).toContain("container inspect petory-jenkins-instructor");
+    expect(result.log).not.toContain("inspect --format");
     expect(result.log).toContain("petory-jenkins-docker-data:/var/lib/docker");
     expect(result.log).toContain("petory-jenkins-demo-state:/var/lib/petory-jenkins-state");
     expect(result.log).toContain("PETORY_DEMO_STATE_PATH=/var/lib/petory-jenkins-state/demo-state.json");
