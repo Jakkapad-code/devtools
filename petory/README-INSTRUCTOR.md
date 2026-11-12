@@ -7,7 +7,7 @@
 ## 1. Clone และ build (เครื่องที่มี Docker)
 
 ```bash
-git clone --branch feature/petory-hardening --single-branch https://github.com/Jakkapad-code/devtools.git
+git clone --branch main --single-branch https://github.com/Jakkapad-code/devtools.git
 cd devtools/petory
 docker build --platform linux/amd64 --build-arg PETORY_SOURCE_REVISION="$(git rev-parse HEAD)" -f Dockerfile.instructor -t petory-instructor:local .
 ```
