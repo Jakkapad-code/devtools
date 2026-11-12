@@ -5,7 +5,8 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { setTimeout as delay } from "node:timers/promises";
 
 const root = fileURLToPath(new URL("../", import.meta.url));
-const statePath = new URL("../.env.quick-demo", import.meta.url);
+// Jenkins can persist the demo secrets alongside its dedicated Docker volume.
+const statePath = process.env.PETORY_DEMO_STATE_PATH || new URL("../.env.quick-demo", import.meta.url);
 
 export function tunnelUrlFromLogs(logs) {
   const urls = logs.match(/https:\/\/[a-z0-9-]+\.trycloudflare\.com\b/g);
