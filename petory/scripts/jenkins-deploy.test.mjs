@@ -57,7 +57,7 @@ describe("Jenkins demo deploy safety", () => {
     expect(result.status).not.toBe(0);
     expect(result.stderr).toContain("not owned by this demo");
     expect(result.log).not.toContain("stop ");
-    expect(result.log).not.toContain("run -d");
+    expect(result.log).not.toContain("run -dit");
   });
 
   it("ignores an image with the container's name and deploys with persistent volumes", async () => {
@@ -65,6 +65,7 @@ describe("Jenkins demo deploy safety", () => {
     expect(result.stderr).toBe("");
     expect(result.status).toBe(0);
     expect(result.log).toContain("--name petory-jenkins-instructor");
+    expect(result.log).toContain("run -dit --name petory-jenkins-instructor");
     expect(result.log).toContain("container inspect petory-jenkins-instructor");
     expect(result.log).not.toContain("inspect --format");
     expect(result.log).toContain("petory-jenkins-docker-data:/var/lib/docker");

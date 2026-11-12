@@ -50,7 +50,9 @@ rollback() {
 }
 trap rollback EXIT
 
-docker run -d --name "$name" --platform linux/amd64 --privileged \
+# The instructor image ends with `exec bash`; keep stdin/TTY open so it stays
+# running in a non-interactive Jenkins job while its Docker daemon starts.
+docker run -dit --name "$name" --platform linux/amd64 --privileged \
   --label org.petory.owner=jenkins-demo \
   -v petory-jenkins-docker-data:/var/lib/docker \
   -v petory-jenkins-demo-state:/var/lib/petory-jenkins-state \
