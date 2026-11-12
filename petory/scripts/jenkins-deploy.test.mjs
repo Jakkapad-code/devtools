@@ -45,6 +45,12 @@ exit 0
 }
 
 describe("Jenkins demo deploy safety", () => {
+  it("keeps Linux shell scripts in LF format", async () => {
+    for (const script of ["scripts/jenkins-deploy.sh", "scripts/jenkins-integration.sh"]) {
+      expect(await readFile(script, "utf8"), `${script} must use LF line endings`).not.toContain("\r");
+    }
+  });
+
   it("refuses a stale commit before invoking Docker", async () => {
     const result = await runDeploy({ MOCK_REMOTE: "newer" });
     expect(result.status).not.toBe(0);

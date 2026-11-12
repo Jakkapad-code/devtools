@@ -24,6 +24,18 @@ docker exec -it petory-instructor bash
 ```bash
 cd /workspace/petory
 until docker info >/dev/null 2>&1; do sleep 2; done
+```
+
+หากใช้ Windows ให้รันคำสั่งนี้ **ภายใน container ก่อนเริ่มเดโม** เพื่อแปลง
+line endings ของ shell script เป็น LF (ไม่ลบข้อมูล):
+
+```bash
+node -e 'const fs=require("node:fs"); for(const p of ["scripts/jenkins-deploy.sh","scripts/jenkins-integration.sh"]) fs.writeFileSync(p,fs.readFileSync(p,"utf8").replace(/\r\n/g,"\n"))'
+```
+
+จากนั้นเริ่มเดโม **ภายใน container**:
+
+```bash
 npm run demo:start
 ```
 
@@ -37,6 +49,9 @@ Password: petory-demo-password-2026
 Admin:    admin@petory.local
 Password: petory-admin-password-2026
 ```
+
+เข้าสู่ระบบด้วยบัญชี Admin แล้วเปิด `/petory/admin` ต่อท้ายโดเมน Quick Tunnel
+บัญชีเหล่านี้ใช้สำหรับข้อมูลสมมุติในการสาธิตเท่านั้น ห้ามใช้กับ production
 
 บน Mac ARM หาก build ภายใน container มีปัญหากับ Rosetta ให้ลอง
 `DOCKER_BUILDKIT=0 npm run demo:start` แทน
@@ -69,4 +84,4 @@ Quick Tunnel ใช้สำหรับเดโม ลิงก์เปลี
 image อาจารย์ ควรรันเฉพาะในเครื่องทดสอบที่เชื่อถือได้
 
 ถ้าชื่อ `petory-instructor` ถูกใช้แล้ว ให้เปลี่ยนชื่อในทุกคำสั่งให้ตรงกัน
-ดูรายละเอียดเพิ่มเติมได้ใน [INSTRUCTOR.md](INSTRUCTOR.md)
+ดูรายละเอียดเพิ่มเติมได้ใน [INSTRUCTOR.md](petory/INSTRUCTOR.md)
